@@ -3,6 +3,9 @@
 ocamlbuild \
 	-use-ocamlfind \
 	-pkg cmdliner \
+	-pkg lwt \
+	-pkg lwt.unix \
+	-pkg lwt.log \
 	-pkg lwt.syntax \
 	-tag 'syntax(camlp4o)' \
 	-tag debug \
