@@ -10,8 +10,7 @@ let config_log verbosity =
       | "notice" -> Some Lwt_log.Notice
       | _ -> None
     in match vlevel with
-    | Some vlevel -> Lwt_log.Section.(set_level main vlevel);
-      `Ok ()
+    | Some vlevel -> Lwt_log.add_rule "*" vlevel; `Ok ()
     | None -> `Error (true, "invalid verbosity")
 
 let hdhcpd verbosity =
