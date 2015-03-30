@@ -1,0 +1,3 @@
+true: debug, bin_annot, syntax(camlp4o), strict_sequence
+true: package(cmdliner), package(lwt.unix), package(lwt.syntax)
+true: warn(A-44)
