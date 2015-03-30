@@ -1,3 +1,3 @@
 #!/bin/sh
 
-ocamlbuild -use-ocamlfind hdhcpd.byte
+ocamlbuild -use-ocamlfind hdhcpd.byte $@
