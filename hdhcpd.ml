@@ -1,3 +1,5 @@
+let () = Printexc.record_backtrace true
+
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
