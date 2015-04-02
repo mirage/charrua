@@ -9,6 +9,7 @@ let open_dhcp_sock () =
   let open Lwt_unix in
   let sock = socket PF_INET SOCK_DGRAM 0 in
   let () = setsockopt sock SO_REUSEADDR true in
+  let () = setsockopt sock SO_BROADCAST true in
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
