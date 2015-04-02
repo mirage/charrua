@@ -1,15 +1,10 @@
-open Lwt
-
-let config_log = function
-  | "debug" -> Lwt_log.add_rule "*" Lwt_log.Debug
-  | "info" -> Lwt_log.add_rule "*" Lwt_log.Info
-  | "notice" -> Lwt_log.add_rule "*" Lwt_log.Notice
-  | _ -> invalid_arg "Verbosity should be debug|info|notice"
+let config_log verbosity =
+  Log.current_level := Log.level_of_str verbosity
 
 let hdhcpd verbosity =
   let () = config_log verbosity in
-  let () = Lwt_log.ign_notice "Haesbaert DHCPD started" in
-  Lwt_main.run (Lwt_log.notice "Haesbaert DHCPD finished")
+  let () = Log.notice "Haesbaert DHCPD started" in
+  Lwt_main.run (Log.notice_lwt "Haesbaert DHCP finished")
 
 (* Parse command line and start the ball *)
 open Cmdliner
