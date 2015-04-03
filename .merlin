@@ -2,5 +2,6 @@ S .
 B _build
 PKG cmdliner
 PKG lwt
+PKG cstruct
 EXT lwt
 EXT nonrec
