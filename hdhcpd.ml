@@ -13,13 +13,17 @@ let open_dhcp_sock () =
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
+let input_pkt pkt =
+  ()
+
 let rec dhcp_recv sock =
-  let buffer_size = 2048 in
-  let buffer = Bytes.create buffer_size in
-  lwt n = Lwt_unix.read sock buffer 0 buffer_size in
-  let () = Log.debug "dhcp sock read %d bytes" n in
-  let () = if n = 0 then
-      failwith "Unexpected EOF in DHCPD socket" in
+  let buffer = Dhcp.make_buf () in
+  lwt n = Lwt_cstruct.read sock buffer in
+  Log.debug "dhcp sock read %d bytes" n;
+  if n = 0 then
+    failwith "Unexpected EOF in DHCPD socket";
+  if n >= Dhcp.pkt_min_len then
+    input_pkt (Dhcp.pkt_of_buf buffer n);
   dhcp_recv sock
 
 let hdhcpd verbosity =
