@@ -3,5 +3,6 @@ B _build
 PKG cmdliner
 PKG lwt
 PKG cstruct
+PKG ipaddr
 EXT lwt
 EXT nonrec

@@ -1,4 +1,4 @@
 true: debug, bin_annot, syntax(camlp4o), syntax(pa_cstruct), strict_sequence
 true: package(lwt.unix), package(lwt.syntax)
 true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
-true: package(cmdliner)
+true: package(cmdliner), package(ipaddr)
