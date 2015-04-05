@@ -13,8 +13,27 @@ let open_dhcp_sock () =
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
+let valid_pkt pkt =
+  let open Dhcp in
+  if pkt.op <> Bootrequest then
+    false
+  else if pkt.htype <> Ethernet_10mb then
+    false
+  else if pkt.hlen <> 6 then
+    false
+  else if pkt.hops <> 0 then
+    false
+  else
+    true
+
 let input_pkt pkt =
-  ()
+  let open Dhcp in
+  let drop = () in
+  if not (valid_pkt pkt) then begin
+    Log.warn "Invalid pkt, dropping";
+    drop;
+  end;
+  Printf.printf "%s\n%!" (str_of_pkt pkt)
 
 let rec dhcp_recv sock =
   let buffer = Dhcp.make_buf () in
@@ -23,7 +42,9 @@ let rec dhcp_recv sock =
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
   if n >= Dhcp.pkt_min_len then
-    input_pkt (Dhcp.pkt_of_buf buffer n);
+    input_pkt (Dhcp.pkt_of_buf buffer n)
+  else
+    Log.warn "pkt too small (%d), dropping" n;
   dhcp_recv sock
 
 let hdhcpd verbosity =

@@ -5,11 +5,15 @@ type op =
 
 type htype =
   | Ethernet_10mb
-  | Unknown
+  | Other
 
 type flags =
   | Broadcast
   | Ignore
+
+type chaddr =
+  | Hwaddr of Macaddr.t
+  | Cliid of Bytes.t
 
 (* Describes a packed DHCP packet *)
 type pkt = {
@@ -24,7 +28,7 @@ type pkt = {
   yiaddr  : Ipaddr.V4.t;
   siaddr  : Ipaddr.V4.t;
   giaddr  : Ipaddr.V4.t;
-  chaddr  : bytes;
+  chaddr  : chaddr;
   sname   : string;
   file    : string;
   options : bytes list;
@@ -33,3 +37,4 @@ type pkt = {
 val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
+val str_of_pkt : pkt -> string
