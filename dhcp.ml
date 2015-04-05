@@ -61,7 +61,7 @@ let secs_of_buf = get_cpkt_secs
 
 (* XXX this is implying policy instead of mechanism *)
 let flags_of_buf buf =
-  if ((get_cpkt_flags buf) land 1) <> 0 then
+  if ((get_cpkt_flags buf) land 0x8000) <> 0 then
     Broadcast
   else
     Ignore
