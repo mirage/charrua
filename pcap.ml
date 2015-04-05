@@ -16,6 +16,8 @@
  *)
 
 open Printf
+let () = Printexc.record_backtrace true
+let () = Log.current_level := Log.Debug
 
 cstruct pcap_header {
   uint32_t magic_number;   (* magic number *)
@@ -24,20 +26,20 @@ cstruct pcap_header {
   uint32_t thiszone;       (* GMT to local correction *)
   uint32_t sigfigs;        (* accuracy of timestamps *)
   uint32_t snaplen;        (* max length of captured packets, in octets *)
-  uint32_t network         (* data link type *)
+  uint32_t network;        (* data link type *)
 } as little_endian
 
 cstruct pcap_packet {
   uint32_t ts_sec;         (* timestamp seconds *)
   uint32_t ts_usec;        (* timestamp microseconds *)
   uint32_t incl_len;       (* number of octets of packet saved in file *)
-  uint32_t orig_len        (* actual length of packet *)
+  uint32_t orig_len;       (* actual length of packet *)
 } as little_endian
 
 cstruct ethernet {
   uint8_t        dst[6];
   uint8_t        src[6];
-  uint16_t       ethertype
+  uint16_t       ethertype;
 } as big_endian
 
 cstruct ipv4 {
@@ -59,15 +61,16 @@ let print_packet p =
   let ethertype = get_ethernet_ethertype p in
   match ethertype with
   | 0x0800 -> begin
-     let ip = Cstruct.shift p sizeof_ethernet in
-     let proto = get_ipv4_proto ip in
-     match proto with
-     | 17 -> (* UDP *)
-       let udp = Cstruct.shift ip sizeof_ipv4 in
-       let dhcp = Cstruct.shift udp 8 in
-       let pkt = Dhcp.pkt_of_buf dhcp Dhcp.pkt_min_len in
-       printf "DHCP: %s\n%!" (Dhcp.str_of_pkt pkt)
-     | _ -> failwith "unknown ip protocol"
+      let ip = Cstruct.shift p sizeof_ethernet in
+      let proto = get_ipv4_proto ip in
+      match proto with
+      | 17 -> (* UDP *)
+        let udp = Cstruct.shift ip sizeof_ipv4 in
+        let udplen = Cstruct.BE.get_uint16 udp 4 in
+        let dhcp = Cstruct.shift udp 8 in
+        let pkt = Dhcp.pkt_of_buf dhcp (udplen - 8) in
+        printf "DHCP: %s\n%!" (Dhcp.str_of_pkt pkt)
+      | _ -> failwith "unknown ip protocol"
     end
   |_ -> failwith "unknown body"
 
@@ -76,7 +79,7 @@ let rec print_pcap_packet (hdr, pkt) =
   let ts_usec = get_pcap_packet_ts_usec hdr in
   let incl_len = get_pcap_packet_incl_len hdr in
   let orig_len = get_pcap_packet_orig_len hdr in
-  printf "\n***** %lu.%lu  bytes %lu (of %lu)\n"
+  printf "***** %lu.%lu  bytes %lu (of %lu)\n%!"
     ts_sec ts_usec incl_len orig_len;
   print_packet pkt
 
@@ -94,13 +97,13 @@ let print_pcap_header buf =
   let sigfis = get_pcap_header_sigfigs buf in
   let snaplen = get_pcap_header_snaplen buf in
   let header_network = get_pcap_header_network buf in
-  printf "pcap_header (len %d)\n" sizeof_pcap_header;
+  printf "pcap_header (len %d)\n%!" sizeof_pcap_header;
   printf "magic_number %lx (%s)\n%!" magic endian;
-  printf "version %d %d\n" version_major version_minor;
-  printf "timezone shift %lu\n" thiszone;
-  printf "timestamp accuracy %lu\n" sigfis;
-  printf "snaplen %lu\n" snaplen;
-  printf "lltype %lx\n" header_network
+  printf "version %d %d\n%!" version_major version_minor;
+  printf "timezone shift %lu\n%!" thiszone;
+  printf "timestamp accuracy %lu\n%!" sigfis;
+  printf "snaplen %lu\n%!" snaplen;
+  printf "lltype %lx\n%!" header_network
 
 let parse () =
   printf "start parse\n%!";
@@ -112,14 +115,14 @@ let parse () =
   print_pcap_header header;
 
   let packets = Cstruct.iter
-    (fun buf -> Some (sizeof_pcap_packet + Int32.to_int (get_pcap_packet_incl_len buf)))
-    (fun buf -> buf, Cstruct.shift buf sizeof_pcap_packet)
-    body
+      (fun buf -> Some (sizeof_pcap_packet + Int32.to_int (get_pcap_packet_incl_len buf)))
+      (fun buf -> buf, Cstruct.shift buf sizeof_pcap_packet)
+      body
   in
   let num_packets = Cstruct.fold
-    (fun a packet -> print_pcap_packet packet; (a+1))
-    packets 0
+      (fun a packet -> print_pcap_packet packet; (a+1))
+      packets 0
   in
-  printf "total packets %d\n" num_packets
+  printf "total packets %d\n%!" num_packets
 
 let _ = parse ()
