@@ -124,9 +124,9 @@ let str_of_file file = file
 let str_of_options options = "implement me!"
 
 let str_of_pkt pkt =
-  Printf.sprintf "op = %s htype = %s hlen = %s hops = %s xid = %s secs = %s \
-                  flags = %s ciaddr = %s yiaddr = %s siaddr = %s giaddr = %s \
-                  chaddr = %s sname = %s file = %s options = %s"
+  Printf.sprintf "op: %s htype: %s hlen: %s hops: %s xid: %s secs: %s \
+                  flags: %s ciaddr: %s yiaddr: %s siaddr: %s giaddr: %s \
+                  chaddr: %s sname: %s file: %s options: %s"
     (str_of_op pkt.op) (str_of_htype pkt.htype) (str_of_hlen pkt.hlen)
     (str_of_hops pkt.hops) (str_of_xid pkt.xid) (str_of_secs pkt.secs)
     (str_of_flags pkt.flags) (str_of_ciaddr pkt.ciaddr)
