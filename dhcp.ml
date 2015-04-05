@@ -18,7 +18,8 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
-  | Subnet_mask of Ipaddr.V4.t
+  | Subnet_mask of Ipaddr.V4.t  (* code 1 *)
+  | Time_offset of Int32.t      (* code 2 *)
   | Unknown
 
 type pkt = {
@@ -84,16 +85,19 @@ let options_of_buf buf buf_len =
     let () = Log.debug "saw option code %u" code in
     let len = Cstruct.get_uint8 buf 1 in
     let body = Cstruct.shift buf 2 in
-    let next = loop (Cstruct.shift body len) in (* Partial application *)
+    let discard () = loop (Cstruct.shift body len) options in
+    let take op = loop (Cstruct.shift body len) (op :: options) in
     match code with
-    | 1 -> (* Subnet Mask *)
+    | 1 ->                      (* Subnet Mask *)
       let mask = Cstruct.BE.get_uint32 body 0 in
-      let opt = Subnet_mask (Ipaddr.V4.of_int32 mask) in
-      next (opt :: options)
+      take (Subnet_mask (Ipaddr.V4.of_int32 mask))
+    | 2 ->                      (* Time Offset *)
+      let time_offset = Cstruct.BE.get_uint32 body 0 in
+      take (Time_offset time_offset)
     | 255 -> options            (* End of option list *)
     | code ->
       Log.warn "Unknown option code %d" code;
-      next options
+      discard ()
   in
   (* Handle a pkt with no options *)
   if buf_len = pkt_min_len then

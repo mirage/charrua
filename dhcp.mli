@@ -17,6 +17,7 @@ type chaddr =
 
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t
+  | Time_offset of Int32.t
   | Unknown
 
 (* Describes a packed DHCP packet *)
