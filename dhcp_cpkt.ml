@@ -16,6 +16,5 @@ cstruct cpkt {
   uint8_t      chaddr[16];
   uint8_t      sname[64];
   uint8_t      file[128];
-  (* uint8_t      options[1024]; (\* 1KB for options should be more than enough *\) *)
 } as big_endian
 

@@ -33,9 +33,5 @@ val get_cpkt_file : Cstruct.t -> Cstruct.t
 val copy_cpkt_file : Cstruct.t -> string
 val set_cpkt_file : string -> int -> Cstruct.t -> unit
 val blit_cpkt_file : Cstruct.t -> int -> Cstruct.t -> unit
-(* val get_cpkt_options : Cstruct.t -> Cstruct.t *)
-(* val copy_cpkt_options : Cstruct.t -> string *)
-(* val set_cpkt_options : string -> int -> Cstruct.t -> unit *)
-(* val blit_cpkt_options : Cstruct.t -> int -> Cstruct.t -> unit *)
 val hexdump_cpkt_to_buffer : Buffer.t -> Cstruct.t -> unit
 val hexdump_cpkt : Cstruct.t -> unit
