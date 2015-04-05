@@ -35,16 +35,10 @@ type pkt = {
   options : bytes list;
 }
 
-let buf_len = 4096
 let pkt_min_len = 236
 
-let make_buf () = Cstruct.create buf_len
-let check_buf_len buf len =
-  if (Cstruct.len buf) <> buf_len then
-    invalid_arg (Printf.sprintf "Invalid buf size %d <> %d" (Cstruct.len buf) buf_len)
-  else if len < pkt_min_len then
-    invalid_arg (Printf.sprintf "len too small %d < %d" len pkt_min_len)
-  
+(* 10KB, maybe there is an asshole doing insane stuff with Jumbo Frames *)
+let make_buf () = Cstruct.create (1024 * 10) 
 let op_of_buf buf = match get_cpkt_op buf with
   | 1 -> Bootrequest
   | 2 -> Bootreply
@@ -81,9 +75,8 @@ let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
 let pkt_of_buf buf len =
-  check_buf_len buf len;
   if len < pkt_min_len then
-    Log.warn "packet too small (%d)" len;
+    invalid_arg (Printf.sprintf "packet too small %d < %d" len pkt_min_len);
   let op = op_of_buf buf in
   let htype = htype_of_buf buf in
   let hlen = hlen_of_buf buf in
