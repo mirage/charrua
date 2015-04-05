@@ -100,11 +100,9 @@ let str_of_op = function
   | Bootrequest -> "Bootrequest"
   | Bootreply -> "Bootreply"
   | Unknown -> "Unknown"
-
 let str_of_htype = function
   | Ethernet_10mb -> "Ethernet_10mb"
   | Other -> "Other"
-
 let str_of_hlen = string_of_int
 let str_of_hops = string_of_int
 let str_of_xid xid = Printf.sprintf "0x%lx" xid
