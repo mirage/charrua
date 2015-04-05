@@ -17,6 +17,10 @@ type chaddr =
   | Hwaddr of Macaddr.t
   | Cliid of Bytes.t
 
+type dhcp_option =
+  | Subnet_mask of Ipaddr.V4.t
+  | Unknown
+
 type pkt = {
   op      : op;
   htype   : htype;
@@ -32,7 +36,7 @@ type pkt = {
   chaddr  : chaddr;
   sname   : string;
   file    : string;
-  options : bytes list;
+  options : dhcp_option list;
 }
 
 let pkt_min_len = 236
@@ -74,6 +78,35 @@ let chaddr_of_buf buf htype hlen =
 let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
+let options_of_buf buf buf_len =
+  let rec loop buf options =
+    let code = Cstruct.get_uint8 buf 0 in
+    let () = Log.debug "saw option code %u" code in
+    let len = Cstruct.get_uint8 buf 1 in
+    let body = Cstruct.shift buf 2 in
+    let next = loop (Cstruct.shift body len) in (* Partial application *)
+    match code with
+    | 1 -> (* Subnet Mask *)
+      let mask = Cstruct.BE.get_uint32 body 0 in
+      let opt = Subnet_mask (Ipaddr.V4.of_int32 mask) in
+      next (opt :: options)
+    | 255 -> options            (* End of option list *)
+    | code ->
+      Log.warn "Unknown option code %d" code;
+      next options
+  in
+  (* Handle a pkt with no options *)
+  if buf_len = pkt_min_len then
+    []
+  else
+    (* Look for magic cookie *)
+    let cookie = Cstruct.BE.get_uint32 buf pkt_min_len in
+    if cookie <> 0x63825363l then
+      failwith "Invalid cookie";
+    (* Jump over cookie and start options *)
+    loop (Cstruct.shift buf (pkt_min_len + 4)) []
+
+(* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
   if len < pkt_min_len then
     invalid_arg (Printf.sprintf "packet too small %d < %d" len pkt_min_len);
@@ -91,7 +124,7 @@ let pkt_of_buf buf len =
   let chaddr = chaddr_of_buf buf htype hlen in
   let sname = sname_of_buf buf in
   let file = file_of_buf buf in
-  let options = [] in
+  let options = options_of_buf buf len in
   { op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
     siaddr; giaddr; chaddr; sname; file; options }
 
@@ -119,7 +152,7 @@ let str_of_chaddr = function
   | Cliid id -> "some id"       (* XXX finish me *)
 let str_of_sname sname = sname
 let str_of_file file = file
-let str_of_options options = "implement me!"
+let str_of_options options = string_of_int  (List.length options)
 
 let str_of_pkt pkt =
   Printf.sprintf "op: %s htype: %s hlen: %s hops: %s xid: %s secs: %s \

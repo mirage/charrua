@@ -15,6 +15,10 @@ type chaddr =
   | Hwaddr of Macaddr.t
   | Cliid of Bytes.t
 
+type dhcp_option =
+  | Subnet_mask of Ipaddr.V4.t
+  | Unknown
+
 (* Describes a packed DHCP packet *)
 type pkt = {
   op      : op;
@@ -31,7 +35,7 @@ type pkt = {
   chaddr  : chaddr;
   sname   : string;
   file    : string;
-  options : bytes list;
+  options : dhcp_option list;
 }
 
 val pkt_min_len : int
