@@ -136,7 +136,8 @@ let options_of_buf buf buf_len =
       else
         loop 0 []
     in
-    let get_string () = Cstruct.copy body 0 len
+    let get_string () =  if len < 1 then failwith bad_len else
+        Cstruct.copy body 0 len
     in
     match code with
     | 1 ->                      (* Subnet Mask *)
