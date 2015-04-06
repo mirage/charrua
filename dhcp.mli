@@ -32,6 +32,7 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
+  (* Start of section 3 of RFC 2132 *)
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of Int32.t                  (* code 2 *)
   | Routers of Ipaddr.V4.t list             (* code 3 *)
@@ -49,6 +50,7 @@ type dhcp_option =
   | Domain_name of string                   (* code 15 *)
   | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
+  (* Start of section 4 of RFC 2132 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
@@ -57,6 +59,16 @@ type dhcp_option =
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_aging_timo of Int32.t              (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
+  (* Start of section 5 of RFC 2132 *)
+  | Interface_mtu of int                    (* code 26 *)
+  | All_subnets_local of bool               (* code 27 *)
+  | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
+  | Perform_mask_discovery of bool          (* code 29 *)
+  | Mask_supplier of bool                   (* code 30 *)
+  | Perform_router_disc of bool             (* code 31 *)
+  | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
+  (* Start of section 6 of RFC 2132 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)

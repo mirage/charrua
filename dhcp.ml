@@ -34,6 +34,7 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
+  (* Start of section 3 of RFC 2132 *)
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of Int32.t                  (* code 2 *)
   | Routers of Ipaddr.V4.t list             (* code 3 *)
@@ -51,6 +52,7 @@ type dhcp_option =
   | Domain_name of string                   (* code 15 *)
   | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
+  (* Start of section 4 of RFC 2132 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
@@ -59,6 +61,16 @@ type dhcp_option =
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_aging_timo of Int32.t              (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
+  (* Start of section 5 of RFC 2132 *)
+  | Interface_mtu of int                    (* code 26 *)
+  | All_subnets_local of bool               (* code 27 *)
+  | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
+  | Perform_mask_discovery of bool          (* code 29 *)
+  | Mask_supplier of bool                   (* code 30 *)
+  | Perform_router_disc of bool             (* code 31 *)
+  | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
+  (* Start of section 6 of RFC 2132 *)
   | Unknown
 
 type pkt = {
@@ -183,6 +195,7 @@ let options_of_buf buf buf_len =
         Cstruct.copy body 0 len
     in
     match code with
+    (* Start of section 3 of RFC 2132 *)
     | 1 ->                      (* Subnet Mask *)
       take (Subnet_mask (get_ip ()))
     | 2 ->                      (* Time Offset *)
@@ -220,6 +233,7 @@ let options_of_buf buf buf_len =
       take (Root_path (get_string ()))
     | 18 ->                     (* Extension path *)
       take (Extension_path (get_string ()))
+    (* Start of section 4 of RFC 2132 *)
     | 19 ->                     (* Ipforwarding *)
       take (Ipforwarding (get_bool ()))
     | 20 ->                     (* Non-local source routing *)
@@ -234,6 +248,24 @@ let options_of_buf buf buf_len =
       take (Pmtu_aging_timo (get_32 ()))
     | 25 ->                     (* Path mtu plateu table *)
       take (Pmtu_plateau_table (get_16_list ()))
+    (* Start of section 5 of RFC 2132 *)
+    | 26 ->
+      take (Interface_mtu (get_16 ()))
+    | 27 ->
+      take (All_subnets_local (get_bool ()))
+    | 28 ->
+      take (Broadcast_addr (get_ip ()))
+    | 29 ->
+      take (Perform_mask_discovery (get_bool ()))
+    | 30 ->
+      take (Mask_supplier (get_bool ()))
+    | 31 ->
+      take (Perform_router_disc (get_bool ()))
+    | 32 ->
+      take (Router_sol_addr (get_ip ()))
+    | 33 ->
+      take (Static_routes (get_ip_pair_list ()))
+    (* Start of section 6 of RFC 2132 *)
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()
