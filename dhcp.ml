@@ -46,6 +46,7 @@ type dhcp_option =
   | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
   | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
   | Hostname of string                      (* code 12 *)
+  | Bootfile_size of int                    (* code 13 *)
   | Unknown
 
 type pkt = {
@@ -163,6 +164,8 @@ let options_of_buf buf buf_len =
       take (Rsclocation_servers (get_ips ()))
     | 12 ->                     (* Hostname *)
       take (Hostname (get_string ()))
+    | 13 ->                     (* Bootfile size *)
+      take (Bootfile_size (get_16 ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()

@@ -44,6 +44,7 @@ type dhcp_option =
   | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
   | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
   | Hostname of string                      (* code 12 *)
+  | Bootfile_size of int                    (* code 13 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
