@@ -34,7 +34,6 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
-  (* Start of section 3 of RFC 2132 *)
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of Int32.t                  (* code 2 *)
   | Routers of Ipaddr.V4.t list             (* code 3 *)
@@ -52,7 +51,6 @@ type dhcp_option =
   | Domain_name of string                   (* code 15 *)
   | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
-  (* Start of section 4 of RFC 2132 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
@@ -61,7 +59,6 @@ type dhcp_option =
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_aging_timo of Int32.t              (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
-  (* Start of section 5 of RFC 2132 *)
   | Interface_mtu of int                    (* code 26 *)
   | All_subnets_local of bool               (* code 27 *)
   | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
@@ -70,27 +67,38 @@ type dhcp_option =
   | Perform_router_disc of bool             (* code 31 *)
   | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
   | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
-  (* Start of section 6 of RFC 2132 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of Int32.t               (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
-  (* Start of section 7 of RFC 2132 *)
   | Tcp_default_ttl of int                  (* code 37 *)
   | Tcp_keepalive_interval of Int32.t       (* code 38 *)
   | Tcp_keepalive_garbase of int            (* code 39 *)
-  (* Start of section 8 of RFC 2132 *)
   | Nis_domain of string                    (* code 40 *)
   | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
   | Ntp_servers of Ipaddr.V4.t list         (* code 42 *)
-  | Vendor_specific of Bytes.t              (* code 43 *)
+  | Vendor_specific of bytes                (* code 43 *)
   | Netbios_name_servers of Ipaddr.V4.t list(* code 44 *)
   | Netbios_datagram_distrib_servers of Ipaddr.V4.t list (* code 45 *)
   | Netbios_node of int                     (* code 46 *)
   | Netbios_scope of string                 (* code 47 *)
   | Xwindow_font_servers of Ipaddr.V4.t list(* code 48 *)
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
+  | Request_ip of Ipaddr.V4.t               (* code 50 *)
+  | Ip_lease_time of Int32.t                (* code 51 *)
+  | Option_overload of int                  (* code 52 TODO especial needs handling *)
+  | Dhcp_message_type of int                (* code 53 *)
+  | Server_identifier of Ipaddr.V4.t        (* code 54 *)
+  | Parameter_requests of int list          (* code 55 *)
+  | Message of string                       (* code 56 *)
+  | Max_message of int                      (* code 57 *)
+  | Renewal_t1 of Int32.t                   (* code 58 *)
+  | Rebinding_t2 of Int32.t                 (* code 59 *)
+  | Vendor_class_id of bytes                (* code 60 *)
+  | Client_id of string                     (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
+  | Tftp_server_name of string              (* code 66 *)
+  | Bootfile_name of string                 (* code 67 *)
   | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
   | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
   | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
@@ -99,6 +107,7 @@ type dhcp_option =
   | Finger_servers of Ipaddr.V4.t list      (* code 73 *)
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
+  | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
   | Unknown
 
 type pkt = {
@@ -171,6 +180,15 @@ let options_of_buf buf buf_len =
     let take op = loop (Cstruct.shift body len) (op :: options) in
     let get_8 () = if len <> 1 then invalid_arg bad_len else
         Cstruct.get_uint8 body 0 in
+    let get_8_list () =
+      let rec loop offset shorts =
+        if offset = len then shorts else
+          let short = Cstruct.get_uint8 body 0 in
+          loop (succ offset) (short :: shorts)
+      in
+      if len <= 0 then invalid_arg bad_len else
+        loop 0 []
+    in
     let get_bool () = match (get_8 ()) with
       | 1 -> true
       | 0 -> false
@@ -222,10 +240,9 @@ let options_of_buf buf buf_len =
     let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
     in
-    let get_bytes () = Bytes.of_string (get_string ())
+    let get_bytes = get_string
     in
     match code with
-    (* Start of section 3 of RFC 2132 *)
     | 1 ->   take (Subnet_mask (get_ip ()))
     | 2 ->   take (Time_offset (get_32 ()))
     | 3 ->   take (Routers (get_ip_list ()))
@@ -244,7 +261,6 @@ let options_of_buf buf buf_len =
     | 16 ->  take (Swap_server (get_ip ()))
     | 17 ->  take (Root_path (get_string ()))
     | 18 ->  take (Extension_path (get_string ()))
-    (* Start of section 4 of RFC 2132 *)
     | 19 ->  take (Ipforwarding (get_bool ()))
     | 20 ->  take (Nlsr (get_bool ()))
     | 21 ->  take (Policy_filters (get_ip_pair_list ()))
@@ -252,7 +268,6 @@ let options_of_buf buf buf_len =
     | 23 ->  take (Default_ip_ttl (get_8 ()))
     | 24 ->  take (Pmtu_aging_timo (get_32 ()))
     | 25 ->  take (Pmtu_plateau_table (get_16_list ()))
-    (* Start of section 5 of RFC 2132 *)
     | 26 ->  take (Interface_mtu (get_16 ()))
     | 27 ->  take (All_subnets_local (get_bool ()))
     | 28 ->  take (Broadcast_addr (get_ip ()))
@@ -277,8 +292,22 @@ let options_of_buf buf buf_len =
     | 47 ->  take (Netbios_scope (get_string ()))
     | 48 ->  take (Xwindow_font_servers (get_ip_list ()))
     | 49 ->  take (Xwindow_display_managers (get_ip_list ()))
+    | 50 ->  take (Request_ip (get_ip ()))
+    | 51 ->  take (Ip_lease_time (get_32 ()))
+    | 52 ->  take (Option_overload (get_8 ()))
+    | 53 ->  take (Dhcp_message_type (get_8 ()))
+    | 54 ->  take (Server_identifier (get_ip ()))
+    | 55 ->  take (Parameter_requests (get_8_list ()))
+    | 56 ->  take (Message (get_string ()))
+    | 57 ->  take (Max_message (get_16 ()))
+    | 58 ->  take (Renewal_t1 (get_32 ()))
+    | 59 ->  take (Rebinding_t2 (get_32 ()))
+    | 60 ->  take (Vendor_class_id (get_bytes ()))
+    | 61 ->  take (Client_id (get_bytes ()))
     | 64 ->  take (Nis_plus_domain (get_string ()))
     | 65 ->  take (Nis_plus_servers (get_ip_list ()))
+    | 66 ->  take (Tftp_server_name (get_string ()))
+    | 67 ->  take (Bootfile_name (get_string ()))
     | 68 ->  take (Mobile_ip_home_agent (get_ip_list ~min_len:0 ()))
     | 69 ->  take (Smtp_servers (get_ip_list ()))
     | 70 ->  take (Pop3_servers (get_ip_list ()))
@@ -287,8 +316,8 @@ let options_of_buf buf buf_len =
     | 73 ->  take (Finger_servers (get_ip_list ()))
     | 74 ->  take (Irc_servers (get_ip_list ()))
     | 75 ->  take (Streettalk_servers (get_ip_list ()))
+    | 76 ->  take (Streettalk_da (get_ip_list ()))
     | 255 -> options            (* End of option list *)
-    (* Start of section 6 of RFC 2132 *)
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()
