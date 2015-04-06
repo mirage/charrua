@@ -114,6 +114,8 @@ let options_of_buf buf buf_len =
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     let discard () = loop (Cstruct.shift body len) options in
     let take op = loop (Cstruct.shift body len) (op :: options) in
+    let get_16 () = if len <> 2 then failwith bad_len else
+        Cstruct.BE.get_uint16 body 0 in
     let get_32 () = if len <> 4 then failwith bad_len else
         Cstruct.BE.get_uint32 body 0 in
     let get_ip () = if len <> 4 then failwith bad_len else
