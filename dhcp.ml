@@ -111,10 +111,13 @@ let options_of_buf buf buf_len =
     let () = Log.debug "saw option code %u" code in
     let len = Cstruct.get_uint8 buf 1 in
     let body = Cstruct.shift buf 2 in
+    let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     let discard () = loop (Cstruct.shift body len) options in
     let take op = loop (Cstruct.shift body len) (op :: options) in
-    let get_32 () = Cstruct.BE.get_uint32 body 0 in
-    let get_ip () = Ipaddr.V4.of_int32 (get_32 ()) in
+    let get_32 () = if len <> 4 then failwith bad_len else
+        Cstruct.BE.get_uint32 body 0 in
+    let get_ip () = if len <> 4 then failwith bad_len else
+        Ipaddr.V4.of_int32 (get_32 ()) in
     (* Fetch ipv4s from options *)
     let get_ips () =
       let rec loop offset ips =
@@ -126,7 +129,7 @@ let options_of_buf buf buf_len =
           loop ((succ offset) * 4) (ip :: ips)
       in
       if ((len mod 4) <> 0) || len <= 0 then
-        failwith (Printf.sprintf ("Malformed len %d in option %d") len code)
+        failwith bad_len
       else
         loop 0 []
     in
