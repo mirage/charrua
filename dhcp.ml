@@ -121,18 +121,18 @@ let options_of_buf buf buf_len =
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     let discard () = loop (Cstruct.shift body len) options in
     let take op = loop (Cstruct.shift body len) (op :: options) in
-    let get_bool () = if len <> 1 then failwith bad_len else
+    let get_bool () = if len <> 1 then invalid_arg bad_len else
         let v = Cstruct.get_uint8 body 0 in
         match v with
         | 1 -> true
         | 0 -> false
         | _ -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
     in
-    let get_16 () = if len <> 2 then failwith bad_len else
+    let get_16 () = if len <> 2 then invalid_arg bad_len else
         Cstruct.BE.get_uint16 body 0 in
-    let get_32 () = if len <> 4 then failwith bad_len else
+    let get_32 () = if len <> 4 then invalid_arg bad_len else
         Cstruct.BE.get_uint32 body 0 in
-    let get_ip () = if len <> 4 then failwith bad_len else
+    let get_ip () = if len <> 4 then invalid_arg bad_len else
         Ipaddr.V4.of_int32 (get_32 ()) in
     (* Fetch ipv4s from options *)
     let get_ips () =
@@ -145,11 +145,11 @@ let options_of_buf buf buf_len =
           loop ((succ offset) * 4) (ip :: ips)
       in
       if ((len mod 4) <> 0) || len <= 0 then
-        failwith bad_len
+        invalid_arg bad_len
       else
         loop 0 []
     in
-    let get_string () =  if len < 1 then failwith bad_len else
+    let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
     in
     match code with
@@ -203,7 +203,7 @@ let options_of_buf buf buf_len =
     (* Look for magic cookie *)
     let cookie = Cstruct.BE.get_uint32 buf pkt_min_len in
     if cookie <> 0x63825363l then
-      failwith "Invalid cookie";
+      invalid_arg "Invalid cookie";
     (* Jump over cookie and start options *)
     loop (Cstruct.shift buf (pkt_min_len + 4)) []
 
