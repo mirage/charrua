@@ -58,6 +58,7 @@ type dhcp_option =
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_aging_timo of Int32.t              (* code 24 *)
+  | Pmtu_plateau_table of int list          (* code 25 *)
   | Unknown
 
 type pkt = {
@@ -141,19 +142,24 @@ let options_of_buf buf buf_len =
         Cstruct.BE.get_uint32 body 0 in
     let get_ip () = if len <> 4 then invalid_arg bad_len else
         Ipaddr.V4.of_int32 (get_32 ()) in
+    let get_16_list () =
+      let rec loop offset shorts =
+        if offset = len then shorts else
+          let short = Cstruct.BE.get_uint16 body 0 in
+          loop ((succ offset) * 2) (short :: shorts)
+      in
+      if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
+        loop 0 []
+    in
     (* Fetch ipv4s from options *)
     let get_ip_list () =
       let rec loop offset ips =
-        if offset = len then
-          ips
-        else
+        if offset = len then ips else
           let word = Cstruct.BE.get_uint32 body offset in
           let ip = Ipaddr.V4.of_int32 word in
           loop ((succ offset) * 4) (ip :: ips)
       in
-      if ((len mod 4) <> 0) || len <= 0 then
-        invalid_arg bad_len
-      else
+      if ((len mod 4) <> 0) || len <= 0 then invalid_arg bad_len else
         loop 0 []
     in
     (* Get a list of ip pairs *)
@@ -222,8 +228,12 @@ let options_of_buf buf buf_len =
       take (Policy_filters (get_ip_pair_list ()))
     | 22 ->                     (* Maximum datagram *)
       take (Max_datagram (get_16 ()))
-    | 23 ->                     (*  *)
+    | 23 ->                     (* Default ip time-to-live *)
       take (Default_ip_ttl (get_8 ()))
+    | 24 ->                     (* Path mtu aging timeout *)
+      take (Pmtu_aging_timo (get_32 ()))
+    | 25 ->                     (* Path mtu plateu table *)
+      take (Pmtu_plateau_table (get_16_list ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()

@@ -56,6 +56,7 @@ type dhcp_option =
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_aging_timo of Int32.t              (* code 24 *)
+  | Pmtu_plateau_table of int list          (* code 25 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
