@@ -20,6 +20,7 @@ type chaddr =
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t  (* code 1 *)
   | Time_offset of Int32.t      (* code 2 *)
+  | Router of Ipaddr.V4.t list  (* code 3 *)
   | Unknown
 
 type pkt = {
@@ -95,6 +96,20 @@ let options_of_buf buf buf_len =
       let time_offset = Cstruct.BE.get_uint32 body 0 in
       take (Time_offset time_offset)
     | 255 -> options            (* End of option list *)
+    | 3 ->                      (* Routers *)
+      let rec build_ips offset ips =
+        if offset = len then
+          ips
+        else
+          let word = Cstruct.BE.get_uint32 body offset in
+          let ip = Ipaddr.V4.of_int32 word in
+          let () = Log.debug "Router with ip: %s" (Ipaddr.V4.to_string ip)  in
+          build_ips ((succ offset) * 4) (ip :: ips)
+      in
+      if ((len mod 4) <> 4) || len <= 0 then
+        failwith ("Invalid Router option len: " ^ (string_of_int len))
+      else
+        take (Router (build_ips 0 []))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()

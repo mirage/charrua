@@ -16,8 +16,9 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
-  | Subnet_mask of Ipaddr.V4.t
-  | Time_offset of Int32.t
+  | Subnet_mask of Ipaddr.V4.t  (* code 1 *)
+  | Time_offset of Int32.t      (* code 2 *)
+  | Router of Ipaddr.V4.t list  (* code 3 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
