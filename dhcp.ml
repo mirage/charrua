@@ -122,8 +122,8 @@ let options_of_buf buf buf_len =
           let ip = Ipaddr.V4.of_int32 word in
           get_ip ((succ offset) * 4) (ip :: ips)
       in
-      if ((len mod 4) <> 4) || len <= 0 then
-        failwith ("Malformed option len: " ^ (string_of_int len))
+      if ((len mod 4) <> 0) || len <= 0 then
+        failwith (Printf.sprintf ("Malformed len %d in option %d") len code)
       else
         get_ip 0 []
     in
