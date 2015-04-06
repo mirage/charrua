@@ -43,6 +43,7 @@ type dhcp_option =
   | Lpr_servers of Ipaddr.V4.t list         (* code 9 *)
   | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
   | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
+  | Hostname of string                      (* code 12 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)

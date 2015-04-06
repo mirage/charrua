@@ -45,6 +45,7 @@ type dhcp_option =
   | Lpr_servers of Ipaddr.V4.t list         (* code 9 *)
   | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
   | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
+  | Hostname of string                      (* code 12 *)
   | Unknown
 
 type pkt = {
@@ -112,28 +113,30 @@ let options_of_buf buf buf_len =
     let body = Cstruct.shift buf 2 in
     let discard () = loop (Cstruct.shift body len) options in
     let take op = loop (Cstruct.shift body len) (op :: options) in
+    let get_32 () = Cstruct.BE.get_uint32 body 0 in
+    let get_ip () = Ipaddr.V4.of_int32 (get_32 ()) in
     (* Fetch ipv4s from options *)
     let get_ips () =
-      let rec get_ip offset ips =
+      let rec loop offset ips =
         if offset = len then
           ips
         else
           let word = Cstruct.BE.get_uint32 body offset in
           let ip = Ipaddr.V4.of_int32 word in
-          get_ip ((succ offset) * 4) (ip :: ips)
+          loop ((succ offset) * 4) (ip :: ips)
       in
       if ((len mod 4) <> 0) || len <= 0 then
         failwith (Printf.sprintf ("Malformed len %d in option %d") len code)
       else
-        get_ip 0 []
+        loop 0 []
+    in
+    let get_string () = Cstruct.copy body 0 len
     in
     match code with
     | 1 ->                      (* Subnet Mask *)
-      let mask = Cstruct.BE.get_uint32 body 0 in
-      take (Subnet_mask (Ipaddr.V4.of_int32 mask))
+      take (Subnet_mask (get_ip ()))
     | 2 ->                      (* Time Offset *)
-      let time_offset = Cstruct.BE.get_uint32 body 0 in
-      take (Time_offset time_offset)
+      take (Time_offset (get_32 ()))
     | 255 -> options            (* End of option list *)
     | 3 ->                      (* Routers *)
       take (Routers (get_ips ()))
@@ -153,6 +156,8 @@ let options_of_buf buf buf_len =
       take (Impress_servers (get_ips ()))
     | 11 ->                     (* Resource location servers *)
       take (Rsclocation_servers (get_ips ()))
+    | 12 ->                     (* Hostname *)
+      take (Hostname (get_string ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()
