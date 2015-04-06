@@ -55,6 +55,9 @@ type dhcp_option =
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
   | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
+  | Max_datagram of int                     (* code 22 *)
+  | Default_ip_ttl of int                   (* code 23 *)
+  | Pmtu_aging_timo of Int32.t              (* code 24 *)
   | Unknown
 
 type pkt = {
@@ -125,12 +128,12 @@ let options_of_buf buf buf_len =
     let discard () = loop (Cstruct.shift body len) options in
     (* take includes the option in the resulting list *)
     let take op = loop (Cstruct.shift body len) (op :: options) in
-    let get_bool () = if len <> 1 then invalid_arg bad_len else
-        let v = Cstruct.get_uint8 body 0 in
-        match v with
-        | 1 -> true
-        | 0 -> false
-        | _ -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
+    let get_8 () = if len <> 1 then invalid_arg bad_len else
+        Cstruct.get_uint8 body 0 in
+    let get_bool () = match (get_8 ()) with
+      | 1 -> true
+      | 0 -> false
+      | v -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
     in
     let get_16 () = if len <> 2 then invalid_arg bad_len else
         Cstruct.BE.get_uint16 body 0 in
@@ -139,7 +142,7 @@ let options_of_buf buf buf_len =
     let get_ip () = if len <> 4 then invalid_arg bad_len else
         Ipaddr.V4.of_int32 (get_32 ()) in
     (* Fetch ipv4s from options *)
-    let get_ips () =
+    let get_ip_list () =
       let rec loop offset ips =
         if offset = len then
           ips
@@ -154,7 +157,7 @@ let options_of_buf buf buf_len =
         loop 0 []
     in
     (* Get a list of ip pairs *)
-    let get_ips_ips () =
+    let get_ip_pair_list () =
       let rec loop offset ips_ips =
         if offset = len then
           ips_ips
@@ -180,23 +183,23 @@ let options_of_buf buf buf_len =
       take (Time_offset (get_32 ()))
     | 255 -> options            (* End of option list *)
     | 3 ->                      (* Routers *)
-      take (Routers (get_ips ()))
+      take (Routers (get_ip_list ()))
     | 4 ->                      (* Time servers *)
-      take (Time_servers (get_ips ()))
+      take (Time_servers (get_ip_list ()))
     | 5 ->                      (* Name servers, NOT DNS *)
-      take (Name_servers (get_ips ()))
+      take (Name_servers (get_ip_list ()))
     | 6 ->                      (* Domain name servers, DNS *)
-      take (Dns_servers (get_ips ()))
+      take (Dns_servers (get_ip_list ()))
     | 7 ->                      (* Log servers *)
-      take (Log_servers (get_ips ()))
+      take (Log_servers (get_ip_list ()))
     | 8 ->                      (* Cookie servers *)
-      take (Cookie_servers (get_ips ()))
+      take (Cookie_servers (get_ip_list ()))
     | 9 ->                      (* Lpr servers *)
-      take (Lpr_servers (get_ips ()))
+      take (Lpr_servers (get_ip_list ()))
     | 10 ->                     (* Impress servers *)
-      take (Impress_servers (get_ips ()))
+      take (Impress_servers (get_ip_list ()))
     | 11 ->                     (* Resource location servers *)
-      take (Rsclocation_servers (get_ips ()))
+      take (Rsclocation_servers (get_ip_list ()))
     | 12 ->                     (* Hostname *)
       take (Hostname (get_string ()))
     | 13 ->                     (* Bootfile size *)
@@ -213,10 +216,14 @@ let options_of_buf buf buf_len =
       take (Extension_path (get_string ()))
     | 19 ->                     (* Ipforwarding *)
       take (Ipforwarding (get_bool ()))
-    | 20 ->                     (* Non-Local Source Routing *)
+    | 20 ->                     (* Non-local source routing *)
       take (Nlsr (get_bool ()))
-    | 21 ->                     (* Policy Filters *)
-      take (Policy_filters (get_ips_ips ()))
+    | 21 ->                     (* Policy filters *)
+      take (Policy_filters (get_ip_pair_list ()))
+    | 22 ->                     (* Maximum datagram *)
+      take (Max_datagram (get_16 ()))
+    | 23 ->                     (*  *)
+      take (Default_ip_ttl (get_8 ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()

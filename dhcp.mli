@@ -53,6 +53,9 @@ type dhcp_option =
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
   | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
+  | Max_datagram of int                     (* code 22 *)
+  | Default_ip_ttl of int                   (* code 23 *)
+  | Pmtu_aging_timo of Int32.t              (* code 24 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
