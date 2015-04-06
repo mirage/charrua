@@ -187,7 +187,7 @@ let options_of_buf buf buf_len =
           loop (succ offset) (short :: shorts)
       in
       if len <= 0 then invalid_arg bad_len else
-        loop 0 []
+        List.rev (loop 0 [])
     in
     let get_bool () = match (get_8 ()) with
       | 1 -> true
@@ -207,7 +207,7 @@ let options_of_buf buf buf_len =
           loop ((succ offset) * 2) (short :: shorts)
       in
       if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
-        loop 0 []
+        List.rev (loop 0 [])
     in
     (* Fetch ipv4s from options *)
     let get_ip_list ?(min_len=4) () =
@@ -218,7 +218,7 @@ let options_of_buf buf buf_len =
           loop ((succ offset) * 4) (ip :: ips)
       in
       if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
-        loop 0 []
+        List.rev (loop 0 [])
     in
     (* Get a list of ip pairs *)
     let get_ip_pair_list () =
@@ -235,7 +235,7 @@ let options_of_buf buf buf_len =
       if ((len mod 8) <> 0) || len <= 0 then
         invalid_arg bad_len
       else
-        loop 0 []
+        List.rev (loop 0 [])
     in
     let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
@@ -331,7 +331,7 @@ let options_of_buf buf buf_len =
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
     (* Jump over cookie and start options *)
-    loop (Cstruct.shift buf (pkt_min_len + 4)) []
+    List.rev (loop (Cstruct.shift buf (pkt_min_len + 4)) [])
 
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
