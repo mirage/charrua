@@ -47,6 +47,11 @@ type dhcp_option =
   | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
   | Hostname of string                      (* code 12 *)
   | Bootfile_size of int                    (* code 13 *)
+  | Merit_dumpfile of string                (* code 14 *)
+  | Domain_name of string                   (* code 15 *)
+  | Swap_server of Ipaddr.V4.t              (* code 16 *)
+  | Root_path of string                     (* code 17 *)
+  | Extension_path of string                (* code 18 *)
   | Unknown
 
 type pkt = {
@@ -167,6 +172,16 @@ let options_of_buf buf buf_len =
       take (Hostname (get_string ()))
     | 13 ->                     (* Bootfile size *)
       take (Bootfile_size (get_16 ()))
+    | 14 ->                     (* Merit_dumpfile *)
+      take (Merit_dumpfile (get_string ()))
+    | 15 ->                     (* Domain name *)
+      take (Domain_name (get_string ()))
+    | 16 ->                     (* Swap server *)
+      take (Swap_server (get_ip ()))
+    | 17 ->                     (* Root path *)
+      take (Root_path (get_string ()))
+    | 18 ->                     (* Extension path *)
+      take (Extension_path (get_string ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()
