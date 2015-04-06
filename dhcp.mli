@@ -32,9 +32,17 @@ type chaddr =
   | Cliid of Bytes.t
 
 type dhcp_option =
-  | Subnet_mask of Ipaddr.V4.t  (* code 1 *)
-  | Time_offset of Int32.t      (* code 2 *)
-  | Router of Ipaddr.V4.t list  (* code 3 *)
+  | Subnet_mask of Ipaddr.V4.t             (* code 1 *)
+  | Time_offset of Int32.t                 (* code 2 *)
+  | Router of Ipaddr.V4.t list             (* code 3 *)
+  | Time_server of Ipaddr.V4.t list        (* code 4 *)
+  | Name_server of Ipaddr.V4.t list        (* code 5 *)
+  | Dns_server of Ipaddr.V4.t list         (* code 6 *)
+  | Log_server of Ipaddr.V4.t list         (* code 7 *)
+  | Cookie_server of Ipaddr.V4.t list      (* code 8 *)
+  | Lpr_server of Ipaddr.V4.t list         (* code 9 *)
+  | Impress_server of Ipaddr.V4.t list     (* code 10 *)
+  | Rsclocation_server of Ipaddr.V4.t list (* code 11 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
