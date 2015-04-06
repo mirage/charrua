@@ -214,6 +214,8 @@ let options_of_buf buf buf_len =
     let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
     in
+    let get_bytes () = Bytes.of_string (get_string ())
+    in
     match code with
     (* Start of section 3 of RFC 2132 *)
     | 1 ->   take (Subnet_mask (get_ip ()))
@@ -260,7 +262,7 @@ let options_of_buf buf buf_len =
     | 40 ->  take (Nis_domain (get_string ()))
     | 41 ->  take (Nis_servers (get_ip_list ()))
     | 42 ->  take (Ntp_servers (get_ip_list ()))
-    (* | 43 ->  take (Vendor_specific (get_bytes ())) *)
+    | 43 ->  take (Vendor_specific (get_bytes ()))
     | 44 ->  take (Netbios_name_servers (get_ip_list ()))
     | 45 ->  take (Netbios_datagram_distrib_servers (get_ip_list ()))
     | 46 ->  take (Netbios_node (get_8 ()))
