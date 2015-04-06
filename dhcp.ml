@@ -52,6 +52,7 @@ type dhcp_option =
   | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
+  | Ipforwarding of bool                    (* code 19 *)
   | Unknown
 
 type pkt = {
@@ -120,6 +121,13 @@ let options_of_buf buf buf_len =
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     let discard () = loop (Cstruct.shift body len) options in
     let take op = loop (Cstruct.shift body len) (op :: options) in
+    let get_bool () = if len <> 1 then failwith bad_len else
+        let v = Cstruct.get_uint8 body 0 in
+        match v with
+        | 1 -> true
+        | 0 -> false
+        | _ -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
+    in
     let get_16 () = if len <> 2 then failwith bad_len else
         Cstruct.BE.get_uint16 body 0 in
     let get_32 () = if len <> 4 then failwith bad_len else
@@ -182,6 +190,8 @@ let options_of_buf buf buf_len =
       take (Root_path (get_string ()))
     | 18 ->                     (* Extension path *)
       take (Extension_path (get_string ()))
+    | 19 ->                     (* Ipforwarding *)
+      take (Ipforwarding (get_bool ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()

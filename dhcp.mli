@@ -50,6 +50,7 @@ type dhcp_option =
   | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
+  | Ipforwarding of bool                    (* code 19 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
