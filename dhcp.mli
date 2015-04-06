@@ -51,6 +51,8 @@ type dhcp_option =
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
+  | Nlsr of bool                            (* code 20 *)
+  | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)

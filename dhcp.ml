@@ -53,6 +53,8 @@ type dhcp_option =
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
+  | Nlsr of bool                            (* code 20 *)
+  | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
   | Unknown
 
 type pkt = {
@@ -119,7 +121,9 @@ let options_of_buf buf buf_len =
     let len = Cstruct.get_uint8 buf 1 in
     let body = Cstruct.shift buf 2 in
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
+    (* discard discards the option from the resulting list *)
     let discard () = loop (Cstruct.shift body len) options in
+    (* take includes the option in the resulting list *)
     let take op = loop (Cstruct.shift body len) (op :: options) in
     let get_bool () = if len <> 1 then invalid_arg bad_len else
         let v = Cstruct.get_uint8 body 0 in
@@ -145,6 +149,23 @@ let options_of_buf buf buf_len =
           loop ((succ offset) * 4) (ip :: ips)
       in
       if ((len mod 4) <> 0) || len <= 0 then
+        invalid_arg bad_len
+      else
+        loop 0 []
+    in
+    (* Get a list of ip pairs *)
+    let get_ips_ips () =
+      let rec loop offset ips_ips =
+        if offset = len then
+          ips_ips
+        else
+          let word1 = Cstruct.BE.get_uint32 body offset in
+          let ip1 = Ipaddr.V4.of_int32 word1 in
+          let word2 = Cstruct.BE.get_uint32 body (offset + 4) in
+          let ip2 = Ipaddr.V4.of_int32 word2 in
+          loop ((succ offset) * 8) ((ip1, ip2) :: ips_ips)
+      in
+      if ((len mod 8) <> 0) || len <= 0 then
         invalid_arg bad_len
       else
         loop 0 []
@@ -192,6 +213,10 @@ let options_of_buf buf buf_len =
       take (Extension_path (get_string ()))
     | 19 ->                     (* Ipforwarding *)
       take (Ipforwarding (get_bool ()))
+    | 20 ->                     (* Non-Local Source Routing *)
+      take (Nlsr (get_bool ()))
+    | 21 ->                     (* Policy Filters *)
+      take (Policy_filters (get_ips_ips ()))
     | code ->
       Log.warn "Unknown option code %d" code;
       discard ()
