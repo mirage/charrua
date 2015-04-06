@@ -90,6 +90,13 @@ type dhcp_option =
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
+  | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
+  | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
+  | Nntp_servers of Ipaddr.V4.t list        (* code 71 *)
+  | Www_servers of Ipaddr.V4.t list         (* code 72 *)
+  | Finger_servers of Ipaddr.V4.t list      (* code 73 *)
+  | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
+  | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)

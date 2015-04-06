@@ -92,6 +92,13 @@ type dhcp_option =
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
+  | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
+  | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
+  | Nntp_servers of Ipaddr.V4.t list        (* code 71 *)
+  | Www_servers of Ipaddr.V4.t list         (* code 72 *)
+  | Finger_servers of Ipaddr.V4.t list      (* code 73 *)
+  | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
+  | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Unknown
 
 type pkt = {
@@ -273,6 +280,13 @@ let options_of_buf buf buf_len =
     | 64 ->  take (Nis_plus_domain (get_string ()))
     | 65 ->  take (Nis_plus_servers (get_ip_list ()))
     | 68 ->  take (Mobile_ip_home_agent (get_ip_list ~min_len:0 ()))
+    | 69 ->  take (Smtp_servers (get_ip_list ()))
+    | 70 ->  take (Pop3_servers (get_ip_list ()))
+    | 71 ->  take (Nntp_servers (get_ip_list ()))
+    | 72 ->  take (Www_servers (get_ip_list ()))
+    | 73 ->  take (Finger_servers (get_ip_list ()))
+    | 74 ->  take (Irc_servers (get_ip_list ()))
+    | 75 ->  take (Streettalk_servers (get_ip_list ()))
     | 255 -> options            (* End of option list *)
     (* Start of section 6 of RFC 2132 *)
     | code ->
