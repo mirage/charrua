@@ -91,6 +91,7 @@ type dhcp_option =
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
+  | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
   | Unknown
 
 type pkt = {
@@ -184,14 +185,14 @@ let options_of_buf buf buf_len =
         loop 0 []
     in
     (* Fetch ipv4s from options *)
-    let get_ip_list () =
+    let get_ip_list ?(min_len=4) () =
       let rec loop offset ips =
         if offset = len then ips else
           let word = Cstruct.BE.get_uint32 body offset in
           let ip = Ipaddr.V4.of_int32 word in
           loop ((succ offset) * 4) (ip :: ips)
       in
-      if ((len mod 4) <> 0) || len <= 0 then invalid_arg bad_len else
+      if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
         loop 0 []
     in
     (* Get a list of ip pairs *)
@@ -271,6 +272,7 @@ let options_of_buf buf buf_len =
     | 49 ->  take (Xwindow_display_managers (get_ip_list ()))
     | 64 ->  take (Nis_plus_domain (get_string ()))
     | 65 ->  take (Nis_plus_servers (get_ip_list ()))
+    | 68 ->  take (Mobile_ip_home_agent (get_ip_list ~min_len:0 ()))
     | 255 -> options            (* End of option list *)
     (* Start of section 6 of RFC 2132 *)
     | code ->

@@ -89,6 +89,7 @@ type dhcp_option =
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
+  | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
   | Unknown
 
 (* Describes a packed DHCP packet *)
