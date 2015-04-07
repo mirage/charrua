@@ -168,16 +168,16 @@ let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
 let options_of_buf buf buf_len =
-  let rec loop buf options =
+  let rec collect_options buf options =
     let code = Cstruct.get_uint8 buf 0 in
     let () = Log.debug "saw option code %u" code in
     let len = Cstruct.get_uint8 buf 1 in
     let body = Cstruct.shift buf 2 in
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     (* discard discards the option from the resulting list *)
-    let discard () = loop (Cstruct.shift body len) options in
+    let discard () = collect_options (Cstruct.shift body len) options in
     (* take includes the option in the resulting list *)
-    let take op = loop (Cstruct.shift body len) (op :: options) in
+    let take op = collect_options (Cstruct.shift body len) (op :: options) in
     let get_8 () = if len <> 1 then invalid_arg bad_len else
         Cstruct.get_uint8 body 0 in
     let get_8_list () =
@@ -333,10 +333,10 @@ let options_of_buf buf buf_len =
     match search options with
     | None -> options           (* Nothing to do, identity function *)
     | Some v -> match v with
-      | 1 -> loop (get_cpkt_file buf) options    (* It's in file *)
-      | 2 -> loop (get_cpkt_sname buf) options   (* It's in sname *)
-      | 3 -> loop (get_cpkt_file buf) options |> (* OMG both *)
-             loop (get_cpkt_sname buf)
+      | 1 -> collect_options (get_cpkt_file buf) options    (* It's in file *)
+      | 2 -> collect_options (get_cpkt_sname buf) options   (* It's in sname *)
+      | 3 -> collect_options (get_cpkt_file buf) options |> (* OMG both *)
+             collect_options (get_cpkt_sname buf)
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
@@ -349,7 +349,7 @@ let options_of_buf buf buf_len =
       invalid_arg "Invalid cookie";
     let options_start = Cstruct.shift buf (pkt_min_len + 4) in
     (* Jump over cookie and start options, also extend them if necessary *)
-    let options = loop options_start [] |>
+    let options = collect_options options_start [] |>
                   extend_options buf in
     List.rev options
 
