@@ -83,7 +83,7 @@ type dhcp_option =
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of Int32.t                (* code 51 *)
-  | Option_overload of int                  (* code 52 TODO especial needs handling *)
+  | Option_overload of int                  (* code 52 *)
   | Dhcp_message_type of int                (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of int list          (* code 55 *)

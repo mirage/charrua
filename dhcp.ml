@@ -85,7 +85,7 @@ type dhcp_option =
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of Int32.t                (* code 51 *)
-  | Option_overload of int                  (* code 52 TODO especial needs handling *)
+  | Option_overload of int                  (* code 52 *)
   | Dhcp_message_type of int                (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of int list          (* code 55 *)
@@ -322,6 +322,23 @@ let options_of_buf buf buf_len =
       Log.warn "Unknown option code %d" code;
       discard ()
   in
+  (* Extends options if it finds an Option_overload *)
+  let extend_options buf options =
+    let rec search = function
+      | [] -> None
+      | opt :: tl -> match opt with
+        | Option_overload v -> Some v
+        | _ -> search tl
+    in
+    match search options with
+    | None -> options           (* Nothing to do, identity function *)
+    | Some v -> match v with
+      | 1 -> loop (get_cpkt_file buf) options    (* It's in file *)
+      | 2 -> loop (get_cpkt_sname buf) options   (* It's in sname *)
+      | 3 -> loop (get_cpkt_file buf) options |> (* OMG both *)
+             loop (get_cpkt_sname buf)
+      | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
+  in
   (* Handle a pkt with no options *)
   if buf_len = pkt_min_len then
     []
@@ -330,8 +347,12 @@ let options_of_buf buf buf_len =
     let cookie = Cstruct.BE.get_uint32 buf pkt_min_len in
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
-    (* Jump over cookie and start options *)
-    List.rev (loop (Cstruct.shift buf (pkt_min_len + 4)) [])
+    let options_start = Cstruct.shift buf (pkt_min_len + 4) in
+    (* Jump over cookie and start options, also extend them if necessary *)
+    let options = loop options_start [] |>
+                  extend_options buf in
+    List.rev options
+
 
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
