@@ -57,10 +57,14 @@ let rec dhcp_recv sock =
   Log.debug "dhcp sock read %d bytes" n;
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
-  if n >= Dhcp.pkt_min_len then
-    input_pkt (Dhcp.pkt_of_buf buffer n)
-  else
-    Log.warn "pkt too small (%d), dropping" n;
+  (* Input the packet *)
+  let () = match (Dhcp.pkt_of_buf buffer n) with
+    | exception Invalid_argument e ->
+      Log.warn "Dropped packet: %s" e
+    | pkt ->
+      Log.debug "valid packet from %d" n;
+      input_pkt pkt
+  in
   dhcp_recv sock
 
 let hdhcpd verbosity =
