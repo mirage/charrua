@@ -57,7 +57,7 @@ type dhcp_option =
   | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
-  | Pmtu_ageing_timo of Int32.t              (* code 24 *)
+  | Pmtu_ageing_timo of Int32.t             (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
   | Interface_mtu of int                    (* code 26 *)
   | All_subnets_local of bool               (* code 27 *)
