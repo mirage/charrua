@@ -76,7 +76,7 @@ type dhcp_option =
   | Nis_domain of string                    (* code 40 *)
   | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
   | Ntp_servers of Ipaddr.V4.t list         (* code 42 *)
-  | Vendor_specific of bytes                (* code 43 *)
+  | Vendor_specific of string               (* code 43 *)
   | Netbios_name_servers of Ipaddr.V4.t list(* code 44 *)
   | Netbios_datagram_distrib_servers of Ipaddr.V4.t list (* code 45 *)
   | Netbios_node of int                     (* code 46 *)
@@ -93,7 +93,7 @@ type dhcp_option =
   | Max_message of int                      (* code 57 *)
   | Renewal_t1 of Int32.t                   (* code 58 *)
   | Rebinding_t2 of Int32.t                 (* code 59 *)
-  | Vendor_class_id of bytes                (* code 60 *)
+  | Vendor_class_id of string               (* code 60 *)
   | Client_id of string                     (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
@@ -240,8 +240,6 @@ let options_of_buf buf buf_len =
     let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
     in
-    let get_bytes = get_string
-    in
     match code with
     | 1 ->   take (Subnet_mask (get_ip ()))
     | 2 ->   take (Time_offset (get_32 ()))
@@ -285,7 +283,7 @@ let options_of_buf buf buf_len =
     | 40 ->  take (Nis_domain (get_string ()))
     | 41 ->  take (Nis_servers (get_ip_list ()))
     | 42 ->  take (Ntp_servers (get_ip_list ()))
-    | 43 ->  take (Vendor_specific (get_bytes ()))
+    | 43 ->  take (Vendor_specific (get_string ()))
     | 44 ->  take (Netbios_name_servers (get_ip_list ()))
     | 45 ->  take (Netbios_datagram_distrib_servers (get_ip_list ()))
     | 46 ->  take (Netbios_node (get_8 ()))
@@ -302,8 +300,8 @@ let options_of_buf buf buf_len =
     | 57 ->  take (Max_message (get_16 ()))
     | 58 ->  take (Renewal_t1 (get_32 ()))
     | 59 ->  take (Rebinding_t2 (get_32 ()))
-    | 60 ->  take (Vendor_class_id (get_bytes ()))
-    | 61 ->  take (Client_id (get_bytes ()))
+    | 60 ->  take (Vendor_class_id (get_string ()))
+    | 61 ->  take (Client_id (get_string ()))
     | 64 ->  take (Nis_plus_domain (get_string ()))
     | 65 ->  take (Nis_plus_servers (get_ip_list ()))
     | 66 ->  take (Tftp_server_name (get_string ()))
