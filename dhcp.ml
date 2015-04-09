@@ -54,7 +54,7 @@ type dhcp_option =
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
-  | Policy_filters of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 21 *)
+  | Policy_filters of Ipaddr.V4.Prefix.t list (* code 21 *)
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_ageing_timo of Int32.t             (* code 24 *)
@@ -66,7 +66,7 @@ type dhcp_option =
   | Mask_supplier of bool                   (* code 30 *)
   | Perform_router_disc of bool             (* code 31 *)
   | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
-  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
+  | Static_routes of Ipaddr.V4.Prefix.t list(* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of Int32.t               (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
@@ -221,16 +221,18 @@ let options_of_buf buf buf_len =
         List.rev (loop 0 [])
     in
     (* Get a list of ip pairs *)
-    let get_ip_pair_list () =
-      let rec loop offset ips_ips =
+    let get_prefix_list () =
+      let rec loop offset prefixes =
         if offset = len then
-          ips_ips
+          prefixes
         else
-          let word1 = Cstruct.BE.get_uint32 body offset in
-          let ip1 = Ipaddr.V4.of_int32 word1 in
-          let word2 = Cstruct.BE.get_uint32 body (offset + 4) in
-          let ip2 = Ipaddr.V4.of_int32 word2 in
-          loop ((succ offset) * 8) ((ip1, ip2) :: ips_ips)
+          let addr = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 body offset) in
+          let mask = Ipaddr.V4.of_int32
+              (Cstruct.BE.get_uint32 body (offset + 4)) in
+          try
+            let prefix = Ipaddr.V4.Prefix.of_netmask addr mask in
+            loop ((succ offset) * 8) (prefix :: prefixes)
+          with Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b)
       in
       if ((len mod 8) <> 0) || len <= 0 then
         invalid_arg bad_len
@@ -261,7 +263,7 @@ let options_of_buf buf buf_len =
     | 18 ->  take (Extension_path (get_string ()))
     | 19 ->  take (Ipforwarding (get_bool ()))
     | 20 ->  take (Nlsr (get_bool ()))
-    | 21 ->  take (Policy_filters (get_ip_pair_list ()))
+    | 21 ->  take (Policy_filters (get_prefix_list ()))
     | 22 ->  take (Max_datagram (get_16 ()))
     | 23 ->  take (Default_ip_ttl (get_8 ()))
     | 24 ->  take (Pmtu_ageing_timo (get_32 ()))
@@ -273,7 +275,7 @@ let options_of_buf buf buf_len =
     | 30 ->  take (Mask_supplier (get_bool ()))
     | 31 ->  take (Perform_router_disc (get_bool ()))
     | 32 ->  take (Router_sol_addr (get_ip ()))
-    | 33 ->  take (Static_routes (get_ip_pair_list ()))
+    | 33 ->  take (Static_routes (get_prefix_list ()))
     | 34 ->  take (Trailer_encapsulation (get_bool ()))
     | 35 ->  take (Arp_cache_timo (get_32 ()))
     | 36 ->  take (Ethernet_encapsulation (get_bool ()))
