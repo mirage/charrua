@@ -96,7 +96,7 @@ let rec dhcp_recv sock =
     | exception Invalid_argument e ->
       Log.warn "Dropped packet: %s" e
     | pkt ->
-      Log.debug "valid packet from %d" n;
+      Log.debug "valid packet from %d bytes" n;
       input_pkt pkt
   in
   dhcp_recv sock
