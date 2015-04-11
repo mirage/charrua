@@ -25,7 +25,7 @@ type htype =
 
 type flags =
   | Broadcast
-  | Ignore
+  | Unicast
 
 type chaddr =
   | Hwaddr of Macaddr.t

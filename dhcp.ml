@@ -27,7 +27,7 @@ type htype =
 
 type flags =
   | Broadcast
-  | Ignore
+  | Unicast
 
 type chaddr =
   | Hwaddr of Macaddr.t
@@ -146,12 +146,11 @@ let hops_of_buf = get_cpkt_hops
 let xid_of_buf = get_cpkt_xid
 let secs_of_buf = get_cpkt_secs
 
-(* XXX this is implying policy instead of mechanism *)
 let flags_of_buf buf =
   if ((get_cpkt_flags buf) land 0x8000) <> 0 then
     Broadcast
   else
-    Ignore
+    Unicast
 
 let ciaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_ciaddr buf)
 let yiaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_yiaddr buf)
@@ -390,7 +389,7 @@ let str_of_xid xid = Printf.sprintf "0x%lx" xid
 let str_of_secs = string_of_int
 let str_of_flags = function
   | Broadcast -> "Broadcast"
-  | Ignore -> "Ignore"
+  | Unicast -> "Unicast"
 let str_of_ciaddr = Ipaddr.V4.to_string
 let str_of_yiaddr = Ipaddr.V4.to_string
 let str_of_siaddr = Ipaddr.V4.to_string
