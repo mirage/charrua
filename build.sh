@@ -1,4 +1,6 @@
 #!/bin/sh
 
-ocamlbuild -use-ocamlfind hdhcpd.native $@
-ocamlbuild -use-ocamlfind pcap.native $@
+for t in hdhcpd.native pcap.native config_parser.native; do
+	echo Building $t...
+	ocamlbuild -use-ocamlfind $t $@
+done
