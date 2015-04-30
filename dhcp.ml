@@ -229,7 +229,7 @@ let options_of_buf buf buf_len =
           let mask = Ipaddr.V4.of_int32
               (Cstruct.BE.get_uint32 body (offset + 4)) in
           try
-            let prefix = Ipaddr.V4.Prefix.of_netmask addr mask in
+            let prefix = Ipaddr.V4.Prefix.of_netmask mask addr in
             loop ((succ offset) * 8) (prefix :: prefixes)
           with Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b)
       in
