@@ -18,7 +18,7 @@
   type statement =
     | Range of Ipaddr.V4.t * Ipaddr.V4.t
     | Dhcp_option of Dhcp.dhcp_option
-    | Hw_eth of string
+    | Hw_eth of Macaddr.t
     | Fixed_addr of Ipaddr.V4.t
 
   let choke s =
@@ -26,7 +26,7 @@
 %}
 
 %token <Ipaddr.V4.t> IP
-%token <string> MACADDR
+%token <Macaddr.t> MACADDR
 %token <string> STRING
 %token DOMAINNAME
 %token DOMAINNAMESERVERS

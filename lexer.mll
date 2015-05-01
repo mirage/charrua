@@ -47,7 +47,7 @@ rule lex = parse
   | white { lex lexbuf }
   | newline  { new_line lexbuf; lex lexbuf }
   | ip as ip { IP(Ipaddr.V4.of_string_exn ip) }
-  | macaddr as mac { MACADDR(mac) }
+  | macaddr as mac { MACADDR(Macaddr.of_string_exn mac) }
   | '"' { lex_string (Buffer.create 17) lexbuf }
   | ';' { SCOLON }
   | '{' { LBRACKET }
