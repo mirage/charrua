@@ -82,30 +82,22 @@ subnet:
   let statements = ss in
   let network = Ipaddr.V4.Prefix.of_netmask mask ip in
   (* First find the range statement, XXX ignoring if multiple *)
-  let rangest = try
+  let range = try
       List.find (function
           | Range _ -> true
           | _ -> false)
-        statements
+        statements |> (function
+          | Range (v1, v2) -> (v1, v2)
+          | _ -> choke "Internal error 1, report this with the config file")
     with Not_found ->
       choke ("Missing `range` statement for subnet " ^ (Ipaddr.V4.to_string ip))
   in
-  (* Now extract the tuple within the Range *)
-  let range = match rangest with
-    | Range (v1, v2) -> (v1, v2)
-    | _ -> choke "Internal error 1, report this with the config file"
-  in
-  (* Extract the dhcp options statements *)
-  let optionsst = List.filter (function
+  let options = List.filter (function
       | Dhcp_option _ -> true
       | _ -> false)
-      statements
-  in
-  (* Now extract the options from the statements *)
-  let options = List.map (function
+      statements |> List.map (function
       | Dhcp_option o -> o
       | _ -> choke "Internal error 2, report this with the config file")
-      optionsst
   in
   Config.{ network; range; options }
 }
