@@ -55,7 +55,7 @@ main:
   (* Now extract the options from the statements *)
   let options = List.map (function
       | Dhcp_option o -> o
-      | _ -> choke "Only dhcp options in the global section")
+      | _ -> choke "Only dhcp options are allowed in the global section")
       statements
   in
   Config.{ subnets; options }
@@ -81,6 +81,13 @@ subnet:
 | SUBNET; ip = IP; NETMASK; mask = IP; LBRACKET; ss = statements; hosts; RBRACKET {
   let statements = ss in
   let network = Ipaddr.V4.Prefix.of_netmask mask ip in
+  (* Catch statements that don't make sense in a subnet *)
+  let () = List.iter (function
+      | Hw_eth _ | Fixed_addr _ ->
+        choke "`hardware` and `fixed-address` belong to `host` context, not subnet"
+      | _ -> ())
+      statements
+  in
   (* First find the range statement, XXX ignoring if multiple *)
   let range = try
       List.find (function
