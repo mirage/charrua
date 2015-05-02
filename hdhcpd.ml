@@ -101,8 +101,9 @@ let rec dhcp_recv sock =
   in
   dhcp_recv sock
 
-let hdhcpd verbosity =
+let hdhcpd configfile verbosity =
   let () = config_log verbosity in
+  let () = Log.debug "Using configuration file: %s" configfile in
   let () = Log.notice "Haesbaert DHCPD started" in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
@@ -115,6 +116,8 @@ open Cmdliner
 let cmd =
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
                          ~doc:"Log verbosity, debug|info|notice") in
-  Term.(pure hdhcpd $ verbosity),
+  let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
+                          ~doc:"Configuration file path") in
+  Term.(pure hdhcpd $ configfile $ verbosity),
   Term.info "hdhcpd" ~version:"0.1" ~doc:"Haesbaert DHCP"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
