@@ -108,7 +108,7 @@ let hdhcpd verbosity =
   let () = go_safe () in
   let recv_thread = dhcp_recv sock in
   Lwt_main.run (recv_thread >>= fun () ->
-    Log.notice_lwt "Haesbaert DHCP finished")
+    Log.notice_lwt "Haesbaert DHCPD finished")
 
 (* Parse command line and start the ball *)
 open Cmdliner
