@@ -33,3 +33,5 @@ type t = {
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
 }
+
+let config = ref { subnets = []; options = []}

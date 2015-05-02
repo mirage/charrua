@@ -22,6 +22,7 @@ type host = {
   fixed_addr : Ipaddr.V4.t option;
   hw_addr : Macaddr.t option;
 }
+
 type subnet = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
@@ -32,3 +33,5 @@ type t = {
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
 }
+
+val config : t ref

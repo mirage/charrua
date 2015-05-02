@@ -13,11 +13,8 @@ let choke lexbuf s =
   in
   raise (Syntax_error str)
 
-let parse ?path () =
-  let ic = match path with
-    | None -> stdin
-    | Some path -> open_in path
-  in
+let parse ?(path="-") () =
+  let ic = if path = "-" then stdin else open_in path in
   let lex = Lexing.from_channel ic in
   finalize (fun () ->
       try
