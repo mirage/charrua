@@ -43,13 +43,13 @@
 %token ROUTERS
 %token SCOLON
 %token SUBNET
-%token WORD
+%token <string> WORD
 
 %start <Config.t> main
 %%
 
 main:
-| s = statement; ss = statements; sub = subnet; subs = subnets; EOF {
+  | s = statement; ss = statements; sub = subnet; subs = subnets; EOF {
   let statements = s :: ss in
   let subnets = sub :: subs in
   (* Now extract the options from the statements *)
@@ -78,8 +78,8 @@ subnets:
   | sub = subnet; subs = subnets { sub :: (List.rev subs) }
 
 subnet:
-| SUBNET; ip = IP; NETMASK; mask = IP; LBRACKET; ss = statements; hosts; RBRACKET {
-  let statements = ss in
+  | SUBNET; ip = IP; NETMASK; mask = IP; LBRACKET;
+  statements = statements; hosts = hosts; RBRACKET {
   let network = Ipaddr.V4.Prefix.of_netmask mask ip in
   (* Catch statements that don't make sense in a subnet *)
   let () = List.iter (function
@@ -110,8 +110,36 @@ subnet:
 }
 
 hosts:
-  | (* empty *) { }
-  | host; hosts { }
+  | (* empty *) { [] }
+  | host = host; hosts = hosts { host :: hosts }
 
 host:
-  | HOST; WORD; LBRACKET; statements; RBRACKET { }
+  | HOST; hostname = WORD; LBRACKET; statements = statements; RBRACKET {
+  let () = List.iter (function
+      | Range _ -> choke "Range is invalid in host context"
+      | _ -> ())
+      statements
+  in
+  let options = List.filter (function
+      | Dhcp_option _ -> true
+      | _ -> false)
+      statements |> List.map (function
+      | Dhcp_option o -> o
+      | _ -> choke "Internal error 3, report this with the config file")
+  in
+  let fixed_addr = try
+      List.find (function | Fixed_addr _ -> true | _ -> false) statements
+      |> (function
+          | Fixed_addr x -> Some x
+          | _ -> choke "Internal error 4, report this with the config file")
+    with Not_found -> None
+  in
+  let hw_addr = try
+      List.find (function | Hw_eth _ -> true | _ -> false) statements
+      |> (function
+          | Hw_eth x -> Some x
+          | _ -> choke "Internal error 5, report this with the config file")
+    with Not_found -> None
+  in
+  Config.{ hostname; options; fixed_addr; hw_addr }
+}

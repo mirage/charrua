@@ -16,6 +16,12 @@
 
 exception Error of string
 
+type host = {
+  hostname : string;
+  options : Dhcp.dhcp_option list;
+  fixed_addr : Ipaddr.V4.t option;
+  hw_addr : Macaddr.t option;
+}
 type subnet = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;

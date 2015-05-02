@@ -64,7 +64,7 @@ rule lex = parse
   | "routers" { ROUTERS }
   | "subnet" { SUBNET }
   | comment { lex_comment lexbuf; lex lexbuf }
-  | word { WORD }
+  | word as word { WORD(word) }
   | _ { choke lexbuf "Invalid syntax" }
   | eof { EOF }
 
