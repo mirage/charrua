@@ -49,6 +49,7 @@ rule lex = parse
   | ip as ip { IP(Ipaddr.V4.of_string_exn ip) }
   | macaddr as mac { MACADDR(Macaddr.of_string_exn mac) }
   | '"' { lex_string (Buffer.create 17) lexbuf }
+  | ',' { COMMA }
   | ';' { SCOLON }
   | '{' { LBRACKET }
   | '}' { RBRACKET }

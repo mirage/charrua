@@ -28,6 +28,7 @@
 %token <Ipaddr.V4.t> IP
 %token <Macaddr.t> MACADDR
 %token <string> STRING
+%token COMMA
 %token DOMAINNAME
 %token DOMAINNAMESERVERS
 %token EOF
@@ -61,14 +62,18 @@ main:
   Config.{ subnets; options }
 }
 
+ips:
+  | ip = IP { [ip] }
+  | ip = IP; COMMA; ips = ips { ip :: ips }
+
 statements:
   | (* empty *) { [] }
   | s = statement; ss = statements { s :: (List.rev ss) }
 
 statement:
   | OPTION; DOMAINNAME; v = STRING; SCOLON { Dhcp_option (Dhcp.Domain_name v)}
-  | OPTION; DOMAINNAMESERVERS; v = IP; SCOLON { Dhcp_option (Dhcp.Dns_servers [v]) }
-  | OPTION; ROUTERS; v = IP; SCOLON { Dhcp_option (Dhcp.Routers [v]) }
+  | OPTION; DOMAINNAMESERVERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Dns_servers ips) }
+  | OPTION; ROUTERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Routers ips) }
   | RANGE; v1 = IP; v2 = IP; SCOLON { Range (v1, v2) }
   | HARDWARE; ETHERNET; mac = MACADDR; SCOLON { Hw_eth mac }
   | FIXEDADDRESS; v = IP; SCOLON { Fixed_addr v }
