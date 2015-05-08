@@ -111,7 +111,7 @@ subnet:
       | Dhcp_option o -> o
       | _ -> choke "Internal error 2, report this with the config file")
   in
-  Config.{ network; range; options }
+  Config.{ network; range; options; hosts }
 }
 
 hosts:

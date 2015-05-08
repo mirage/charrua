@@ -28,6 +28,7 @@ type subnet = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
+  hosts : host list;
 }
 
 type t = {
@@ -41,6 +42,7 @@ type subnet_ast = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
+  hosts : host list;
 }
 
 type ast = {
@@ -61,7 +63,8 @@ let config_of_ast ast ifaddrs =
       { ifaddr = ifaddr;
         network = subnet.network;
         range = subnet.range;
-        options = subnet.options })
-      ast.subnets in
-  let options = ast.options in
-  { ifaddrs; subnets; options }
+        options = subnet.options;
+        hosts = subnet.hosts })
+      ast.subnets
+  in
+  { ifaddrs; subnets; options = ast.options }

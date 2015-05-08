@@ -28,6 +28,7 @@ type subnet = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
+  hosts : host list;
 }
 
 type t = {
@@ -41,6 +42,7 @@ type subnet_ast = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
+  hosts : host list;
 }
 
 type ast = {
