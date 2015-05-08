@@ -60,11 +60,20 @@ let config_of_ast ast ifaddrs =
           raise (Error ("No interface address for network " ^
                         (Ipaddr.V4.Prefix.to_string subnet.network)))
       in
-      { ifaddr = ifaddr;
-        network = subnet.network;
-        range = subnet.range;
-        options = subnet.options;
-        hosts = subnet.hosts })
+      let () = List.iter (fun host ->
+          match host.fixed_addr with
+          | None -> ()
+          | Some addr -> if not (Ipaddr.V4.Prefix.mem addr subnet.network) then
+              raise (Error ("Fixed address " ^ (Ipaddr.V4.to_string addr) ^
+                            " does not belong to subnet " ^
+                            (Ipaddr.V4.Prefix.to_string subnet.network))))
+          subnet.hosts
+      in
+          { ifaddr = ifaddr;
+            network = subnet.network;
+            range = subnet.range;
+            options = subnet.options;
+            hosts = subnet.hosts })
       ast.subnets
   in
   { ifaddrs; subnets; options = ast.options }
