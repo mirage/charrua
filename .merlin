@@ -4,5 +4,6 @@ PKG cmdliner
 PKG lwt
 PKG cstruct
 PKG ipaddr
+PKG extunix
 EXT lwt
 EXT nonrec
