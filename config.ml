@@ -24,14 +24,44 @@ type host = {
 }
 
 type subnet = {
+  ifaddr : string * Ipaddr.V4.t;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
 }
 
 type t = {
+  ifaddrs : (string * Ipaddr.V4.t) list;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
 }
 
-let config = ref { subnets = []; options = []}
+(* The structures returned when parsing the config file *)
+type subnet_ast = {
+  network : Ipaddr.V4.Prefix.t;
+  range : Ipaddr.V4.t * Ipaddr.V4.t;
+  options : Dhcp.dhcp_option list;
+}
+
+type ast = {
+  subnets : subnet_ast list;
+  options : Dhcp.dhcp_option list;
+}
+
+let config = ref { ifaddrs = []; subnets = []; options = []}
+
+let config_of_ast ast ifaddrs =
+  let subnets = List.map (fun subnet ->
+      let ifaddr = try List.find (function _, addr ->
+          Ipaddr.V4.Prefix.mem addr subnet.network) ifaddrs
+        with Not_found ->
+          raise (Error ("No interface address for network " ^
+                        (Ipaddr.V4.Prefix.to_string subnet.network)))
+      in
+      { ifaddr = ifaddr;
+        network = subnet.network;
+        range = subnet.range;
+        options = subnet.options })
+      ast.subnets in
+  let options = ast.options in
+  { ifaddrs; subnets; options }

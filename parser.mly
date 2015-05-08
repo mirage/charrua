@@ -46,7 +46,7 @@
 %token SUBNET
 %token <string> WORD
 
-%start <Config.t> main
+%start <Config.ast> main
 %%
 
 main:

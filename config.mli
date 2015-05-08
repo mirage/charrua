@@ -24,14 +24,30 @@ type host = {
 }
 
 type subnet = {
+  ifaddr : string * Ipaddr.V4.t;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
 }
 
 type t = {
+  ifaddrs : (string * Ipaddr.V4.t) list;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
 }
+
+(* The structures returned when parsing the config file *)
+type subnet_ast = {
+  network : Ipaddr.V4.Prefix.t;
+  range : Ipaddr.V4.t * Ipaddr.V4.t;
+  options : Dhcp.dhcp_option list;
+}
+
+type ast = {
+  subnets : subnet_ast list;
+  options : Dhcp.dhcp_option list;
+}
+
+val config_of_ast : ast -> (string * Ipaddr.V4.t) list -> t
 
 val config : t ref
