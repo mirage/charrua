@@ -69,11 +69,11 @@ let config_of_ast ast ifaddrs =
                             (Ipaddr.V4.Prefix.to_string subnet.network))))
           subnet.hosts
       in
-          { ifaddr = ifaddr;
-            network = subnet.network;
-            range = subnet.range;
-            options = subnet.options;
-            hosts = subnet.hosts })
+      { ifaddr = ifaddr;
+        network = subnet.network;
+        range = subnet.range;
+        options = subnet.options;
+        hosts = subnet.hosts })
       ast.subnets
   in
   { ifaddrs; subnets; options = ast.options }
