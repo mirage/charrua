@@ -31,6 +31,16 @@ type chaddr =
   | Hwaddr of Macaddr.t
   | Cliid of Bytes.t
 
+type msgtype =
+  | DHCPDISCOVER (* value 1 *)
+  | DHCPOFFER    (* value 2 *)
+  | DHCPREQUEST  (* value 3 *)
+  | DHCPDECLINE  (* value 4 *)
+  | DHCPACK      (* value 5 *)
+  | DHCPNAK      (* value 6 *)
+  | DHCPRELEASE  (* value 7 *)
+  | DHCPINFORM   (* value 8 *)
+
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of Int32.t                  (* code 2 *)
@@ -84,7 +94,7 @@ type dhcp_option =
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of Int32.t                (* code 51 *)
   | Option_overload of int                  (* code 52 *)
-  | Dhcp_message_type of int                (* code 53 *)
+  | Message_type of msgtype                 (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of int list          (* code 55 *)
   | Message of string                       (* code 56 *)
@@ -107,6 +117,16 @@ type dhcp_option =
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
   | Unknown
+
+type msgtype =
+  | DHCPDISCOVER (* value 1 *)
+  | DHCPOFFER    (* value 2 *)
+  | DHCPREQUEST  (* value 3 *)
+  | DHCPDECLINE  (* value 4 *)
+  | DHCPACK      (* value 5 *)
+  | DHCPNAK      (* value 6 *)
+  | DHCPRELEASE  (* value 7 *)
+  | DHCPINFORM   (* value 8 *)
 
 (* Describes a packed DHCP packet *)
 type pkt = {

@@ -33,6 +33,27 @@ type chaddr =
   | Hwaddr of Macaddr.t
   | Cliid of Bytes.t
 
+type msgtype =
+  | DHCPDISCOVER (* value 1 *)
+  | DHCPOFFER    (* value 2 *)
+  | DHCPREQUEST  (* value 3 *)
+  | DHCPDECLINE  (* value 4 *)
+  | DHCPACK      (* value 5 *)
+  | DHCPNAK      (* value 6 *)
+  | DHCPRELEASE  (* value 7 *)
+  | DHCPINFORM   (* value 8 *)
+
+let msgtype_of_int = function
+  | 1 -> DHCPDISCOVER (* value 1 *)
+  | 2 -> DHCPOFFER    (* value 2 *)
+  | 3 -> DHCPREQUEST  (* value 3 *)
+  | 4 -> DHCPDECLINE  (* value 4 *)
+  | 5 -> DHCPACK      (* value 5 *)
+  | 6 -> DHCPNAK      (* value 6 *)
+  | 7 -> DHCPRELEASE  (* value 7 *)
+  | 8 -> DHCPINFORM   (* value 8 *)
+  | v -> invalid_arg ("No message type for int " ^ (string_of_int v))
+
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of Int32.t                  (* code 2 *)
@@ -86,7 +107,7 @@ type dhcp_option =
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of Int32.t                (* code 51 *)
   | Option_overload of int                  (* code 52 *)
-  | Dhcp_message_type of int                (* code 53 *)
+  | Message_type of msgtype                 (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of int list          (* code 55 *)
   | Message of string                       (* code 56 *)
@@ -294,7 +315,7 @@ let options_of_buf buf buf_len =
     | 50 ->  take (Request_ip (get_ip ()))
     | 51 ->  take (Ip_lease_time (get_32 ()))
     | 52 ->  take (Option_overload (get_8 ()))
-    | 53 ->  take (Dhcp_message_type (get_8 ()))
+    | 53 ->  take (Message_type (msgtype_of_int (get_8 ())))
     | 54 ->  take (Server_identifier (get_ip ()))
     | 55 ->  take (Parameter_requests (get_8_list ()))
     | 56 ->  take (Message (get_string ()))
@@ -452,7 +473,7 @@ let str_of_option = function
   | Request_ip _                       -> "request_ip"
   | Ip_lease_time _                    -> "ip_lease_time"
   | Option_overload _                  -> "option_overload"
-  | Dhcp_message_type _                -> "dhcp_message_type"
+  | Message_type _                     -> "dhcp_message_type"
   | Server_identifier _                -> "server_identifier"
   | Parameter_requests _               -> "parameter_requests"
   | Message _                          -> "message"
@@ -478,6 +499,9 @@ let str_of_option = function
 
 let str_of_options options =
   String.concat " " (List.map str_of_option options)
+
+let msgtype_of_options =
+  Util.find_map (function Message_type m -> Some m | _ -> None)
 
 let str_of_pkt pkt =
   Printf.sprintf "op: %s htype: %s hlen: %s hops: %s xid: %s secs: %s \
