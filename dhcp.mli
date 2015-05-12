@@ -118,16 +118,6 @@ type dhcp_option =
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
   | Unknown
 
-type msgtype =
-  | DHCPDISCOVER (* value 1 *)
-  | DHCPOFFER    (* value 2 *)
-  | DHCPREQUEST  (* value 3 *)
-  | DHCPDECLINE  (* value 4 *)
-  | DHCPACK      (* value 5 *)
-  | DHCPNAK      (* value 6 *)
-  | DHCPRELEASE  (* value 7 *)
-  | DHCPINFORM   (* value 8 *)
-
 (* Describes a packed DHCP packet *)
 type pkt = {
   op      : op;
@@ -151,3 +141,4 @@ val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
 val str_of_pkt : pkt -> string
+val msgtype_of_options : dhcp_option list -> msgtype option
