@@ -29,3 +29,7 @@ let finalize f g =
     x | exception e -> g ();
     raise e
 
+open Ctypes
+open Foreign
+let if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
+let if_indextoname = foreign "if_indextoname" (int @-> returning string)
