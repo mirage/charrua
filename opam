@@ -21,6 +21,7 @@ depends: [
   "lwt"     {>= "2.4.3"}
   "ipaddr"  {>= "2.5.0"}
   "ctypes"  {>= "0.4.0"}
+  "ctypes-foreign"
   "extunix"
   "menhir"
 ]
