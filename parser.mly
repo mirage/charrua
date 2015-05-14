@@ -121,26 +121,20 @@ host:
       | _ -> ())
       statements
   in
-  let options = List.filter (function
-      | Dhcp_option _ -> true
-      | _ -> false)
-      statements |> List.map (function
-      | Dhcp_option o -> o
-      | _ -> choke "Internal error 3, report this with the config file")
+  let options = Util.filter_map (function
+      | Dhcp_option o -> Some o
+      | _ -> None)
+      statements
   in
-  let fixed_addr = try
-      List.find (function | Fixed_addr _ -> true | _ -> false) statements
-      |> (function
-          | Fixed_addr x -> Some x
-          | _ -> choke "Internal error 4, report this with the config file")
-    with Not_found -> None
+  let fixed_addr = Util.find_map (function
+      | Fixed_addr fa -> Some fa
+      | _ -> None)
+      statements
   in
-  let hw_addr = try
-      List.find (function | Hw_eth _ -> true | _ -> false) statements
-      |> (function
-          | Hw_eth x -> Some x
-          | _ -> choke "Internal error 5, report this with the config file")
-    with Not_found -> None
+  let hw_addr = Util.find_map (function
+      | Hw_eth he -> Some he
+      | _ -> None)
+      statements
   in
   Config.{ hostname; options; fixed_addr; hw_addr }
 }
