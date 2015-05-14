@@ -15,7 +15,4 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-for t in hdhcpd.native pcap.native config_parser.native; do
-	echo Building $t...
-	ocamlbuild -use-ocamlfind $t $@
-done
+ocamlbuild -use-ocamlfind all.otarget $@
