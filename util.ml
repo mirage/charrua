@@ -28,9 +28,13 @@ let filter_map f l =
   List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
 
 let finalize f g =
-  match f () with x -> g ();
-    x | exception e -> g ();
-    raise e
+  try
+    let x = f () in
+    g ();
+    x
+  with exn ->
+    g ();
+    raise exn
 
 open Ctypes
 open Foreign
