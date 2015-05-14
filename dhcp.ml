@@ -15,23 +15,24 @@
  *)
 
 open Dhcp_cpkt
+open Sexplib.Conv
 
 type op =
   | Bootrequest
   | Bootreply
-  | Unknown
+  | Unknown with sexp
 
 type htype =
   | Ethernet_10mb
-  | Other
+  | Other with sexp
 
 type flags =
   | Broadcast
-  | Unicast
+  | Unicast with sexp
 
 type chaddr =
   | Hwaddr of Macaddr.t
-  | Cliid of Bytes.t
+  | Cliid of string with sexp
 
 type msgtype =
   | DHCPDISCOVER (* value 1 *)
@@ -42,6 +43,7 @@ type msgtype =
   | DHCPNAK      (* value 6 *)
   | DHCPRELEASE  (* value 7 *)
   | DHCPINFORM   (* value 8 *)
+  with sexp
 
 let msgtype_of_int = function
   | 1 -> DHCPDISCOVER (* value 1 *)
@@ -56,7 +58,7 @@ let msgtype_of_int = function
 
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
-  | Time_offset of Int32.t                  (* code 2 *)
+  | Time_offset of int32                    (* code 2 *)
   | Routers of Ipaddr.V4.t list             (* code 3 *)
   | Time_servers of Ipaddr.V4.t list        (* code 4 *)
   | Name_servers of Ipaddr.V4.t list        (* code 5 *)
@@ -78,7 +80,7 @@ type dhcp_option =
   | Policy_filters of Ipaddr.V4.Prefix.t list (* code 21 *)
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
-  | Pmtu_ageing_timo of Int32.t             (* code 24 *)
+  | Pmtu_ageing_timo of int32               (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
   | Interface_mtu of int                    (* code 26 *)
   | All_subnets_local of bool               (* code 27 *)
@@ -89,10 +91,10 @@ type dhcp_option =
   | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
   | Static_routes of Ipaddr.V4.Prefix.t list(* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
-  | Arp_cache_timo of Int32.t               (* code 35 *)
+  | Arp_cache_timo of int32                 (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
   | Tcp_default_ttl of int                  (* code 37 *)
-  | Tcp_keepalive_interval of Int32.t       (* code 38 *)
+  | Tcp_keepalive_interval of int32         (* code 38 *)
   | Tcp_keepalive_garbage of int            (* code 39 *)
   | Nis_domain of string                    (* code 40 *)
   | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
@@ -105,15 +107,15 @@ type dhcp_option =
   | Xwindow_font_servers of Ipaddr.V4.t list(* code 48 *)
   | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
-  | Ip_lease_time of Int32.t                (* code 51 *)
+  | Ip_lease_time of int32                  (* code 51 *)
   | Option_overload of int                  (* code 52 *)
   | Message_type of msgtype                 (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of int list          (* code 55 *)
   | Message of string                       (* code 56 *)
   | Max_message of int                      (* code 57 *)
-  | Renewal_t1 of Int32.t                   (* code 58 *)
-  | Rebinding_t2 of Int32.t                 (* code 59 *)
+  | Renewal_t1 of int32                     (* code 58 *)
+  | Rebinding_t2 of int32                   (* code 59 *)
   | Vendor_class_id of string               (* code 60 *)
   | Client_id of string                     (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
@@ -130,6 +132,7 @@ type dhcp_option =
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
   | Unknown
+  with sexp
 
 type pkt = {
   op      : op;
@@ -147,7 +150,7 @@ type pkt = {
   sname   : string;
   file    : string;
   options : dhcp_option list;
-}
+} with sexp
 
 let pkt_min_len = 236
 
@@ -180,7 +183,7 @@ let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_giaddr buf)
 let chaddr_of_buf buf htype hlen =
   let s = copy_cpkt_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
-    Hwaddr (Macaddr.of_bytes_exn (Bytes.sub_string s 0 6))
+    Hwaddr (Macaddr.of_string_exn (String.sub s 0 6))
   else
     Cliid (copy_cpkt_chaddr buf)
 

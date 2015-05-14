@@ -17,19 +17,19 @@
 type op =
   | Bootrequest
   | Bootreply
-  | Unknown
+  | Unknown with sexp
 
 type htype =
   | Ethernet_10mb
-  | Other
+  | Other with sexp
 
 type flags =
   | Broadcast
-  | Unicast
+  | Unicast with sexp
 
 type chaddr =
   | Hwaddr of Macaddr.t
-  | Cliid of Bytes.t
+  | Cliid of string with sexp
 
 type msgtype =
   | DHCPDISCOVER (* value 1 *)
@@ -40,6 +40,7 @@ type msgtype =
   | DHCPNAK      (* value 6 *)
   | DHCPRELEASE  (* value 7 *)
   | DHCPINFORM   (* value 8 *)
+  with sexp
 
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
@@ -117,6 +118,7 @@ type dhcp_option =
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
   | Unknown
+  with sexp
 
 (* Describes a packed DHCP packet *)
 type pkt = {
@@ -135,7 +137,7 @@ type pkt = {
   sname   : string;
   file    : string;
   options : dhcp_option list;
-}
+} with sexp
 
 val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
