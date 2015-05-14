@@ -1,6 +1,7 @@
 language: c
 install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh
 script: bash -ex .travis-opam.sh
+sudo: true
 env:
   - PACKAGE="hdhcp" OCAML_VERSION=4.01
   - PACKAGE="hdhcp" OCAML_VERSION=latest
