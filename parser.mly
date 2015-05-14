@@ -94,22 +94,18 @@ subnet:
       statements
   in
   (* First find the range statement, XXX ignoring if multiple *)
-  let range = try
-      List.find (function
-          | Range _ -> true
-          | _ -> false)
-        statements |> (function
-          | Range (v1, v2) -> (v1, v2)
-          | _ -> choke "Internal error 1, report this with the config file")
-    with Not_found ->
-      choke ("Missing `range` statement for subnet " ^ (Ipaddr.V4.to_string ip))
+  let range = Util.find_map (function
+      | Range (v1, v2) -> Some (v1, v2)
+      | _ -> None)
+      statements |> (function
+      | Some (v1, v2) -> (v1, v2)
+      | None -> choke ("Missing `range` statement for subnet " ^
+                       (Ipaddr.V4.to_string ip)))
   in
-  let options = List.filter (function
-      | Dhcp_option _ -> true
-      | _ -> false)
-      statements |> List.map (function
-      | Dhcp_option o -> o
-      | _ -> choke "Internal error 2, report this with the config file")
+  let options = Util.filter_map (function
+      | Dhcp_option o -> Some o
+      | _ -> None)
+      statements
   in
   Config.{ network; range; options; hosts }
 }
