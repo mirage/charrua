@@ -21,7 +21,7 @@ type host = {
   options : Dhcp.dhcp_option list;
   fixed_addr : Ipaddr.V4.t option;
   hw_addr : Macaddr.t option;
-}
+} with sexp
 
 type subnet = {
   ifaddr : string * Ipaddr.V4.t;
@@ -29,13 +29,13 @@ type subnet = {
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
   hosts : host list;
-}
+} with sexp
 
 type t = {
   ifaddrs : (string * Ipaddr.V4.t) list;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
-}
+} with sexp
 
 (* The structures returned when parsing the config file *)
 type subnet_ast = {
@@ -43,12 +43,12 @@ type subnet_ast = {
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
   hosts : host list;
-}
+} with sexp
 
 type ast = {
   subnets : subnet_ast list;
   options : Dhcp.dhcp_option list;
-}
+} with sexp
 
 val config_of_ast : ast -> (string * Ipaddr.V4.t) list -> t
 
