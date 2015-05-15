@@ -59,7 +59,7 @@ main:
       | _ -> choke "Only dhcp options are allowed in the global section")
       statements
   in
-  Config.{ subnets; options }
+  { Config.subnets; options }
 }
 
 ips:
@@ -107,7 +107,7 @@ subnet:
       | _ -> None)
       statements
   in
-  Config.{ network; range; options; hosts }
+  { Config.network; range; options; hosts }
 }
 
 hosts:
@@ -136,5 +136,5 @@ host:
       | _ -> None)
       statements
   in
-  Config.{ hostname; options; fixed_addr; hw_addr }
+  { Config.hostname; options; fixed_addr; hw_addr }
 }
