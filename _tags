@@ -1,7 +1,7 @@
 true: debug, bin_annot, syntax(camlp4o), syntax(pa_cstruct), strict_sequence
 true: use_menhir
 true: package(ctypes.foreign)
-true: package(lwt.unix), package(lwt.syntax)
+true: package(lwt.unix), package(lwt.syntax), ppopt(-lwt-debug)
 true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
 true: package(cstruct.unix), package(extunix)
 true: package(cmdliner), package(ipaddr)
