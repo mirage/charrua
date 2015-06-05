@@ -42,6 +42,8 @@ let simple_getifaddrs () =
 
 (* C stubs from stubs.c *)
 (* XXX Move all to ctypes some day *)
+external if_indextoname: int -> string = "caml_if_indextoname"
+external if_nametoindex: string -> int = "caml_if_nametoindex"
 external reqif: Unix.file_descr -> unit = "caml_reqif"
 external recvif: Unix.file_descr -> Lwt_bytes.t -> int -> int -> (int * int) =
   "caml_recvif"
@@ -60,12 +62,3 @@ let lwt_recvif fd buf pos len =
 
 let lwt_cstruct_recvif fd t =
   lwt_recvif fd t.Cstruct.buffer t.Cstruct.off t.Cstruct.len
-
-open Ctypes
-open Foreign
-let if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
-
-let if_nametoindex iface =
-  match (if_nametoindex iface) with
-  | 0 -> raise Not_found
-  | idx -> idx

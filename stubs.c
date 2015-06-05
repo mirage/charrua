@@ -19,6 +19,7 @@
 #include <sys/queue.h>
 #include <sys/uio.h>
 
+#include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
@@ -39,6 +40,31 @@
 #include "caml/alloc.h"
 #include "caml/custom.h"
 #include "caml/bigarray.h"
+
+CAMLprim value
+caml_if_indextoname(value vidx)
+{
+	CAMLparam1(vidx);
+	char buf[IFNAMSIZ];
+
+	if (if_indextoname(Int_val(vidx), buf) == NULL)
+		caml_raise_not_found();
+
+	/* Never trust the system */
+	buf[IFNAMSIZ - 1] = 0;
+
+	CAMLreturn(caml_copy_string(buf));
+}
+
+CAMLprim value
+caml_if_nametoindex(value vname)
+{
+	CAMLparam1(vname);
+	int idx = if_nametoindex(String_val(vname));
+	if (idx == 0)
+		caml_raise_not_found();
+	CAMLreturn(Val_int(idx));
+}
 
 #ifndef IP_RECVIF
 #error NO IP_RECVIF, IMPLEMENT THE REST!!

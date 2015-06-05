@@ -5,6 +5,5 @@ PKG lwt
 PKG cstruct
 PKG ipaddr
 PKG tuntap
-PKG ctypes.foreign
 EXT lwt
 EXT nonrec
