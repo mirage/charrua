@@ -60,6 +60,7 @@ let open_dhcp_sock () =
   let sock = socket PF_INET SOCK_DGRAM 0 in
   let () = setsockopt sock SO_REUSEADDR true in
   let () = setsockopt sock SO_BROADCAST true in
+  let () = Util.reqif (unix_file_descr sock) in
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
@@ -87,8 +88,8 @@ let input_pkt pkt =
 
 let rec dhcp_recv sock =
   let buffer = Dhcp.make_buf () in
-  lwt n = Lwt_cstruct.read sock buffer in
-  Log.debug "dhcp sock read %d bytes" n;
+  lwt (n, idx) = Util.lwt_cstruct_recvif sock buffer in
+  Log.debug "dhcp sock read %d bytes on interface %d" n idx;
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
   (* Input the packet *)

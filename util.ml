@@ -36,12 +36,32 @@ let finalize f g =
     g ();
     raise exn
 
+(* C stubs from stubs.c *)
+(* XXX Move all to ctypes some day *)
+external reqif: Unix.file_descr -> unit = "caml_reqif"
+external recvif: Unix.file_descr -> Lwt_bytes.t -> int -> int -> (int * int) =
+  "caml_recvif"
+
+let lwt_recvif fd buf pos len =
+  let open Lwt.Infix in
+  let open Lwt_unix in
+  let open Lwt_bytes in
+    if pos < 0 || len < 0 || pos > length buf - len then
+    invalid_arg "bad pos/len"
+  else
+    blocking fd >>= function
+    | true -> failwith "socket must be nonblocking"
+    | false ->
+      wrap_syscall Read fd (fun () -> recvif (unix_file_descr fd) buf pos len)
+
+let lwt_cstruct_recvif fd t =
+  lwt_recvif fd t.Cstruct.buffer t.Cstruct.off t.Cstruct.len
+
 open Ctypes
 open Foreign
-let c_if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
-let c_if_indextoname = foreign "if_indextoname" (int @-> returning string)
+let if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
 
 let if_nametoindex iface =
-  match (c_if_nametoindex iface) with
+  match (if_nametoindex iface) with
   | 0 -> raise Not_found
   | idx -> idx

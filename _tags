@@ -6,3 +6,5 @@ true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
 true: package(cstruct.unix), package(extunix)
 true: package(cmdliner), package(ipaddr)
 true: package(sexplib), package(sexplib.syntax)
+<*.byte>: linkdep(stubs.o), custom
+<*.native>: linkdep(stubs.o)
