@@ -107,7 +107,7 @@ let hdhcpd configfile verbosity =
   let () = Log.debug "Using configuration file: %s" configfile in
   let () = Log.notice "Haesbaert DHCPD started" in
   let () = Config.config := Config_parser.parse
-        ~path:configfile (ExtUnixSpecific.getifaddrs ()) in
+        ~path:configfile (Util.simple_getifaddrs ()) in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
   let recv_thread = dhcp_recv sock in

@@ -36,6 +36,10 @@ let finalize f g =
     g ();
     raise exn
 
+let simple_getifaddrs () =
+  List.map (function | ifname, (ifaddr, _) -> (ifname, ifaddr))
+    (Tuntap.getifaddrs_v4 ())
+
 (* C stubs from stubs.c *)
 (* XXX Move all to ctypes some day *)
 external reqif: Unix.file_descr -> unit = "caml_reqif"

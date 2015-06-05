@@ -4,7 +4,7 @@ PKG cmdliner
 PKG lwt
 PKG cstruct
 PKG ipaddr
-PKG extunix
+PKG tuntap
 PKG ctypes.foreign
 EXT lwt
 EXT nonrec

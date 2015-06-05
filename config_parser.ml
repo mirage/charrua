@@ -10,10 +10,6 @@ let choke lexbuf s =
 
 let parse ?(path="-") ifaddrs =
   let ic = if path = "-" then stdin else open_in path in
-  let ifaddrs = List.map (function
-      | ifname, ifaddr -> (ifname, Ipaddr.V4.of_string_exn ifaddr))
-      ifaddrs
-  in
   let lex = Lexing.from_channel ic in
   Util.finalize (fun () ->
       try
