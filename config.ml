@@ -25,8 +25,14 @@ type host = {
   hw_addr : Macaddr.t option;
 } with sexp
 
+type interface = {
+  name : string;
+  id : int;
+  addr : Ipaddr.V4.t;
+} with sexp
+
 type subnet = {
-  ifaddr : string * Ipaddr.V4.t;
+  interface : interface;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
@@ -34,7 +40,7 @@ type subnet = {
 } with sexp
 
 type t = {
-  ifaddrs : (string * Ipaddr.V4.t) list;
+  interfaces : interface list;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
 } with sexp
@@ -52,12 +58,22 @@ type ast = {
   options : Dhcp.dhcp_option list;
 } with sexp
 
-let config = ref { ifaddrs = []; subnets = []; options = []}
+let config = ref { interfaces = []; subnets = []; options = []}
 
-let config_of_ast ast ifaddrs =
+let get_interfaces () =
+  List.map (function
+      | name, (addr, _) ->
+        let id = Util.if_nametoindex name in
+        Log.debug "Got interface name:%s id:%d addr:%s"
+          name id (Ipaddr.V4.to_string addr);
+        { name; id; addr})
+    (Tuntap.getifaddrs_v4 ())
+
+let config_of_ast ast =
+  let interfaces = get_interfaces () in
   let subnets = List.map (fun subnet ->
-      let ifaddr = try List.find (function _, addr ->
-          Ipaddr.V4.Prefix.mem addr subnet.network) ifaddrs
+      let interface = try List.find (function ifnet ->
+          Ipaddr.V4.Prefix.mem ifnet.addr subnet.network) interfaces
         with Not_found ->
           raise (Error ("No interface address for network " ^
                         (Ipaddr.V4.Prefix.to_string subnet.network)))
@@ -71,11 +87,11 @@ let config_of_ast ast ifaddrs =
                             (Ipaddr.V4.Prefix.to_string subnet.network))))
           subnet.hosts
       in
-      { ifaddr = ifaddr;
+      { interface = interface;
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
         hosts = subnet.hosts })
       ast.subnets
   in
-  { ifaddrs; subnets; options = ast.options }
+  { interfaces; subnets; options = ast.options }
