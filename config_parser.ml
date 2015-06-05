@@ -23,5 +23,3 @@ let parse ?(path="-") ifaddrs =
       | Lexer.Error e -> raise (Syntax_error e)
       | Config.Error e -> choke lex e)
     (fun () -> if ic <> stdin then close_in ic)
-
-let _ = parse (ExtUnixSpecific.getifaddrs ())
