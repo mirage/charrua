@@ -38,5 +38,10 @@ let finalize f g =
 
 open Ctypes
 open Foreign
-let if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
-let if_indextoname = foreign "if_indextoname" (int @-> returning string)
+let c_if_nametoindex = foreign "if_nametoindex" (string @-> returning int)
+let c_if_indextoname = foreign "if_indextoname" (int @-> returning string)
+
+let if_nametoindex iface =
+  match (c_if_nametoindex iface) with
+  | 0 -> raise Not_found
+  | idx -> idx
