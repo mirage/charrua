@@ -27,7 +27,9 @@
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
 
+#ifdef IP_RECVIF
 #include <net/if_dl.h>
+#endif
 
 #include <errno.h>
 #include <stdlib.h>
@@ -66,8 +68,14 @@ caml_if_nametoindex(value vname)
 	CAMLreturn(Val_int(idx));
 }
 
-#ifndef IP_RECVIF
-#error NO IP_RECVIF, IMPLEMENT THE REST!!
+#if !defined(IP_RECVIF) && !defined(IP_PKTINFO)
+#error NO IP_RECVIF or PKTINFO, cant go on :=(.
+#endif
+
+#if defined(IP_RECVIF)
+#define IP_REQOPT IP_RECVIF
+#elif defined(IP_PKTINFO)
+#define IP_REQOPT IP_PKTINFO
 #endif
 
 CAMLprim value
@@ -76,10 +84,8 @@ caml_reqif(value vfd)
 	CAMLparam1(vfd);
 	int yes = 1;
 
-#ifdef IP_RECVIF
-	if (setsockopt(Int_val(vfd), IPPROTO_IP, IP_RECVIF, &yes, sizeof(yes)))
+	if (setsockopt(Int_val(vfd), IPPROTO_IP, IP_REQOPT, &yes, sizeof(yes)))
 		uerror("reqif: setsockopt", Nothing);
-#endif
 
 	CAMLreturn (Val_unit);
 }
@@ -96,8 +102,10 @@ caml_recvif(value vfd, value vbuf, value vofs, value vlen)
 #ifdef IP_RECVIF
 		    + CMSG_SPACE(sizeof(struct sockaddr_dl)) /* IP_RECVIF */
 #endif
-#ifdef IP_RECVDSTADDR
+#if defined(IP_RECVDSTADDR)
 		    + CMSG_SPACE(sizeof(struct in_addr))     /* IP_RECVDSTADDR */
+#elif defined(IP_PKTINFO)
+		    + CMSG_SPACE(sizeof(struct in_pktinfo))
 #endif
 		];
 	} cmsgbuf;
@@ -108,8 +116,10 @@ caml_recvif(value vfd, value vbuf, value vofs, value vlen)
 	size_t			 len;
 	char			 iobuf[UNIX_BUFFER_SIZE];
 	struct sockaddr_storage	 ss;
-#ifdef IP_RECVIF
-	struct sockaddr_dl	*dst = NULL;
+#if defined(IP_RECVIF)
+	struct sockaddr_dl	*dst;
+#elif defined(IP_PKTINFO)
+	struct in_pktinfo	*pktinfo;
 #endif
 	int			 ifidx = -1;
 
@@ -143,11 +153,18 @@ caml_recvif(value vfd, value vbuf, value vofs, value vlen)
 
 	for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
 	     cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-#ifdef IP_RECVIF
+#if defined(IP_RECVIF)
 		if (cmsg->cmsg_level == IPPROTO_IP &&
 		    cmsg->cmsg_type == IP_RECVIF) {
 			dst = (struct sockaddr_dl *)CMSG_DATA(cmsg);
 			ifidx = dst->sdl_index;
+			continue;
+		}
+#elif defined(IP_PKTINFO)
+		if (cmsg->cmsg_level == IPPROTO_IP &&
+		    cmsg->cmsg_type == IP_PKTINFO) {
+			pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+			ifidx = pktinfo->ipi_ifindex;
 			continue;
 		}
 #endif
