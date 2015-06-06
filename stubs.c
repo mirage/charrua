@@ -149,7 +149,8 @@ caml_recvif(value vfd, value vbuf, value vofs, value vlen)
 		CAMLreturn (Val_unit);
 	}
 
-	memmove(&Byte(vbuf, Long_val(vofs)), iobuf, n);
+	memmove((char*)Caml_ba_array_val(vbuf)->data + Long_val(vofs),
+	    iobuf, n);
 
 	for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
 	     cmsg = CMSG_NXTHDR(&msg, cmsg)) {
