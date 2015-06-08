@@ -206,7 +206,7 @@ let options_of_buf buf buf_len =
     let get_8_list () =
       let rec loop offset shorts =
         if offset = len then shorts else
-          let short = Cstruct.get_uint8 body 0 in
+          let short = Cstruct.get_uint8 body offset in
           loop (succ offset) (short :: shorts)
       in
       if len <= 0 then invalid_arg bad_len else
@@ -226,7 +226,7 @@ let options_of_buf buf buf_len =
     let get_16_list () =
       let rec loop offset shorts =
         if offset = len then shorts else
-          let short = Cstruct.BE.get_uint16 body 0 in
+          let short = Cstruct.BE.get_uint16 body offset in
           loop ((succ offset) * 2) (short :: shorts)
       in
       if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
