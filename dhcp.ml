@@ -372,10 +372,9 @@ let options_of_buf buf buf_len =
       invalid_arg "Invalid cookie";
     let options_start = Cstruct.shift buf (pkt_min_len + 4) in
     (* Jump over cookie and start options, also extend them if necessary *)
-    let options = collect_options options_start [] |>
-                  extend_options buf in
-    List.rev options
-
+    collect_options options_start [] |>
+    extend_options buf |>
+    List.rev
 
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
