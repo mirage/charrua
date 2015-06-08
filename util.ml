@@ -36,10 +36,6 @@ let finalize f g =
     g ();
     raise exn
 
-let simple_getifaddrs () =
-  List.map (function | ifname, (ifaddr, _) -> (ifname, ifaddr))
-    (Tuntap.getifaddrs_v4 ())
-
 (* C stubs from stubs.c *)
 (* XXX Move all to ctypes some day *)
 external if_indextoname: int -> string = "caml_if_indextoname"
