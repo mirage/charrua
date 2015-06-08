@@ -183,7 +183,7 @@ let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_giaddr buf)
 let chaddr_of_buf buf htype hlen =
   let s = copy_cpkt_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
-    Hwaddr (Macaddr.of_string_exn (String.sub s 0 6))
+    Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
   else
     Cliid (copy_cpkt_chaddr buf)
 
