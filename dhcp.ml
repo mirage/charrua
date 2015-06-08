@@ -400,119 +400,25 @@ let pkt_of_buf buf len =
     siaddr; giaddr; chaddr; sname; file; options }
 
 (* str_of_* functions *)
-let str_of_op = function
-  | Bootrequest -> "Bootrequest"
-  | Bootreply -> "Bootreply"
-  | Unknown -> "Unknown"
-let str_of_htype = function
-  | Ethernet_10mb -> "Ethernet_10mb"
-  | Other -> "Other"
+let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
+let str_of_op = to_hum sexp_of_op
+let str_of_htype = to_hum sexp_of_htype
 let str_of_hlen = string_of_int
 let str_of_hops = string_of_int
 let str_of_xid xid = Printf.sprintf "0x%lx" xid
 let str_of_secs = string_of_int
-let str_of_flags = function
-  | Broadcast -> "Broadcast"
-  | Unicast -> "Unicast"
+let str_of_flags = to_hum sexp_of_flags
+let str_of_ciaddr = Ipaddr.V4.to_string
 let str_of_ciaddr = Ipaddr.V4.to_string
 let str_of_yiaddr = Ipaddr.V4.to_string
 let str_of_siaddr = Ipaddr.V4.to_string
 let str_of_giaddr = Ipaddr.V4.to_string
-let str_of_chaddr = function
-  | Hwaddr hwaddr -> Macaddr.to_string hwaddr
-  | Cliid id -> "some id"       (* XXX finish me *)
+let str_of_chaddr = to_hum sexp_of_chaddr
 let str_of_sname sname = sname
 let str_of_file file = file
-let str_of_option = function
-  | Subnet_mask _                      -> "subnet_mask"
-  | Time_offset _                      -> "time_offset"
-  | Routers _                          -> "routers"
-  | Time_servers _                     -> "time_servers"
-  | Name_servers _                     -> "name_servers"
-  | Dns_servers _                      -> "dns_servers"
-  | Log_servers _                      -> "log_servers"
-  | Cookie_servers _                   -> "cookie_servers"
-  | Lpr_servers _                      -> "lpr_servers"
-  | Impress_servers _                  -> "impress_servers"
-  | Rsclocation_servers _              -> "resource_relocation_servers"
-  | Hostname _                         -> "hostname"
-  | Bootfile_size _                    -> "bootfile_size"
-  | Merit_dumpfile _                   -> "merit_dump_file"
-  | Domain_name _                      -> "domain_name"
-  | Swap_server _                      -> "swap_server"
-  | Root_path _                        -> "root_path"
-  | Extension_path _                   -> "extension_path"
-  | Ipforwarding _                     -> "ip_forwarding"
-  | Nlsr _                             -> "nlsr"
-  | Policy_filters _                   -> "policy_filters"
-  | Max_datagram _                     -> "max_datagram"
-  | Default_ip_ttl _                   -> "default_ip_ttl"
-  | Pmtu_ageing_timo _                 -> "pmtu_ageing_timeout"
-  | Pmtu_plateau_table _               -> "pmtu_plateau_table"
-  | Interface_mtu _                    -> "interface_mtu"
-  | All_subnets_local _                -> "all_subnets_local"
-  | Broadcast_addr _                   -> "broadcast_addr"
-  | Perform_mask_discovery _           -> "perform_mask_discovery"
-  | Mask_supplier _                    -> "mask_supplier"
-  | Perform_router_disc _              -> "perform_router_disc"
-  | Router_sol_addr _                  -> "router_solicitation_addr"
-  | Static_routes _                    -> "static_routes"
-  | Trailer_encapsulation _            -> "trailer_encapsulation"
-  | Arp_cache_timo _                   -> "arp_cache_timeout"
-  | Ethernet_encapsulation _           -> "ethernet_encapsulation"
-  | Tcp_default_ttl _                  -> "tcp_default_ttl"
-  | Tcp_keepalive_interval _           -> "tcp_keepalive_interval"
-  | Tcp_keepalive_garbage _            -> "tcp_keepalive_garbage"
-  | Nis_domain _                       -> "nis_domain"
-  | Nis_servers _                      -> "nis_servers"
-  | Ntp_servers _                      -> "ntp_servers"
-  | Vendor_specific _                  -> "vendor_specific"
-  | Netbios_name_servers _             -> "netbios_name_servers"
-  | Netbios_datagram_distrib_servers _ -> "netbios_datagram_distrib_servers"
-  | Netbios_node _                     -> "netbios_node"
-  | Netbios_scope _                    -> "netbios_scope"
-  | Xwindow_font_servers _             -> "xwindow_font_servers"
-  | Xwindow_display_managers _         -> "xwindow_display_managers"
-  | Request_ip _                       -> "request_ip"
-  | Ip_lease_time _                    -> "ip_lease_time"
-  | Option_overload _                  -> "option_overload"
-  | Message_type _                     -> "dhcp_message_type"
-  | Server_identifier _                -> "server_identifier"
-  | Parameter_requests _               -> "parameter_requests"
-  | Message _                          -> "message"
-  | Max_message _                      -> "max_message"
-  | Renewal_t1 _                       -> "renewal_t1"
-  | Rebinding_t2 _                     -> "rebinding_t2"
-  | Vendor_class_id _                  -> "vendor_class_id"
-  | Client_id _                        -> "client_id"
-  | Nis_plus_domain _                  -> "nis_plus_domain"
-  | Nis_plus_servers _                 -> "nis_plus_servers"
-  | Tftp_server_name _                 -> "tftp_server_name"
-  | Bootfile_name _                    -> "bootfile_name"
-  | Mobile_ip_home_agent _             -> "mobile_ip_home_agent"
-  | Smtp_servers _                     -> "smtp_servers"
-  | Pop3_servers _                     -> "pop3_servers"
-  | Nntp_servers _                     -> "nntp_servers"
-  | Www_servers _                      -> "www_servers"
-  | Finger_servers _                   -> "finger_servers"
-  | Irc_servers _                      -> "irc_servers"
-  | Streettalk_servers _               -> "streettalk_servers"
-  | Streettalk_da _                    -> "streettalk_da"
-  | Unknown                            -> "unknown"
-
-let str_of_options options =
-  String.concat " " (List.map str_of_option options)
+let str_of_option = to_hum sexp_of_dhcp_option
+let str_of_options = sexp_of_list sexp_of_dhcp_option
+let str_of_pkt = to_hum sexp_of_pkt
 
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
-
-let str_of_pkt pkt =
-  Printf.sprintf "op: %s htype: %s hlen: %s hops: %s xid: %s secs: %s \
-                  flags: %s ciaddr: %s yiaddr: %s siaddr: %s giaddr: %s \
-                  chaddr: %s sname: %s file: %s options: %s"
-    (str_of_op pkt.op) (str_of_htype pkt.htype) (str_of_hlen pkt.hlen)
-    (str_of_hops pkt.hops) (str_of_xid pkt.xid) (str_of_secs pkt.secs)
-    (str_of_flags pkt.flags) (str_of_ciaddr pkt.ciaddr)
-    (str_of_yiaddr pkt.yiaddr) (str_of_siaddr pkt.siaddr)
-    (str_of_giaddr pkt.giaddr) (str_of_chaddr pkt.chaddr)
-    (str_of_sname pkt.sname) (str_of_file pkt.file) (str_of_options pkt.options)
