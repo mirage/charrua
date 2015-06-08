@@ -204,10 +204,10 @@ let options_of_buf buf buf_len =
     let get_8 () = if len <> 1 then invalid_arg bad_len else
         Cstruct.get_uint8 body 0 in
     let get_8_list () =
-      let rec loop offset shorts =
-        if offset = len then shorts else
-          let short = Cstruct.get_uint8 body offset in
-          loop (succ offset) (short :: shorts)
+      let rec loop offset octets =
+        if offset = len then octets else
+          let octet = Cstruct.get_uint8 body offset in
+          loop (succ offset) (octet :: octets)
       in
       if len <= 0 then invalid_arg bad_len else
         List.rev (loop 0 [])
