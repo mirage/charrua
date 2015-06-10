@@ -64,6 +64,18 @@ let open_dhcp_sock () =
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
+let ip_of_range range =
+  let (low_ip, high_ip) = range in
+  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  if (Int32.compare low_32 high_32) >= 0 then
+    invalid_arg "invalid range, must be (low * high)";
+  Int32.sub high_32 low_32 |>
+  Random.int32 |>
+  Int32.add low_32 |>
+  Ipaddr.V4.of_int32 |>
+  Ipaddr.V4.to_string
+
 let input_discover config subnet pkt =
   let open Dhcp in
   Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt)
