@@ -64,6 +64,10 @@ let open_dhcp_sock () =
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
+let input_discover config subnet pkt =
+  let open Dhcp in
+  Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt)
+
 let valid_pkt pkt =
   let open Dhcp in
   if pkt.op <> Bootrequest then
@@ -77,19 +81,24 @@ let valid_pkt pkt =
   else
     true
 
-let input_pkt pkt =
+let input_pkt config ifid pkt =
   let open Dhcp in
-  let drop = () in
-  if not (valid_pkt pkt) then begin
-    Log.warn "Invalid pkt, dropping";
-    drop;
-  end;
-  Printf.printf "%s\n%!" (str_of_pkt pkt)
+  if valid_pkt pkt then
+    (* Check if we have a subnet configured on the receiving interface *)
+    match Config.subnet_of_ifid config ifid with
+    | None -> Log.warn "No subnet for interface %s" (Util.if_indextoname ifid)
+    | Some subnet ->
+      match msgtype_of_options pkt.options with
+      | Some DHCPDISCOVER -> input_discover config subnet pkt
+      | None -> Log.warn "Got malformed packet: no dhcp msgtype"
+      | Some m -> Log.debug "Unhandled msgtype %s" (str_of_msgtype m)
+  else
+    Log.warn "Invalid packet %s" (str_of_pkt pkt)
 
 let rec dhcp_recv config sock =
   let buffer = Dhcp.make_buf () in
-  lwt (n, idx) = Util.lwt_cstruct_recvif sock buffer in
-  Log.debug "dhcp sock read %d bytes on interface %d" n idx;
+  lwt (n, ifid) = Util.lwt_cstruct_recvif sock buffer in
+  Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
   (* Input the packet *)
@@ -98,7 +107,7 @@ let rec dhcp_recv config sock =
       Log.warn "Dropped packet: %s" e
     | pkt ->
       Log.debug "valid packet from %d bytes" n;
-      input_pkt pkt
+      input_pkt config ifid pkt
   in
   dhcp_recv config sock
 

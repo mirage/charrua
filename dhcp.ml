@@ -653,6 +653,7 @@ let str_of_giaddr = Ipaddr.V4.to_string
 let str_of_chaddr = to_hum sexp_of_chaddr
 let str_of_sname sname = sname
 let str_of_file file = file
+let str_of_msgtype = to_hum sexp_of_msgtype
 let str_of_option = to_hum sexp_of_dhcp_option
 let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 let str_of_pkt = to_hum sexp_of_pkt

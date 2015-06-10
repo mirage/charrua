@@ -93,3 +93,7 @@ let config_of_ast ast =
       ast.subnets
   in
   { interfaces; subnets; options = ast.options }
+
+let subnet_of_ifid (config : t) ifid = try
+    Some (List.find (fun subnet -> subnet.interface.id = ifid) config.subnets)
+  with Not_found -> None
