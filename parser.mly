@@ -74,7 +74,11 @@ statement:
   | OPTION; DOMAINNAME; v = STRING; SCOLON { Dhcp_option (Dhcp.Domain_name v)}
   | OPTION; DOMAINNAMESERVERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Dns_servers ips) }
   | OPTION; ROUTERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Routers ips) }
-  | RANGE; v1 = IP; v2 = IP; SCOLON { Range (v1, v2) }
+  | RANGE; v1 = IP; v2 = IP; SCOLON {
+  if Int32.compare (Ipaddr.V4.to_int32 v1) (Ipaddr.V4.to_int32 v2) >= 0 then
+    choke "Invalid `range` statement, must be `low high`";
+  Range (v1, v2)
+  }
   | HARDWARE; ETHERNET; mac = MACADDR; SCOLON { Hw_eth mac }
   | FIXEDADDRESS; v = IP; SCOLON { Fixed_addr v }
 
