@@ -631,6 +631,11 @@ let pkt_of_buf buf len =
   { op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
     siaddr; giaddr; chaddr; sname; file; options }
 
+let msgtype_of_options =
+  Util.find_map (function Message_type m -> Some m | _ -> None)
+let parameter_requests_of_options =
+  Util.find_map (function Parameter_requests pr -> Some pr | _ -> None)
+
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let str_of_op = to_hum sexp_of_op
@@ -651,6 +656,3 @@ let str_of_file file = file
 let str_of_option = to_hum sexp_of_dhcp_option
 let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 let str_of_pkt = to_hum sexp_of_pkt
-
-let msgtype_of_options =
-  Util.find_map (function Message_type m -> Some m | _ -> None)

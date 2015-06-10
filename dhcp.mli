@@ -225,3 +225,4 @@ val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
 val str_of_pkt : pkt -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
+val parameter_requests_of_options : dhcp_option list -> parameter_request list option
