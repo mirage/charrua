@@ -86,7 +86,7 @@ let input_pkt pkt =
   end;
   Printf.printf "%s\n%!" (str_of_pkt pkt)
 
-let rec dhcp_recv sock =
+let rec dhcp_recv config sock =
   let buffer = Dhcp.make_buf () in
   lwt (n, idx) = Util.lwt_cstruct_recvif sock buffer in
   Log.debug "dhcp sock read %d bytes on interface %d" n idx;
@@ -100,16 +100,16 @@ let rec dhcp_recv sock =
       Log.debug "valid packet from %d bytes" n;
       input_pkt pkt
   in
-  dhcp_recv sock
+  dhcp_recv config sock
 
 let hdhcpd configfile verbosity =
   let () = config_log verbosity in
   let () = Log.debug "Using configuration file: %s" configfile in
   let () = Log.notice "Haesbaert DHCPD started" in
-  let () = Config.config := Config_parser.parse ~path:configfile () in
+  let config = Config_parser.parse ~path:configfile () in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv sock in
+  let recv_thread = dhcp_recv config sock in
   Lwt_main.run (recv_thread >>= fun () ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 

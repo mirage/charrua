@@ -58,8 +58,6 @@ type ast = {
   options : Dhcp.dhcp_option list;
 } with sexp
 
-let config = ref { interfaces = []; subnets = []; options = []}
-
 let get_interfaces () =
   List.map (function
       | name, (addr, _) ->
