@@ -642,6 +642,13 @@ let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
 let parameter_requests_of_options =
   Util.find_map (function Parameter_requests pr -> Some pr | _ -> None)
+let client_id_of_options =
+  Util.find_map (function Client_id id -> Some id | _ -> None)
+
+let client_id_of_pkt pkt =
+  match client_id_of_options pkt.options with
+  | Some id -> id
+  | None -> pkt.chaddr
 
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
