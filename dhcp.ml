@@ -650,6 +650,55 @@ let client_id_of_pkt pkt =
   | Some id -> id
   | None -> pkt.chaddr
 
+(* Lease (dhcp bindings) operations *)
+type lease = {
+  tm_start   : Unix.tm;
+  tm_end     : Unix.tm;
+  addr       : Ipaddr.V4.t;
+  client_id  : chaddr;
+  hostname   : string;
+}
+
+type leases = (chaddr, lease) Hashtbl.t
+
+let create_leases () = Hashtbl.create 50
+let lookup_lease client_id leases = Hashtbl.find leases client_id
+let replace_lease client_id lease leases = Hashtbl.replace leases client_id lease
+
+(* XXX might go away, maybe addr should be figured out *)
+let make_lease addr client_id hostname secs =
+  let now_base = Unix.gettimeofday () in
+  let tm_start = Unix.localtime now_base in
+  let tm_end = Unix.localtime (now_base +. (float_of_int secs)) in
+  { tm_start; tm_end; addr; client_id; hostname }
+
+let current_lease_of_client_id id leases =
+  try Some (Hashtbl.find leases id)
+  with Not_found -> None
+
+(* XXX experimental *)
+let ip_of_range range =
+  let (low_ip, high_ip) = range in
+  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  if (Int32.compare low_32 high_32) >= 0 then
+    invalid_arg "invalid range, must be (low * high)";
+  Int32.sub high_32 low_32 |>
+  Random.int32 |>
+  Int32.add low_32 |>
+  Ipaddr.V4.of_int32
+
+let lease_of_pkt range pkt leases =
+  let id = client_id_of_pkt pkt in
+  try Hashtbl.find leases id
+  with Not_found -> make_lease (ip_of_range range) id "TODO" 10
+
+(* Beware! This is an online state *)
+let is_lease_expired lease =
+  let (s, _) = Unix.mktime lease.tm_start in
+  let (e, _) = Unix.mktime lease.tm_end in
+  e >= s
+
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let str_of_op = to_hum sexp_of_op

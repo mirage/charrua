@@ -64,21 +64,12 @@ let open_dhcp_sock () =
   let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
   sock
 
-let ip_of_range range =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-  let high_32 = Ipaddr.V4.to_int32 high_ip in
-  if (Int32.compare low_32 high_32) >= 0 then
-    invalid_arg "invalid range, must be (low * high)";
-  Int32.sub high_32 low_32 |>
-  Random.int32 |>
-  Int32.add low_32 |>
-  Ipaddr.V4.of_int32 |>
-  Ipaddr.V4.to_string
-
-let input_discover config subnet pkt =
+let input_discover config (subnet:Config.subnet) pkt leases =
   let open Dhcp in
-  Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt)
+  Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt);
+  let lease = lease_of_pkt subnet.Config.range pkt leases in
+  Log.debug "Got lease: %s" (str_of_lease lease);
+  replace_lease (client_id_of_pkt pkt) lease leases
 
 let valid_pkt pkt =
   let open Dhcp in
@@ -93,7 +84,7 @@ let valid_pkt pkt =
   else
     true
 
-let input_pkt config ifid pkt =
+let input_pkt config ifid pkt leases =
   let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
@@ -101,13 +92,13 @@ let input_pkt config ifid pkt =
     | None -> Log.warn "No subnet for interface %s" (Util.if_indextoname ifid)
     | Some subnet ->
       match msgtype_of_options pkt.options with
-      | Some DHCPDISCOVER -> input_discover config subnet pkt
+      | Some DHCPDISCOVER -> input_discover config subnet pkt leases
       | None -> Log.warn "Got malformed packet: no dhcp msgtype"
       | Some m -> Log.debug "Unhandled msgtype %s" (str_of_msgtype m)
   else
     Log.warn "Invalid packet %s" (str_of_pkt pkt)
 
-let rec dhcp_recv config sock =
+let rec dhcp_recv config sock leases =
   let buffer = Dhcp.make_buf () in
   lwt (n, ifid) = Util.lwt_cstruct_recvif sock buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
@@ -119,9 +110,10 @@ let rec dhcp_recv config sock =
       Log.warn "Dropped packet: %s" e
     | pkt ->
       Log.debug "valid packet from %d bytes" n;
-      input_pkt config ifid pkt
+      try input_pkt config ifid pkt leases
+      with Invalid_argument e -> Log.warn "Input pkt %s" e
   in
-  dhcp_recv config sock
+  dhcp_recv config sock leases
 
 let hdhcpd configfile verbosity =
   let () = config_log verbosity in
@@ -130,7 +122,7 @@ let hdhcpd configfile verbosity =
   let config = Config_parser.parse ~path:configfile () in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv config sock in
+  let recv_thread = dhcp_recv config sock (Dhcp.create_leases ()) in
   Lwt_main.run (recv_thread >>= fun () ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 

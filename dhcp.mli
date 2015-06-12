@@ -223,7 +223,24 @@ type pkt = {
 val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
+val client_id_of_pkt : pkt -> chaddr
 val str_of_pkt : pkt -> string
 val str_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
+
+type lease = {
+  tm_start   : Unix.tm;
+  tm_end     : Unix.tm;
+  addr       : Ipaddr.V4.t;
+  client_id  : chaddr;
+  hostname   : string;
+}
+
+(* opaque *)
+type leases
+
+val create_leases : unit -> leases
+val lease_of_pkt : Ipaddr.V4.t * Ipaddr.V4.t -> pkt -> leases -> lease
+val lookup_lease : chaddr -> leases -> lease
+val replace_lease : chaddr -> lease -> leases -> unit
