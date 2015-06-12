@@ -349,7 +349,7 @@ type dhcp_option =
   | Renewal_t1 of int32                     (* code 58 *)
   | Rebinding_t2 of int32                   (* code 59 *)
   | Vendor_class_id of string               (* code 60 *)
-  | Client_id of string                     (* code 61 *)
+  | Client_id of chaddr                     (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
@@ -497,6 +497,13 @@ let options_of_buf buf buf_len =
     let get_string () =  if len < 1 then invalid_arg bad_len else
         Cstruct.copy body 0 len
     in
+    let get_client_id () =  if len < 2 then invalid_arg bad_len else
+        let s = Cstruct.copy body 1 (len - 1) in
+        if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
+            Hwaddr (Macaddr.of_bytes_exn s)
+        else
+          Cliid s
+    in
     match code with
     | 1 ->   take (Subnet_mask (get_ip ()))
     | 2 ->   take (Time_offset (get_32 ()))
@@ -559,7 +566,7 @@ let options_of_buf buf buf_len =
     | 58 ->  take (Renewal_t1 (get_32 ()))
     | 59 ->  take (Rebinding_t2 (get_32 ()))
     | 60 ->  take (Vendor_class_id (get_string ()))
-    | 61 ->  take (Client_id (get_string ()))
+    | 61 ->  take (Client_id (get_client_id ()))
     | 64 ->  take (Nis_plus_domain (get_string ()))
     | 65 ->  take (Nis_plus_servers (get_ip_list ()))
     | 66 ->  take (Tftp_server_name (get_string ()))

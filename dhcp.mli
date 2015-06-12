@@ -184,7 +184,7 @@ type dhcp_option =
   | Renewal_t1 of Int32.t                   (* code 58 *)
   | Rebinding_t2 of Int32.t                 (* code 59 *)
   | Vendor_class_id of string               (* code 60 *)
-  | Client_id of string                     (* code 61 *)
+  | Client_id of chaddr                     (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
