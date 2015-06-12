@@ -229,18 +229,32 @@ val str_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 
+type tm = Unix.tm = {
+  tm_sec  :int;	(*	Seconds 0..59	*)
+  tm_min  :int;	(*	Minutes 0..59	*)
+  tm_hour :int;	(*	Hours 0..23	*)
+  tm_mday :int;	(*	Day of month 1..31	*)
+  tm_mon  :int;	(*	Month of year 0..11	*)
+  tm_year :int;	(*	Year - 1900	*)
+  tm_wday :int;	(*	Day of week (Sunday is 0)	*)
+  tm_yday :int;	(*	Day of year 0..365	*)
+  tm_isdst :bool;	(*	Daylight time savings in effect	*)
+} with sexp
+
+(* Lease (dhcp bindings) operations *)
 type lease = {
-  tm_start   : Unix.tm;
-  tm_end     : Unix.tm;
+  tm_start   : tm;
+  tm_end     : tm;
   addr       : Ipaddr.V4.t;
   client_id  : chaddr;
   hostname   : string;
-}
+} with sexp
 
 (* opaque *)
-type leases
+type leases with sexp
 
 val create_leases : unit -> leases
 val lease_of_pkt : Ipaddr.V4.t * Ipaddr.V4.t -> pkt -> leases -> lease
 val lookup_lease : chaddr -> leases -> lease
 val replace_lease : chaddr -> lease -> leases -> unit
+val str_of_lease : lease -> string

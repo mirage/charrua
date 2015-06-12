@@ -16,6 +16,7 @@
 
 open Dhcp_cpkt
 open Sexplib.Conv
+open Sexplib.Std
 
 type op =
   | Bootrequest
@@ -650,16 +651,28 @@ let client_id_of_pkt pkt =
   | Some id -> id
   | None -> pkt.chaddr
 
+type tm = Unix.tm = {
+  tm_sec  :int;   (*      Seconds 0..59   *)
+  tm_min  :int;   (*      Minutes 0..59   *)
+  tm_hour :int;   (*      Hours 0..23     *)
+  tm_mday :int;   (*      Day of month 1..31      *)
+  tm_mon  :int;   (*      Month of year 0..11     *)
+  tm_year :int;   (*      Year - 1900     *)
+  tm_wday :int;   (*      Day of week (Sunday is 0)       *)
+  tm_yday :int;   (*      Day of year 0..365      *)
+  tm_isdst :bool; (*      Daylight time savings in effect *)
+} with sexp
+
 (* Lease (dhcp bindings) operations *)
 type lease = {
-  tm_start   : Unix.tm;
-  tm_end     : Unix.tm;
+  tm_start   : tm;
+  tm_end     : tm;
   addr       : Ipaddr.V4.t;
   client_id  : chaddr;
   hostname   : string;
-}
+} with sexp
 
-type leases = (chaddr, lease) Hashtbl.t
+type leases = (chaddr, lease) Hashtbl.t with sexp
 
 let create_leases () = Hashtbl.create 50
 let lookup_lease client_id leases = Hashtbl.find leases client_id
@@ -720,3 +733,4 @@ let str_of_msgtype = to_hum sexp_of_msgtype
 let str_of_option = to_hum sexp_of_dhcp_option
 let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 let str_of_pkt = to_hum sexp_of_pkt
+let str_of_lease = to_hum sexp_of_lease
