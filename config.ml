@@ -38,6 +38,7 @@ type subnet = {
   options : Dhcp.dhcp_option list;
   hosts : host list;
   default_lease_time : int32 option;
+  max_lease_time : int32 option;
 } with sexp
 
 type t = {
@@ -45,6 +46,7 @@ type t = {
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
   default_lease_time : int32;
+  max_lease_time : int32;
 } with sexp
 
 (* The structures returned when parsing the config file *)
@@ -54,12 +56,14 @@ type subnet_ast = {
   options : Dhcp.dhcp_option list;
   hosts : host list;
   default_lease_time : int32 option;
+  max_lease_time : int32 option;
 } with sexp
 
 type ast = {
   subnets : subnet_ast list;
   options : Dhcp.dhcp_option list;
   default_lease_time : int32;
+  max_lease_time : int32;
 } with sexp
 
 let get_interfaces () =
@@ -94,12 +98,14 @@ let config_of_ast ast =
         range = subnet.range;
         options = subnet.options;
         hosts = subnet.hosts;
-        default_lease_time = subnet.default_lease_time })
+        default_lease_time = subnet.default_lease_time;
+        max_lease_time = subnet.max_lease_time })
       ast.subnets
   in
   { interfaces; subnets;
     options = ast.options;
-    default_lease_time = ast.default_lease_time }
+    default_lease_time = ast.default_lease_time;
+    max_lease_time = ast.max_lease_time }
 
 let subnet_of_ifid (config : t) ifid = try
     Some (List.find (fun subnet -> subnet.interface.id = ifid) config.subnets)
@@ -110,5 +116,9 @@ let lease_time (config : t) (subnet : subnet) =
   | Some time -> time
   | None -> config.default_lease_time
 
-(* XXX TODO *)
-let lease_time_good (config : t) (subnet : subnet) time = true
+let lease_time_good (config : t) (subnet : subnet) time =
+  let max_lease_time = match subnet.max_lease_time with
+    | Some time -> time
+    | None -> config.max_lease_time
+  in
+  time <= max_lease_time

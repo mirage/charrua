@@ -21,6 +21,7 @@
     | Hw_eth of Macaddr.t
     | Fixed_addr of Ipaddr.V4.t
     | Default_lease_time of int32
+    | Max_lease_time of int32
 
   let choke s =
     raise (Config.Error s)
@@ -40,6 +41,7 @@
 %token HOST
 %token <int> INTEGER
 %token LBRACKET
+%token MAXLEASETIME
 %token NETMASK
 %token OPTION
 %token RANGE
@@ -60,7 +62,8 @@ main:
   let () = List.iter (function
       | Dhcp_option o -> ()
       | Default_lease_time t -> ()
-      | _ -> choke "Only dhcp options and default-lease-time \
+      | Max_lease_time t -> ()
+      | _ -> choke "Only dhcp options and default|max-lease-time \
                     are allowed in the global section")
       statements
   in
@@ -75,9 +78,17 @@ main:
         | _ -> None)
         statements)
     with | Some time -> time
-         | None -> Int32.of_int (60 * 60 * 60)
+         | None -> Int32.of_int (60 * 60 * 60) (* 1h *)
   in
-  { Config.subnets; options; default_lease_time }
+  let max_lease_time =
+    match (Util.find_map (function
+        | Max_lease_time t -> Some t
+        | _ -> None)
+        statements)
+    with | Some time -> time
+         | None -> Int32.of_int (60 * 60 * 60 * 24) (* 24h *)
+  in
+  { Config.subnets; options; default_lease_time; max_lease_time }
 }
 
 ips:
@@ -100,6 +111,7 @@ statement:
   | HARDWARE; ETHERNET; mac = MACADDR; SCOLON { Hw_eth mac }
   | FIXEDADDRESS; v = IP; SCOLON { Fixed_addr v }
   | DEFAULTLEASETIME; v = INTEGER; SCOLON { Default_lease_time (Int32.of_int v) }
+  | MAXLEASETIME; v = INTEGER; SCOLON { Max_lease_time (Int32.of_int v) }
 
 subnets:
   | (* empty *) { [] }
@@ -134,7 +146,11 @@ subnet:
     (Util.find_map (function Default_lease_time t -> Some t | _ -> None)
         statements)
   in
-  { Config.network; range; options; hosts; default_lease_time }
+  let max_lease_time =
+    (Util.find_map (function Max_lease_time t -> Some t | _ -> None)
+        statements)
+  in
+  { Config.network; range; options; hosts; default_lease_time; max_lease_time }
 }
 
 hosts:

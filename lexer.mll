@@ -61,6 +61,7 @@ rule lex = parse
   | "fixed-address" { FIXEDADDRESS }
   | "hardware" { HARDWARE }
   | "host" { HOST }
+  | "maxleasetime" { MAXLEASETIME }
   | "netmask" { NETMASK }
   | "option" { OPTION }
   | "range" { RANGE }
