@@ -228,6 +228,8 @@ val str_of_pkt : pkt -> string
 val str_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
+val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
+val ip_lease_time_of_options : dhcp_option list -> int32 option
 
 type tm = Unix.tm = {
   tm_sec  :int;	(*	Seconds 0..59	*)
@@ -254,7 +256,13 @@ type lease = {
 type leases with sexp
 
 val create_leases : unit -> leases
-val lease_of_pkt : Ipaddr.V4.t * Ipaddr.V4.t -> pkt -> leases -> lease
-val lookup_lease : chaddr -> leases -> lease
+val lookup_lease : chaddr -> leases -> lease option
 val replace_lease : chaddr -> lease -> leases -> unit
+val is_lease_expired : lease -> bool
 val str_of_lease : lease -> string
+
+val addr_in_range : Ipaddr.V4.t -> (Ipaddr.V4.t * Ipaddr.V4.t) -> bool
+val addr_is_free : Ipaddr.V4.t -> leases -> bool
+
+(* XXX experimental *)
+val ip_of_range : (Ipaddr.V4.t * Ipaddr.V4.t) -> Ipaddr.V4.t

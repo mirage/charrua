@@ -645,6 +645,10 @@ let parameter_requests_of_options =
   Util.find_map (function Parameter_requests pr -> Some pr | _ -> None)
 let client_id_of_options =
   Util.find_map (function Client_id id -> Some id | _ -> None)
+let request_ip_of_options =
+  Util.find_map (function Request_ip ip -> Some ip | _ -> None)
+let ip_lease_time_of_options =
+  Util.find_map (function Ip_lease_time ip -> Some ip | _ -> None)
 
 let client_id_of_pkt pkt =
   match client_id_of_options pkt.options with
@@ -675,7 +679,9 @@ type lease = {
 type leases = (chaddr, lease) Hashtbl.t with sexp
 
 let create_leases () = Hashtbl.create 50
-let lookup_lease client_id leases = Hashtbl.find leases client_id
+let lookup_lease client_id leases =
+  try Some (Hashtbl.find leases client_id) with Not_found -> None
+
 let replace_lease client_id lease leases = Hashtbl.replace leases client_id lease
 
 (* XXX might go away, maybe addr should be figured out *)
@@ -701,16 +707,27 @@ let ip_of_range range =
   Int32.add low_32 |>
   Ipaddr.V4.of_int32
 
-let lease_of_pkt range pkt leases =
-  let id = client_id_of_pkt pkt in
-  try Hashtbl.find leases id
-  with Not_found -> make_lease (ip_of_range range) id "TODO" 10
-
 (* Beware! This is an online state *)
 let is_lease_expired lease =
   let (s, _) = Unix.mktime lease.tm_start in
   let (e, _) = Unix.mktime lease.tm_end in
   e >= s
+
+let addr_in_range addr range =
+  let (low_ip, high_ip) = range in
+  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  let addr_32 = Ipaddr.V4.to_int32 addr in
+  addr_32 >= low_32 && addr_32 <= high_32
+
+(* XXX inneficient *)
+let addr_is_free addr leases = Hashtbl.fold
+    (fun id lease acc ->
+       if (lease.addr = addr) && not (is_lease_expired lease) then
+         true
+       else
+         acc)
+    leases false
 
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)

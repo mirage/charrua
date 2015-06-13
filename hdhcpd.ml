@@ -67,9 +67,47 @@ let open_dhcp_sock () =
 let input_discover config (subnet:Config.subnet) pkt leases =
   let open Dhcp in
   Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt);
-  let lease = lease_of_pkt subnet.Config.range pkt leases in
-  Log.debug "Got lease: %s" (str_of_lease lease);
-  replace_lease (client_id_of_pkt pkt) lease leases
+  (* RFC section 4.3.1 *)
+  (* Figure out the ip address *)
+  let lease = lookup_lease (client_id_of_pkt pkt) leases in
+  let expired = match lease with
+    | Some lease -> is_lease_expired lease
+    | None -> false
+  in
+  let addr = match lease with
+    (* Handle the case where we have a lease *)
+    | Some lease ->
+      if not expired then
+        lease.addr
+      (* If the lease expired, the address might have gone *)
+      else if (addr_is_free lease.addr leases) then
+        lease.addr
+      else
+        ip_of_range subnet.Config.range (* XXX must be fixed *)
+    (* Handle the case where we have no lease *)
+    | None -> match (request_ip_of_options pkt.options) with
+      | Some req_addr ->
+        if (addr_in_range req_addr subnet.Config.range) &&
+           (addr_is_free req_addr leases) then
+          req_addr
+        else
+          ip_of_range subnet.Config.range
+      | None -> ip_of_range subnet.Config.range
+  in
+   (* XXX fix me, just to get this going *)
+  let default_lease_time = Int32.of_int (60 * 60 * 60) in
+  (* Figure out the lease duration *)
+  let duration = match (ip_lease_time_of_options pkt.options) with
+    | Some ip_lease_time -> ip_lease_time (* XXX make sure this is a nice lease time *)
+    | None -> match lease with
+      | None -> default_lease_time
+      | Some lease -> if expired then
+          default_lease_time
+        else
+          let (tm_end_float, _) = Unix.mktime lease.tm_end in
+          Int32.of_float tm_end_float
+  in
+  Log.debug "addr = %s, duration = %lu" (Ipaddr.V4.to_string addr) duration
 
 let valid_pkt pkt =
   let open Dhcp in
