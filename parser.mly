@@ -20,7 +20,7 @@
     | Dhcp_option of Dhcp.dhcp_option
     | Hw_eth of Macaddr.t
     | Fixed_addr of Ipaddr.V4.t
-    | Default_lease_time of int
+    | Default_lease_time of int32
 
   let choke s =
     raise (Config.Error s)
@@ -69,13 +69,13 @@ main:
       | _ -> None)
       statements
   in
-  let default_lease_time = Int32.of_int @@
+  let default_lease_time =
     match (Util.find_map (function
         | Default_lease_time t -> Some t
         | _ -> None)
         statements)
     with | Some time -> time
-         | None -> 60 * 60 * 60
+         | None -> Int32.of_int (60 * 60 * 60)
   in
   { Config.subnets; options; default_lease_time }
 }
@@ -99,7 +99,7 @@ statement:
   }
   | HARDWARE; ETHERNET; mac = MACADDR; SCOLON { Hw_eth mac }
   | FIXEDADDRESS; v = IP; SCOLON { Fixed_addr v }
-  | DEFAULTLEASETIME; v = INTEGER; SCOLON { Default_lease_time v }
+  | DEFAULTLEASETIME; v = INTEGER; SCOLON { Default_lease_time (Int32.of_int v) }
 
 subnets:
   | (* empty *) { [] }
