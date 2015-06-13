@@ -97,3 +97,15 @@ let config_of_ast ast =
 let subnet_of_ifid (config : t) ifid = try
     Some (List.find (fun subnet -> subnet.interface.id = ifid) config.subnets)
   with Not_found -> None
+
+(* XXX move this to top-level config and parse from config file *)
+let default_lease_time = Int32.of_int (60 * 60 * 60)
+
+let lease_time (config : t) (subnet : subnet) =
+  let open Dhcp in
+  match ip_lease_time_of_options subnet.options with
+  | Some time -> time
+  | None -> default_lease_time
+
+(* XXX TODO *)
+let lease_time_good (config : t) (subnet : subnet) time = true

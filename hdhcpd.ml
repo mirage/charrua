@@ -94,15 +94,17 @@ let input_discover config (subnet:Config.subnet) pkt leases =
           ip_of_range subnet.Config.range
       | None -> ip_of_range subnet.Config.range
   in
-   (* XXX fix me, just to get this going *)
-  let default_lease_time = Int32.of_int (60 * 60 * 60) in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with
-    | Some ip_lease_time -> ip_lease_time (* XXX make sure this is a nice lease time *)
+    | Some ip_lease_time ->
+      if Config.lease_time_good config subnet ip_lease_time then
+        ip_lease_time
+      else
+        Config.lease_time config subnet
     | None -> match lease with
-      | None -> default_lease_time
+      | None -> Config.lease_time config subnet
       | Some lease -> if expired then
-          default_lease_time
+          Config.lease_time config subnet
         else
           Int32.of_float lease.tm_end
   in
