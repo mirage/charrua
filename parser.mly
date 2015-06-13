@@ -20,6 +20,7 @@
     | Dhcp_option of Dhcp.dhcp_option
     | Hw_eth of Macaddr.t
     | Fixed_addr of Ipaddr.V4.t
+    | Default_lease_time of int
 
   let choke s =
     raise (Config.Error s)
@@ -29,6 +30,7 @@
 %token <Macaddr.t> MACADDR
 %token <string> STRING
 %token COMMA
+%token DEFAULTLEASETIME
 %token DOMAINNAME
 %token DOMAINNAMESERVERS
 %token EOF
@@ -36,6 +38,7 @@
 %token FIXEDADDRESS
 %token HARDWARE
 %token HOST
+%token <int> INTEGER
 %token LBRACKET
 %token NETMASK
 %token OPTION
@@ -54,12 +57,27 @@ main:
   let statements = s :: ss in
   let subnets = sub :: subs in
   (* Now extract the options from the statements *)
-  let options = List.map (function
-      | Dhcp_option o -> o
-      | _ -> choke "Only dhcp options are allowed in the global section")
+  let () = List.iter (function
+      | Dhcp_option o -> ()
+      | Default_lease_time t -> ()
+      | _ -> choke "Only dhcp options and default-lease-time \
+                    are allowed in the global section")
       statements
   in
-  { Config.subnets; options }
+  let options = Util.filter_map (function
+      | Dhcp_option o -> Some o
+      | _ -> None)
+      statements
+  in
+  let default_lease_time = Int32.of_int @@
+    match (Util.find_map (function
+        | Default_lease_time t -> Some t
+        | _ -> None)
+        statements)
+    with | Some time -> time
+         | None -> 60 * 60 * 60
+  in
+  { Config.subnets; options; default_lease_time }
 }
 
 ips:
@@ -81,6 +99,7 @@ statement:
   }
   | HARDWARE; ETHERNET; mac = MACADDR; SCOLON { Hw_eth mac }
   | FIXEDADDRESS; v = IP; SCOLON { Fixed_addr v }
+  | DEFAULTLEASETIME; v = INTEGER; SCOLON { Default_lease_time v }
 
 subnets:
   | (* empty *) { [] }

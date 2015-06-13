@@ -42,6 +42,7 @@ let macaddr = ['a' - 'f' 'A' - 'F' '0' - '9'] ['a' - 'f' 'A' - 'F' '0' - '9'] ':
     ['a' - 'f' 'A' - 'F' '0' - '9'] ['a' - 'f' 'A' - 'F' '0' - '9'] ':'
     ['a' - 'f' 'A' - 'F' '0' - '9'] ['a' - 'f' 'A' - 'F' '0' - '9']
 let word = ['a'-'z' 'A'-'Z' '0'-'9' '_' '-'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '-']*
+let integer = ['0' - '9']+
 
 rule lex = parse
   | white { lex lexbuf }
@@ -53,6 +54,7 @@ rule lex = parse
   | ';' { SCOLON }
   | '{' { LBRACKET }
   | '}' { RBRACKET }
+  | "default-lease-time" { DEFAULTLEASETIME }
   | "domain-name" { DOMAINNAME }
   | "domain-name-servers" { DOMAINNAMESERVERS }
   | "ethernet" { ETHERNET }
@@ -65,6 +67,7 @@ rule lex = parse
   | "routers" { ROUTERS }
   | "subnet" { SUBNET }
   | comment { lex_comment lexbuf; lex lexbuf }
+  | integer as integer { INTEGER(int_of_string integer) }
   | word as word { WORD(word) }
   | _ { choke lexbuf "Invalid syntax" }
   | eof { EOF }
