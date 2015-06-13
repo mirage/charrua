@@ -104,8 +104,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
       | Some lease -> if expired then
           default_lease_time
         else
-          let (tm_end_float, _) = Unix.mktime lease.tm_end in
-          Int32.of_float tm_end_float
+          Int32.of_float lease.tm_end
   in
   Log.debug "addr = %s, duration = %lu" (Ipaddr.V4.to_string addr) duration
 

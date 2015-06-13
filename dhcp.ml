@@ -655,22 +655,10 @@ let client_id_of_pkt pkt =
   | Some id -> id
   | None -> pkt.chaddr
 
-type tm = Unix.tm = {
-  tm_sec  :int;   (*      Seconds 0..59   *)
-  tm_min  :int;   (*      Minutes 0..59   *)
-  tm_hour :int;   (*      Hours 0..23     *)
-  tm_mday :int;   (*      Day of month 1..31      *)
-  tm_mon  :int;   (*      Month of year 0..11     *)
-  tm_year :int;   (*      Year - 1900     *)
-  tm_wday :int;   (*      Day of week (Sunday is 0)       *)
-  tm_yday :int;   (*      Day of year 0..365      *)
-  tm_isdst :bool; (*      Daylight time savings in effect *)
-} with sexp
-
 (* Lease (dhcp bindings) operations *)
 type lease = {
-  tm_start   : tm;
-  tm_end     : tm;
+  tm_start   : float;
+  tm_end     : float;
   addr       : Ipaddr.V4.t;
   client_id  : chaddr;
   hostname   : string;
@@ -686,9 +674,8 @@ let replace_lease client_id lease leases = Hashtbl.replace leases client_id leas
 
 (* XXX might go away, maybe addr should be figured out *)
 let make_lease addr client_id hostname secs =
-  let now_base = Unix.gettimeofday () in
-  let tm_start = Unix.localtime now_base in
-  let tm_end = Unix.localtime (now_base +. (float_of_int secs)) in
+  let tm_start = Unix.gettimeofday () in
+  let tm_end = (tm_start +. (float_of_int secs)) in
   { tm_start; tm_end; addr; client_id; hostname }
 
 let current_lease_of_client_id id leases =
@@ -708,10 +695,7 @@ let ip_of_range range =
   Ipaddr.V4.of_int32
 
 (* Beware! This is an online state *)
-let is_lease_expired lease =
-  let (s, _) = Unix.mktime lease.tm_start in
-  let (e, _) = Unix.mktime lease.tm_end in
-  e >= s
+let is_lease_expired lease = lease.tm_end >= lease.tm_start
 
 let addr_in_range addr range =
   let (low_ip, high_ip) = range in

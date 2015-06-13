@@ -231,22 +231,10 @@ val parameter_requests_of_options : dhcp_option list -> parameter_request list o
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
 
-type tm = Unix.tm = {
-  tm_sec  :int;	(*	Seconds 0..59	*)
-  tm_min  :int;	(*	Minutes 0..59	*)
-  tm_hour :int;	(*	Hours 0..23	*)
-  tm_mday :int;	(*	Day of month 1..31	*)
-  tm_mon  :int;	(*	Month of year 0..11	*)
-  tm_year :int;	(*	Year - 1900	*)
-  tm_wday :int;	(*	Day of week (Sunday is 0)	*)
-  tm_yday :int;	(*	Day of year 0..365	*)
-  tm_isdst :bool;	(*	Daylight time savings in effect	*)
-} with sexp
-
 (* Lease (dhcp bindings) operations *)
 type lease = {
-  tm_start   : tm;
-  tm_end     : tm;
+  tm_start   : float;
+  tm_end     : float;
   addr       : Ipaddr.V4.t;
   client_id  : chaddr;
   hostname   : string;
