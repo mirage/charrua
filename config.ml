@@ -37,6 +37,7 @@ type subnet = {
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
   hosts : host list;
+  default_lease_time : int32 option;
 } with sexp
 
 type t = {
@@ -52,6 +53,7 @@ type subnet_ast = {
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
   hosts : host list;
+  default_lease_time : int32 option;
 } with sexp
 
 type ast = {
@@ -91,7 +93,8 @@ let config_of_ast ast =
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
-        hosts = subnet.hosts })
+        hosts = subnet.hosts;
+        default_lease_time = subnet.default_lease_time })
       ast.subnets
   in
   { interfaces; subnets;
@@ -103,8 +106,7 @@ let subnet_of_ifid (config : t) ifid = try
   with Not_found -> None
 
 let lease_time (config : t) (subnet : subnet) =
-  let open Dhcp in
-  match ip_lease_time_of_options subnet.options with
+  match subnet.default_lease_time with
   | Some time -> time
   | None -> config.default_lease_time
 

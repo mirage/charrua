@@ -130,7 +130,11 @@ subnet:
       | _ -> None)
       statements
   in
-  { Config.network; range; options; hosts }
+  let default_lease_time =
+    (Util.find_map (function Default_lease_time t -> Some t | _ -> None)
+        statements)
+  in
+  { Config.network; range; options; hosts; default_lease_time }
 }
 
 hosts:
