@@ -69,7 +69,8 @@ let input_discover config (subnet:Config.subnet) pkt leases =
   Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
-  let lease = lookup_lease (client_id_of_pkt pkt) leases in
+  let id = client_id_of_pkt pkt in
+  let lease = lookup_lease id leases in
   let expired = match lease with
     | Some lease -> lease_expired lease
     | None -> false
@@ -83,7 +84,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
       else if (addr_available lease.addr leases) then
         Some lease.addr
       else
-        get_usable_addr subnet.Config.range leases
+        get_usable_addr id subnet.Config.range leases
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
@@ -91,8 +92,8 @@ let input_discover config (subnet:Config.subnet) pkt leases =
            (addr_available req_addr leases) then
           Some req_addr
         else
-          get_usable_addr subnet.Config.range leases
-      | None -> get_usable_addr subnet.Config.range leases
+          get_usable_addr id subnet.Config.range leases
+      | None -> get_usable_addr id subnet.Config.range leases
   in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with

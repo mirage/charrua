@@ -698,25 +698,31 @@ let addr_available addr leases =
   | [] -> true
   | leases -> List.exists (fun l -> not (lease_expired l)) leases
 
-(* Inneficient allocator, try to get a random unallocated address, if we fail we
-   try a linear search, if that also fails, we do a linear search for an expired
-   lease *)
-let get_usable_addr range leases =
+(*
+ * We try to use the last 4 bytes of the mac address as a hint for the ip
+ * address, if that fails, we try a linear search.
+ *)
+let get_usable_addr id range leases =
   let (low_ip, high_ip) = range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   if (Int32.compare low_32 high_32) >= 0 then
     invalid_arg "invalid range, must be (low * high)";
-  let random_ip () =
-    Int32.sub high_32 low_32 |>
-    Random.int32 |>
+  let hint_ip =
+    let v = match id with
+      | Cliid s -> Int32.of_int 1805 (* XXX who cares *)
+      | Hwaddr hw ->
+        let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
+        let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
+        let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in
+        let b2 = Int32.shift_left (Char.code s.[1] |> Int32.of_int) 16 in
+        let b3 = Int32.shift_left (Char.code s.[0] |> Int32.of_int) 24 in
+        Int32.zero |> Int32.logor b0 |> Int32.logor b1 |>
+        Int32.logor b2 |> Int32.logor b3
+    in
+    Int32.rem v (Int32.sub (Int32.succ high_32) low_32) |>
     Int32.add low_32 |>
     Ipaddr.V4.of_int32
-  in
-  let rec random_loop tries f = match tries with
-    | 0 -> None
-    | tries -> let ip = random_ip () in
-      if f ip then Some ip else random_loop (pred tries) f
   in
   let rec linear_loop off f =
     let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
@@ -727,10 +733,9 @@ let get_usable_addr range leases =
     else
       linear_loop (Int32.succ off) f
   in
-  match random_loop 10 (fun a -> not (addr_allocated a leases)) with
-  | Some ip -> Some ip
-  | None ->
-    match linear_loop Int32.zero (fun a -> not (addr_allocated a leases)) with
+  if not (addr_allocated hint_ip leases) then
+    Some hint_ip
+  else match linear_loop Int32.zero (fun a -> not (addr_allocated a leases)) with
     | Some ip -> Some ip
     | None -> linear_loop Int32.zero (fun a -> addr_available a leases)
 
