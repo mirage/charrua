@@ -246,11 +246,11 @@ type leases with sexp
 val create_leases : unit -> leases
 val lookup_lease : chaddr -> leases -> lease option
 val replace_lease : chaddr -> lease -> leases -> unit
-val is_lease_expired : lease -> bool
+val lease_expired : lease -> bool
 val str_of_lease : lease -> string
 
 val addr_in_range : Ipaddr.V4.t -> (Ipaddr.V4.t * Ipaddr.V4.t) -> bool
-val addr_is_free : Ipaddr.V4.t -> leases -> bool
+val addr_available : Ipaddr.V4.t -> leases -> bool
 
 (* XXX experimental *)
 val ip_of_range : (Ipaddr.V4.t * Ipaddr.V4.t) -> Ipaddr.V4.t

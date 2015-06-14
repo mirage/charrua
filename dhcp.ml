@@ -672,16 +672,6 @@ let lookup_lease client_id leases =
 
 let replace_lease client_id lease leases = Hashtbl.replace leases client_id lease
 
-(* XXX might go away, maybe addr should be figured out *)
-let make_lease addr client_id hostname secs =
-  let tm_start = Unix.gettimeofday () in
-  let tm_end = (tm_start +. (float_of_int secs)) in
-  { tm_start; tm_end; addr; client_id; hostname }
-
-let current_lease_of_client_id id leases =
-  try Some (Hashtbl.find leases id)
-  with Not_found -> None
-
 (* XXX experimental *)
 let ip_of_range range =
   let (low_ip, high_ip) = range in
@@ -695,7 +685,10 @@ let ip_of_range range =
   Ipaddr.V4.of_int32
 
 (* Beware! This is an online state *)
-let is_lease_expired lease = lease.tm_end >= lease.tm_start
+let lease_expired lease = lease.tm_end >= lease.tm_start
+
+let list_of_leases leases =
+  Hashtbl.fold (fun _ v acc -> v :: acc ) leases []
 
 let addr_in_range addr range =
   let (low_ip, high_ip) = range in
@@ -704,14 +697,18 @@ let addr_in_range addr range =
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
 
-(* XXX inneficient *)
-let addr_is_free addr leases = Hashtbl.fold
-    (fun id lease acc ->
-       if (lease.addr = addr) && not (is_lease_expired lease) then
-         true
-       else
-         acc)
-    leases false
+let leases_of_addr addr leases =
+  List.filter (fun l -> l.addr = addr) (list_of_leases leases)
+
+let addr_allocated addr leases =
+  match (leases_of_addr addr leases) with
+  | [] -> false
+  | _ -> true
+
+let addr_available addr leases =
+  match (leases_of_addr addr leases) with
+  | [] -> true
+  | leases -> List.exists (fun l -> not (lease_expired l)) leases
 
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)

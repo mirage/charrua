@@ -71,7 +71,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
   (* Figure out the ip address *)
   let lease = lookup_lease (client_id_of_pkt pkt) leases in
   let expired = match lease with
-    | Some lease -> is_lease_expired lease
+    | Some lease -> lease_expired lease
     | None -> false
   in
   let addr = match lease with
@@ -79,8 +79,8 @@ let input_discover config (subnet:Config.subnet) pkt leases =
     | Some lease ->
       if not expired then
         lease.addr
-      (* If the lease expired, the address might have gone *)
-      else if (addr_is_free lease.addr leases) then
+      (* If the lease expired, the address might not be available *)
+      else if (addr_available lease.addr leases) then
         lease.addr
       else
         ip_of_range subnet.Config.range (* XXX must be fixed *)
@@ -88,7 +88,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
         if (addr_in_range req_addr subnet.Config.range) &&
-           (addr_is_free req_addr leases) then
+           (addr_available req_addr leases) then
           req_addr
         else
           ip_of_range subnet.Config.range
