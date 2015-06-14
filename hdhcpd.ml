@@ -78,21 +78,21 @@ let input_discover config (subnet:Config.subnet) pkt leases =
     (* Handle the case where we have a lease *)
     | Some lease ->
       if not expired then
-        lease.addr
+        Some lease.addr
       (* If the lease expired, the address might not be available *)
       else if (addr_available lease.addr leases) then
-        lease.addr
+        Some lease.addr
       else
-        ip_of_range subnet.Config.range (* XXX must be fixed *)
+        get_usable_addr subnet.Config.range leases
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
         if (addr_in_range req_addr subnet.Config.range) &&
            (addr_available req_addr leases) then
-          req_addr
+          Some req_addr
         else
-          ip_of_range subnet.Config.range
-      | None -> ip_of_range subnet.Config.range
+          get_usable_addr subnet.Config.range leases
+      | None -> get_usable_addr subnet.Config.range leases
   in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with
@@ -108,7 +108,10 @@ let input_discover config (subnet:Config.subnet) pkt leases =
         else
           Int32.of_float lease.tm_end
   in
-  Log.debug "addr = %s, duration = %lu" (Ipaddr.V4.to_string addr) duration
+  match addr with
+  | None -> Log.warn "No ips left to offer !"
+  | Some addr -> Log.debug "addr = %s, duration = %lu"
+                   (Ipaddr.V4.to_string addr) duration
 
 let valid_pkt pkt =
   let open Dhcp in

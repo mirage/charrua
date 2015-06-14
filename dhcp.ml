@@ -665,24 +665,12 @@ type lease = {
 } with sexp
 
 type leases = (chaddr, lease) Hashtbl.t with sexp
-
 let create_leases () = Hashtbl.create 50
+
 let lookup_lease client_id leases =
   try Some (Hashtbl.find leases client_id) with Not_found -> None
 
 let replace_lease client_id lease leases = Hashtbl.replace leases client_id lease
-
-(* XXX experimental *)
-let ip_of_range range =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-  let high_32 = Ipaddr.V4.to_int32 high_ip in
-  if (Int32.compare low_32 high_32) >= 0 then
-    invalid_arg "invalid range, must be (low * high)";
-  Int32.sub high_32 low_32 |>
-  Random.int32 |>
-  Int32.add low_32 |>
-  Ipaddr.V4.of_int32
 
 (* Beware! This is an online state *)
 let lease_expired lease = lease.tm_end >= lease.tm_start
@@ -709,6 +697,42 @@ let addr_available addr leases =
   match (leases_of_addr addr leases) with
   | [] -> true
   | leases -> List.exists (fun l -> not (lease_expired l)) leases
+
+(* Inneficient allocator, try to get a random unallocated address, if we fail we
+   try a linear search, if that also fails, we do a linear search for an expired
+   lease *)
+let get_usable_addr range leases =
+  let (low_ip, high_ip) = range in
+  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  if (Int32.compare low_32 high_32) >= 0 then
+    invalid_arg "invalid range, must be (low * high)";
+  let random_ip () =
+    Int32.sub high_32 low_32 |>
+    Random.int32 |>
+    Int32.add low_32 |>
+    Ipaddr.V4.of_int32
+  in
+  let rec random_loop tries f = match tries with
+    | 0 -> None
+    | tries -> let ip = random_ip () in
+      if f ip then Some ip else random_loop (pred tries) f
+  in
+  let rec linear_loop off f =
+    let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
+    if f ip then
+      Some ip
+    else if off = high_32 then
+      None
+    else
+      linear_loop (Int32.succ off) f
+  in
+  match random_loop 10 (fun a -> not (addr_allocated a leases)) with
+  | Some ip -> Some ip
+  | None ->
+    match linear_loop Int32.zero (fun a -> not (addr_allocated a leases)) with
+    | Some ip -> Some ip
+    | None -> linear_loop Int32.zero (fun a -> addr_available a leases)
 
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)

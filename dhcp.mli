@@ -252,5 +252,4 @@ val str_of_lease : lease -> string
 val addr_in_range : Ipaddr.V4.t -> (Ipaddr.V4.t * Ipaddr.V4.t) -> bool
 val addr_available : Ipaddr.V4.t -> leases -> bool
 
-(* XXX experimental *)
-val ip_of_range : (Ipaddr.V4.t * Ipaddr.V4.t) -> Ipaddr.V4.t
+val get_usable_addr : (Ipaddr.V4.t * Ipaddr.V4.t) -> leases -> Ipaddr.V4.t option
