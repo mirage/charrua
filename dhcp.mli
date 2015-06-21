@@ -230,27 +230,3 @@ val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
-
-(* Lease (dhcp bindings) operations *)
-type lease = {
-  tm_start   : float;
-  tm_end     : float;
-  addr       : Ipaddr.V4.t;
-  client_id  : chaddr;
-  hostname   : string;
-} with sexp
-
-(* opaque *)
-type leases with sexp
-
-val create_leases : unit -> leases
-val lookup_lease : chaddr -> leases -> lease option
-val replace_lease : chaddr -> lease -> leases -> unit
-val lease_expired : lease -> bool
-val str_of_lease : lease -> string
-
-val addr_in_range : Ipaddr.V4.t -> (Ipaddr.V4.t * Ipaddr.V4.t) -> bool
-val addr_available : Ipaddr.V4.t -> leases -> bool
-
-val get_usable_addr : chaddr -> (Ipaddr.V4.t * Ipaddr.V4.t) -> leases ->
-  Ipaddr.V4.t option

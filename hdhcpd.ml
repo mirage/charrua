@@ -40,30 +40,30 @@ let input_discover config (subnet:Config.subnet) pkt leases =
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
   let id = client_id_of_pkt pkt in
-  let lease = lookup_lease id leases in
+  let lease = Lease.lookup id leases in
   let expired = match lease with
-    | Some lease -> lease_expired lease
+    | Some lease -> Lease.expired lease
     | None -> false
   in
   let addr = match lease with
     (* Handle the case where we have a lease *)
     | Some lease ->
       if not expired then
-        Some lease.addr
+        Some lease.Lease.addr
       (* If the lease expired, the address might not be available *)
-      else if (addr_available lease.addr leases) then
-        Some lease.addr
+      else if (Lease.addr_available lease.Lease.addr leases) then
+        Some lease.Lease.addr
       else
-        get_usable_addr id subnet.Config.range leases
+        Lease.get_usable_addr id subnet.Config.range leases
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
-        if (addr_in_range req_addr subnet.Config.range) &&
-           (addr_available req_addr leases) then
+        if (Lease.addr_in_range req_addr subnet.Config.range) &&
+           (Lease.addr_available req_addr leases) then
           Some req_addr
         else
-          get_usable_addr id subnet.Config.range leases
-      | None -> get_usable_addr id subnet.Config.range leases
+          Lease.get_usable_addr id subnet.Config.range leases
+      | None -> Lease.get_usable_addr id subnet.Config.range leases
   in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with
@@ -77,7 +77,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
       | Some lease -> if expired then
           Config.lease_time config subnet
         else
-          Int32.of_float lease.tm_end
+          Int32.of_float lease.Lease.tm_end
   in
   match addr with
   | None -> Log.warn "No ips left to offer !"
@@ -165,7 +165,7 @@ let hdhcpd configfile verbosity =
   let config = Config_parser.parse ~path:configfile () in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv config sock (Dhcp.create_leases ()) in
+  let recv_thread = dhcp_recv config sock (Lease.empty ()) in
   Lwt_main.run (recv_thread >>= fun () ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 

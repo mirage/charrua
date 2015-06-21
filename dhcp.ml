@@ -655,90 +655,6 @@ let client_id_of_pkt pkt =
   | Some id -> id
   | None -> pkt.chaddr
 
-(* Lease (dhcp bindings) operations *)
-type lease = {
-  tm_start   : float;
-  tm_end     : float;
-  addr       : Ipaddr.V4.t;
-  client_id  : chaddr;
-  hostname   : string;
-} with sexp
-
-type leases = (chaddr, lease) Hashtbl.t with sexp
-let create_leases () = Hashtbl.create 50
-
-let lookup_lease client_id leases =
-  try Some (Hashtbl.find leases client_id) with Not_found -> None
-
-let replace_lease client_id lease leases = Hashtbl.replace leases client_id lease
-
-(* Beware! This is an online state *)
-let lease_expired lease = lease.tm_end >= lease.tm_start
-
-let list_of_leases leases =
-  Hashtbl.fold (fun _ v acc -> v :: acc ) leases []
-
-let addr_in_range addr range =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-  let high_32 = Ipaddr.V4.to_int32 high_ip in
-  let addr_32 = Ipaddr.V4.to_int32 addr in
-  addr_32 >= low_32 && addr_32 <= high_32
-
-let leases_of_addr addr leases =
-  List.filter (fun l -> l.addr = addr) (list_of_leases leases)
-
-let addr_allocated addr leases =
-  match (leases_of_addr addr leases) with
-  | [] -> false
-  | _ -> true
-
-let addr_available addr leases =
-  match (leases_of_addr addr leases) with
-  | [] -> true
-  | leases -> List.exists (fun l -> not (lease_expired l)) leases
-
-(*
- * We try to use the last 4 bytes of the mac address as a hint for the ip
- * address, if that fails, we try a linear search.
- *)
-let get_usable_addr id range leases =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-  let high_32 = Ipaddr.V4.to_int32 high_ip in
-  if (Int32.compare low_32 high_32) >= 0 then
-    invalid_arg "invalid range, must be (low * high)";
-  let hint_ip =
-    let v = match id with
-      | Cliid s -> Int32.of_int 1805 (* XXX who cares *)
-      | Hwaddr hw ->
-        let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
-        let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
-        let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in
-        let b2 = Int32.shift_left (Char.code s.[1] |> Int32.of_int) 16 in
-        let b3 = Int32.shift_left (Char.code s.[0] |> Int32.of_int) 24 in
-        Int32.zero |> Int32.logor b0 |> Int32.logor b1 |>
-        Int32.logor b2 |> Int32.logor b3
-    in
-    Int32.rem v (Int32.sub (Int32.succ high_32) low_32) |>
-    Int32.add low_32 |>
-    Ipaddr.V4.of_int32
-  in
-  let rec linear_loop off f =
-    let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
-    if f ip then
-      Some ip
-    else if off = high_32 then
-      None
-    else
-      linear_loop (Int32.succ off) f
-  in
-  if not (addr_allocated hint_ip leases) then
-    Some hint_ip
-  else match linear_loop Int32.zero (fun a -> not (addr_allocated a leases)) with
-    | Some ip -> Some ip
-    | None -> linear_loop Int32.zero (fun a -> addr_available a leases)
-
 (* str_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let str_of_op = to_hum sexp_of_op
@@ -760,4 +676,3 @@ let str_of_msgtype = to_hum sexp_of_msgtype
 let str_of_option = to_hum sexp_of_dhcp_option
 let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 let str_of_pkt = to_hum sexp_of_pkt
-let str_of_lease = to_hum sexp_of_lease
