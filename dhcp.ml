@@ -56,6 +56,16 @@ let msgtype_of_int = function
   | 8 -> DHCPINFORM   (* value 8 *)
   | v -> invalid_arg ("No message type for int " ^ (string_of_int v))
 
+let int_of_msgtype = function
+  | DHCPDISCOVER -> 1 (* value 1 *)
+  | DHCPOFFER    -> 2 (* value 2 *)
+  | DHCPREQUEST  -> 3 (* value 3 *)
+  | DHCPDECLINE  -> 4 (* value 4 *)
+  | DHCPACK      -> 5 (* value 5 *)
+  | DHCPNAK      -> 6 (* value 6 *)
+  | DHCPRELEASE  -> 7 (* value 7 *)
+  | DHCPINFORM   -> 8(* value 8 *)
+
 type parameter_request =
   | Subnet_mask                      (* code 1 *)
   | Time_offset                      (* code 2 *)
