@@ -14,6 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+open Sexplib.Conv
+open Sexplib.Std
+
 (* Lease (dhcp bindings) operations *)
 type lease = {
   tm_start   : float;
@@ -21,7 +24,7 @@ type lease = {
   addr       : Ipaddr.V4.t;
   client_id  : Dhcp.chaddr;
   hostname   : string;
-}
+} with sexp
 
 type leases = (Dhcp.chaddr, lease) Hashtbl.t
 let empty () = Hashtbl.create 50
@@ -32,6 +35,7 @@ let replace client_id lease leases = Hashtbl.replace leases client_id lease
 let expired lease = lease.tm_end >= lease.tm_start
 let to_list leases =
   Hashtbl.fold (fun _ v acc -> v :: acc ) leases []
+let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
 
 let addr_in_range addr range =
   let (low_ip, high_ip) = range in
