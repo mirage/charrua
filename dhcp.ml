@@ -653,6 +653,26 @@ let pkt_of_buf buf len =
   { op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
     siaddr; giaddr; chaddr; sname; file; options }
 
+let buf_of_pkt pkt =
+  let buf = make_buf () in
+  set_cpkt_op buf (int_of_op pkt.op);
+  set_cpkt_htype buf (int_of_htype pkt.htype);
+  set_cpkt_hlen buf pkt.hlen;
+  set_cpkt_hops buf pkt.hops;
+  set_cpkt_xid buf pkt.xid;
+  set_cpkt_secs buf pkt.secs;
+  set_cpkt_flags buf (int_of_flags pkt.flags);
+  set_cpkt_ciaddr buf (Ipaddr.V4.to_int32 pkt.ciaddr);
+  set_cpkt_yiaddr buf (Ipaddr.V4.to_int32 pkt.yiaddr);
+  set_cpkt_siaddr buf (Ipaddr.V4.to_int32 pkt.siaddr);
+  set_cpkt_giaddr buf (Ipaddr.V4.to_int32 pkt.giaddr);
+  let b = bytes_of_chaddr pkt.chaddr in
+  set_cpkt_chaddr b (Bytes.length b) buf;
+  set_cpkt_sname pkt.sname (Bytes.length pkt.sname) buf;
+  set_cpkt_file pkt.file (Bytes.length pkt.file) buf;
+  buf
+  (* TODO set_cpkt_options buf; *)
+
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
 let parameter_requests_of_options =
