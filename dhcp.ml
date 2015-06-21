@@ -402,6 +402,10 @@ let htype_of_buf buf = match get_cpkt_htype buf with
   | 1 -> Ethernet_10mb
   | _ -> Other
 
+let int_of_htype = function
+  | Ethernet_10mb -> 1
+  | Other -> invalid_arg "Can't make int of Other htype"
+
 let hlen_of_buf = get_cpkt_hlen
 let hops_of_buf = get_cpkt_hops
 let xid_of_buf = get_cpkt_xid
@@ -413,6 +417,10 @@ let flags_of_buf buf =
   else
     Unicast
 
+let int_of_flags = function
+  | Broadcast -> 0x8000
+  | Unicast -> 0
+
 let ciaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_ciaddr buf)
 let yiaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_yiaddr buf)
 let siaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_siaddr buf)
@@ -423,7 +431,9 @@ let chaddr_of_buf buf htype hlen =
     Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
   else
     Cliid (copy_cpkt_chaddr buf)
-
+let bytes_of_chaddr = function
+  | Hwaddr hw -> Macaddr.to_bytes hw
+  | Cliid id -> Bytes.of_string id
 let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
