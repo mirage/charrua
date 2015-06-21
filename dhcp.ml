@@ -20,8 +20,7 @@ open Sexplib.Std
 
 type op =
   | Bootrequest
-  | Bootreply
-  | Unknown with sexp
+  | Bootreply with sexp
 
 type htype =
   | Ethernet_10mb
@@ -389,10 +388,15 @@ let pkt_min_len = 236
 
 (* 10KB, maybe there is an asshole doing insane stuff with Jumbo Frames *)
 let make_buf () = Cstruct.create (1024 * 10) 
+
 let op_of_buf buf = match get_cpkt_op buf with
   | 1 -> Bootrequest
   | 2 -> Bootreply
-  | _ -> Unknown
+  | _ as op -> invalid_arg ("Unknown op value: " ^ string_of_int(op))
+
+let int_of_op = function
+  | Bootrequest -> 1
+  | Bootreply -> 2
 
 let htype_of_buf buf = match get_cpkt_htype buf with
   | 1 -> Ethernet_10mb

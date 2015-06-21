@@ -16,8 +16,7 @@
 
 type op =
   | Bootrequest
-  | Bootreply
-  | Unknown with sexp
+  | Bootreply with sexp
 
 type htype =
   | Ethernet_10mb
