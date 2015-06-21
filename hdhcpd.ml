@@ -21,48 +21,18 @@ let () = Printexc.record_backtrace true
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
-(* Drop privileges and chroot to _hdhcpd home *)
-let go_safe () =
-  let (pw, gr) = try
-      (Unix.getpwnam "_hdhcpd", Unix.getgrnam "_hdhcpd")
-    with _  ->
-      failwith "No user and/or group _hdhcpd found, please create them."
-  in
-  Unix.chroot pw.Unix.pw_dir;
-  Unix.chdir "/";
-  (* Unix.setproctitle "hdhcpd"; XXX implement me *)
-  Log.info "Chrooted to %s" pw.Unix.pw_dir;
-  let ogid = Unix.getgid () in
-  let oegid = Unix.getegid () in
-  let ouid = Unix.getuid () in
-  let oeuid = Unix.geteuid () in
-  Unix.setgroups (Array.of_list [pw.Unix.pw_gid]);
-  Unix.setgid pw.Unix.pw_gid;
-  Unix.setuid pw.Unix.pw_uid;
-  if ogid = pw.Unix.pw_gid ||
-     oegid = pw.Unix.pw_gid ||
-     ouid = pw.Unix.pw_uid ||
-     oeuid = pw.Unix.pw_uid then
-    failwith "Unexpected uid or gid after dropping privileges";
-  (* Make sure we cant restore the old gid and uid *)
-  let canrestore = try
-      Unix.setuid ouid;
-      Unix.setuid oeuid;
-      Unix.setgid ogid;
-      Unix.setuid oegid;
-      true
-    with _ -> false in
-  if canrestore then
-    failwith "Was able to restore UID, setuid is broken"
-
-let open_dhcp_sock () =
-  let open Lwt_unix in
-  let sock = socket PF_INET SOCK_DGRAM 0 in
-  let () = setsockopt sock SO_REUSEADDR true in
-  let () = setsockopt sock SO_BROADCAST true in
-  let () = Util.reqif (unix_file_descr sock) in
-  let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
-  sock
+let valid_pkt pkt =
+  let open Dhcp in
+  if pkt.op <> Bootrequest then
+    false
+  else if pkt.htype <> Ethernet_10mb then
+    false
+  else if pkt.hlen <> 6 then
+    false
+  else if pkt.hops <> 0 then
+    false
+  else
+    true
 
 let input_discover config (subnet:Config.subnet) pkt leases =
   let open Dhcp in
@@ -114,19 +84,6 @@ let input_discover config (subnet:Config.subnet) pkt leases =
   | Some addr -> Log.debug "addr = %s, duration = %lu"
                    (Ipaddr.V4.to_string addr) duration
 
-let valid_pkt pkt =
-  let open Dhcp in
-  if pkt.op <> Bootrequest then
-    false
-  else if pkt.htype <> Ethernet_10mb then
-    false
-  else if pkt.hlen <> 6 then
-    false
-  else if pkt.hops <> 0 then
-    false
-  else
-    true
-
 let input_pkt config ifid pkt leases =
   let open Dhcp in
   if valid_pkt pkt then
@@ -157,6 +114,49 @@ let rec dhcp_recv config sock leases =
       with Invalid_argument e -> Log.warn "Input pkt %s" e
   in
   dhcp_recv config sock leases
+
+let open_dhcp_sock () =
+  let open Lwt_unix in
+  let sock = socket PF_INET SOCK_DGRAM 0 in
+  let () = setsockopt sock SO_REUSEADDR true in
+  let () = setsockopt sock SO_BROADCAST true in
+  let () = Util.reqif (unix_file_descr sock) in
+  let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
+  sock
+
+(* Drop privileges and chroot to _hdhcpd home *)
+let go_safe () =
+  let (pw, gr) = try
+      (Unix.getpwnam "_hdhcpd", Unix.getgrnam "_hdhcpd")
+    with _  ->
+      failwith "No user and/or group _hdhcpd found, please create them."
+  in
+  Unix.chroot pw.Unix.pw_dir;
+  Unix.chdir "/";
+  (* Unix.setproctitle "hdhcpd"; XXX implement me *)
+  Log.info "Chrooted to %s" pw.Unix.pw_dir;
+  let ogid = Unix.getgid () in
+  let oegid = Unix.getegid () in
+  let ouid = Unix.getuid () in
+  let oeuid = Unix.geteuid () in
+  Unix.setgroups (Array.of_list [pw.Unix.pw_gid]);
+  Unix.setgid pw.Unix.pw_gid;
+  Unix.setuid pw.Unix.pw_uid;
+  if ogid = pw.Unix.pw_gid ||
+     oegid = pw.Unix.pw_gid ||
+     ouid = pw.Unix.pw_uid ||
+     oeuid = pw.Unix.pw_uid then
+    failwith "Unexpected uid or gid after dropping privileges";
+  (* Make sure we cant restore the old gid and uid *)
+  let canrestore = try
+      Unix.setuid ouid;
+      Unix.setuid oeuid;
+      Unix.setgid ogid;
+      Unix.setuid oegid;
+      true
+    with _ -> false in
+  if canrestore then
+    failwith "Was able to restore UID, setuid is broken"
 
 let hdhcpd configfile verbosity =
   let () = config_log verbosity in
