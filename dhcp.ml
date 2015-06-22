@@ -394,7 +394,7 @@ type pkt = {
   options : dhcp_option list;
 } with sexp
 
-let pkt_min_len = 236
+let pkt_min_len = sizeof_cpkt
 
 (* 10KB, maybe there is an asshole doing insane stuff with Jumbo Frames *)
 let make_buf () = Cstruct.create (1024 * 10) 
