@@ -378,8 +378,8 @@ type dhcp_option =
   | Unknown
   with sexp
 
-let str_of_option = to_hum sexp_of_dhcp_option
-let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
+let string_of_option = to_hum sexp_of_dhcp_option
+let string_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 
 type pkt = {
   op      : op;
@@ -760,7 +760,7 @@ let buf_of_options sbuf options =
     | Streettalk_servers ips -> put_coded_ip_list 75 ips buf  (* code 75 *)
     | Streettalk_da ips -> put_coded_ip_list 76 ips buf       (* code 76 *)
     | Unknown | _ ->
-      Log.warn "buf_of_pkt option unimplemented: %s" (str_of_option option);
+      Log.warn "buf_of_pkt option unimplemented: %s" (string_of_option option);
       buf
   in
   match options with
@@ -832,21 +832,21 @@ let client_id_of_pkt pkt =
   | Some id -> id
   | None -> pkt.chaddr
 
-(* str_of_* functions *)
-let str_of_op = to_hum sexp_of_op
-let str_of_htype = to_hum sexp_of_htype
-let str_of_hlen = string_of_int
-let str_of_hops = string_of_int
-let str_of_xid xid = Printf.sprintf "0x%lx" xid
-let str_of_secs = string_of_int
-let str_of_flags = to_hum sexp_of_flags
-let str_of_ciaddr = Ipaddr.V4.to_string
-let str_of_ciaddr = Ipaddr.V4.to_string
-let str_of_yiaddr = Ipaddr.V4.to_string
-let str_of_siaddr = Ipaddr.V4.to_string
-let str_of_giaddr = Ipaddr.V4.to_string
-let str_of_chaddr = to_hum sexp_of_chaddr
-let str_of_sname sname = sname
-let str_of_file file = file
-let str_of_msgtype = to_hum sexp_of_msgtype
-let str_of_pkt = to_hum sexp_of_pkt
+(* string_of_* functions *)
+let string_of_op = to_hum sexp_of_op
+let string_of_htype = to_hum sexp_of_htype
+let string_of_hlen = string_of_int
+let string_of_hops = string_of_int
+let string_of_xid xid = Printf.sprintf "0x%lx" xid
+let string_of_secs = string_of_int
+let string_of_flags = to_hum sexp_of_flags
+let string_of_ciaddr = Ipaddr.V4.to_string
+let string_of_ciaddr = Ipaddr.V4.to_string
+let string_of_yiaddr = Ipaddr.V4.to_string
+let string_of_siaddr = Ipaddr.V4.to_string
+let string_of_giaddr = Ipaddr.V4.to_string
+let string_of_chaddr = to_hum sexp_of_chaddr
+let string_of_sname sname = sname
+let string_of_file file = file
+let string_of_msgtype = to_hum sexp_of_msgtype
+let string_of_pkt = to_hum sexp_of_pkt

@@ -36,7 +36,7 @@ let valid_pkt pkt =
 
 let input_discover config (subnet:Config.subnet) pkt leases =
   let open Dhcp in
-  Log.debug "DISCOVER packet received %s" (Dhcp.str_of_pkt pkt);
+  Log.debug "DISCOVER packet received %s" (Dhcp.string_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
   let id = client_id_of_pkt pkt in
@@ -94,9 +94,9 @@ let input_pkt config ifid pkt leases =
       match msgtype_of_options pkt.options with
       | Some DHCPDISCOVER -> input_discover config subnet pkt leases
       | None -> Log.warn "Got malformed packet: no dhcp msgtype"
-      | Some m -> Log.debug "Unhandled msgtype %s" (str_of_msgtype m)
+      | Some m -> Log.debug "Unhandled msgtype %s" (string_of_msgtype m)
   else
-    Log.warn "Invalid packet %s" (str_of_pkt pkt)
+    Log.warn "Invalid packet %s" (string_of_pkt pkt)
 
 let rec dhcp_recv config sock leases =
   let buffer = Dhcp.make_buf () in

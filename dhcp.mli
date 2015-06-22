@@ -224,8 +224,8 @@ val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
 val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> chaddr
-val str_of_pkt : pkt -> string
-val str_of_msgtype : msgtype -> string
+val string_of_pkt : pkt -> string
+val string_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option

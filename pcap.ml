@@ -69,7 +69,7 @@ let print_packet p =
         let udplen = Cstruct.BE.get_uint16 udp 4 in
         let dhcp = Cstruct.shift udp 8 in
         let pkt = Dhcp.pkt_of_buf dhcp (udplen - 8) in
-        printf "DHCP: %s\n%!" (Dhcp.str_of_pkt pkt)
+        printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt)
       | _ -> failwith "unknown ip protocol"
     end
   |_ -> failwith "unknown body"
