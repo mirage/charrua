@@ -222,6 +222,7 @@ type pkt = {
 val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
+val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> chaddr
 val str_of_pkt : pkt -> string
 val str_of_msgtype : msgtype -> string

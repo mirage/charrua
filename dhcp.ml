@@ -18,6 +18,8 @@ open Dhcp_cpkt
 open Sexplib.Conv
 open Sexplib.Std
 
+let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
+
 type op =
   | Bootrequest
   | Bootreply with sexp
@@ -376,6 +378,9 @@ type dhcp_option =
   | Unknown
   with sexp
 
+let str_of_option = to_hum sexp_of_dhcp_option
+let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
+
 type pkt = {
   op      : op;
   htype   : htype;
@@ -646,6 +651,128 @@ let options_of_buf buf buf_len =
     extend_options buf |>
     List.rev
 
+let buf_of_options sbuf options =
+  let open Cstruct in
+  let put_code code buf = set_uint8 buf 0 code; shift buf 1 in
+  let put_len len buf = if len > 255 then
+      invalid_arg ("option len is too big: " ^ (string_of_int len));
+    set_uint8 buf 0 len; shift buf 1
+  in
+  let put_8 v buf = set_uint8 buf 0 v; shift buf 1 in
+  let put_16 v buf = BE.set_uint16 buf 0 v; shift buf 2 in
+  let put_32 v buf = BE.set_uint32 buf 0 v; shift buf 4 in
+  let put_ip ip buf = put_32 (Ipaddr.V4.to_int32 ip) buf in
+  let put_coded_8 code v buf = put_code code buf |> put_len 1 |> put_8 v in
+  let put_coded_16 code v buf = put_code code buf |> put_len 6 |> put_16 v in
+  let put_coded_32 code v buf = put_code code buf |> put_len 4 |> put_32 v in
+  let put_coded_ip code ip buf = put_code code buf |> put_len 4 |> put_ip ip in
+  let put_coded_bool code v buf =
+    put_coded_8 code (match v with true -> 1 | false -> 0) buf in
+  let put_coded_bytes code v buf =
+    let len = (Bytes.length v) in
+    let buf = put_code code buf |> put_len len in
+    blit_from_string v 0 buf 0 len;
+    shift buf len
+  in
+  let make_listf f len code l buf =
+    let buf = put_code code buf |> put_len (len * (List.length l)) in
+    List.fold_left f buf l
+  in
+  let put_coded_8_list = make_listf (fun buf x -> put_8 x buf) 1 in
+  let put_coded_16_list = make_listf (fun buf x -> put_16 x buf) 2 in
+  (* let put_coded_32_list = make_listf (fun buf x -> put_32 x buf) 4 in *)
+  let put_coded_ip_list = make_listf (fun buf x -> put_ip x buf) 4 in
+  let buf_of_option buf option =
+    match option with
+    | Subnet_mask mask -> put_coded_ip 1 mask buf             (* code 1 *)
+    | Time_offset toff -> put_coded_32 2 toff buf             (* code 2 *)
+    | Routers ips -> put_coded_ip_list 3 ips buf              (* code 3 *)
+    | Time_servers ips -> put_coded_ip_list 4 ips buf         (* code 4 *)
+    | Name_servers ips -> put_coded_ip_list 5 ips buf         (* code 5 *)
+    | Dns_servers ips -> put_coded_ip_list 6 ips buf          (* code 6 *)
+    | Log_servers ips -> put_coded_ip_list 7 ips buf          (* code 7 *)
+    | Cookie_servers ips -> put_coded_ip_list 8 ips buf       (* code 8 *)
+    | Lpr_servers ips -> put_coded_ip_list 9 ips buf          (* code 9 *)
+    | Impress_servers ips -> put_coded_ip_list 10 ips buf     (* code 10 *)
+    | Rsclocation_servers ips -> put_coded_ip_list 11 ips buf (* code 11 *)
+    | Hostname h -> put_coded_bytes 12 h buf                  (* code 12 *)
+    | Bootfile_size bs -> put_coded_16 13 bs buf              (* code 13 *)
+    | Merit_dumpfile md -> put_coded_bytes 14 md buf          (* code 14 *)
+    | Domain_name dn -> put_coded_bytes 15 dn buf             (* code 15 *)
+    | Swap_server ss -> put_coded_ip 16 ss buf                (* code 16 *)
+    | Root_path rp -> put_coded_bytes 17 rp buf               (* code 17 *)
+    | Extension_path ep -> put_coded_bytes 18 ep buf          (* code 18 *)
+    | Ipforwarding b -> put_coded_bool 19 b buf               (* code 19 *)
+    | Nlsr b -> put_coded_bool 20 b buf                       (* code 20 *)
+    (* | Policy_filters pf -> put_coded_bytes 21 pf buf          (\* code 21 *\) *)
+    | Max_datagram md -> put_coded_16 22 md buf               (* code 22 *)
+    | Default_ip_ttl dit -> put_coded_8 23 dit buf            (* code 23 *)
+    | Pmtu_ageing_timo pat -> put_coded_32 24 pat buf         (* code 24 *)
+    | Pmtu_plateau_table ppt -> put_coded_16_list 25 ppt buf  (* code 25 *)
+    | Interface_mtu im -> put_coded_16 26 im buf              (* code 26 *)
+    | All_subnets_local b -> put_coded_bool 27 b buf          (* code 27 *)
+    | Broadcast_addr ba -> put_coded_ip 28 ba buf             (* code 28 *)
+    | Perform_mask_discovery b -> put_coded_bool 29 b buf     (* code 29 *)
+    | Mask_supplier b -> put_coded_bool 30 b buf              (* code 30 *)
+    | Perform_router_disc b -> put_coded_bool 31 b buf        (* code 31 *)
+    | Router_sol_addr rsa -> put_coded_ip 32 rsa buf          (* code 32 *)
+    (* | Static_routes of Ipaddr.V4.Prefix.t list(\* code 33 *\) *)
+    | Trailer_encapsulation b -> put_coded_bool 34 b buf      (* code 34 *)
+    | Arp_cache_timo act -> put_coded_32 35 act buf           (* code 35 *)
+    | Ethernet_encapsulation b -> put_coded_bool 36 b buf     (* code 36 *)
+    | Tcp_default_ttl tdt -> put_coded_8 37 tdt buf           (* code 37 *)
+    | Tcp_keepalive_interval tki -> put_coded_32 38 tki buf   (* code 38 *)
+    | Tcp_keepalive_garbage tkg -> put_coded_8 39 tkg buf     (* code 39 *)
+    | Nis_domain nd -> put_coded_bytes 40 nd buf              (* code 40 *)
+    | Nis_servers ips -> put_coded_ip_list 41 ips buf         (* code 41 *)
+    | Ntp_servers ips -> put_coded_ip_list 42 ips buf         (* code 42 *)
+    | Vendor_specific vs -> put_coded_bytes 43 vs buf         (* code 43 *)
+    | Netbios_name_servers ips -> put_coded_ip_list 44 ips buf(* code 44 *)
+    | Netbios_datagram_distrib_servers ips -> put_coded_ip_list 45 ips buf (* code 45 *)
+    | Netbios_node nn -> put_coded_8 46 nn buf                (* code 46 *)
+    | Netbios_scope ns -> put_coded_bytes 47 ns buf           (* code 47 *)
+    | Xwindow_font_servers ips -> put_coded_ip_list 48 ips buf(* code 48 *)
+    | Xwindow_display_managers ips -> put_coded_ip_list 49 ips buf (* code 49 *)
+    | Request_ip rip -> put_coded_ip 50 rip buf               (* code 50 *)
+    | Ip_lease_time ilt -> put_coded_32 51 ilt buf            (* code 51 *)
+    | Option_overload oo -> put_coded_8 52 oo buf             (* code 52 *)
+    | Message_type mt -> put_coded_8 53 (int_of_msgtype mt) buf(* code 53 *)
+    | Server_identifier si -> put_coded_ip 54 si buf          (* code 54 *)
+    | Parameter_requests pr ->
+      put_coded_8_list 55 (List.map int_of_parameter_request pr) buf(* code 55 *)
+    | Message m -> put_coded_bytes 56 m buf                   (* code 56 *)
+    | Max_message mm -> put_coded_16 57 mm buf                (* code 57 *)
+    | Renewal_t1 rt -> put_coded_32 58 rt buf                 (* code 58 *)
+    | Rebinding_t2 rt -> put_coded_32 59 rt buf               (* code 59 *)
+    | Vendor_class_id vci -> put_coded_bytes 60 vci buf       (* code 60 *)
+    (* | Client_id of chaddr                     (\* code 61 *\) *)
+    | Nis_plus_domain npd -> put_coded_bytes 64 npd buf       (* code 64 *)
+    | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf    (* code 65 *)
+    | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf      (* code 66 *)
+    | Bootfile_name bn -> put_coded_bytes 67 bn buf           (* code 67 *)
+    | Mobile_ip_home_agent ips -> put_coded_ip_list 68 ips buf(* code 68 *)
+    | Smtp_servers ips -> put_coded_ip_list 69 ips buf        (* code 69 *)
+    | Pop3_servers ips -> put_coded_ip_list 70 ips buf        (* code 70 *)
+    | Nntp_servers ips -> put_coded_ip_list 71 ips buf        (* code 71 *)
+    | Www_servers ips -> put_coded_ip_list 72 ips buf         (* code 72 *)
+    | Finger_servers ips -> put_coded_ip_list 73 ips buf      (* code 73 *)
+    | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
+    | Streettalk_servers ips -> put_coded_ip_list 75 ips buf  (* code 75 *)
+    | Streettalk_da ips -> put_coded_ip_list 76 ips buf       (* code 76 *)
+    | Unknown | _ ->
+      Log.warn "buf_of_pkt option unimplemented: %s" (str_of_option option);
+      buf
+  in
+  match options with
+  | [] -> sbuf
+  | _ ->
+    let () = BE.set_uint32 sbuf 0 0x63825363l in       (* put cookie *)
+    let sbuf = shift sbuf 4 in
+    let ebuf = List.fold_left buf_of_option sbuf options in
+    (* Add the "end of dhcp options (255) option" *)
+    (* TODO add padding, it's A MUST *)
+    set_uint8 ebuf 0 255; shift ebuf 1
+
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
   if len < pkt_min_len then
@@ -681,12 +808,13 @@ let buf_of_pkt pkt =
   set_cpkt_yiaddr buf (Ipaddr.V4.to_int32 pkt.yiaddr);
   set_cpkt_siaddr buf (Ipaddr.V4.to_int32 pkt.siaddr);
   set_cpkt_giaddr buf (Ipaddr.V4.to_int32 pkt.giaddr);
-  let b = bytes_of_chaddr pkt.chaddr in
-  set_cpkt_chaddr b (Bytes.length b) buf;
-  set_cpkt_sname pkt.sname (Bytes.length pkt.sname) buf;
-  set_cpkt_file pkt.file (Bytes.length pkt.file) buf;
+  set_cpkt_chaddr (bytes_of_chaddr pkt.chaddr) 0 buf;
+  set_cpkt_sname pkt.sname 0 buf;
+  set_cpkt_file pkt.file 0 buf;
+  let options_start = Cstruct.shift buf sizeof_cpkt in
+  let buf_end = buf_of_options options_start pkt.options in
+  (* TODO calculate full pkt len, trim len, return buf *)
   buf
-  (* TODO set_cpkt_options buf; *)
 
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
@@ -705,7 +833,6 @@ let client_id_of_pkt pkt =
   | None -> pkt.chaddr
 
 (* str_of_* functions *)
-let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let str_of_op = to_hum sexp_of_op
 let str_of_htype = to_hum sexp_of_htype
 let str_of_hlen = string_of_int
@@ -722,6 +849,4 @@ let str_of_chaddr = to_hum sexp_of_chaddr
 let str_of_sname sname = sname
 let str_of_file file = file
 let str_of_msgtype = to_hum sexp_of_msgtype
-let str_of_option = to_hum sexp_of_dhcp_option
-let str_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 let str_of_pkt = to_hum sexp_of_pkt
