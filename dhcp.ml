@@ -441,9 +441,14 @@ let chaddr_of_buf buf htype hlen =
     Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
   else
     Cliid (copy_cpkt_chaddr buf)
-let bytes_of_chaddr = function
-  | Hwaddr hw -> Macaddr.to_bytes hw
-  | Cliid id -> Bytes.of_string id
+let bytes_of_chaddr chaddr =
+  let d = Bytes.make 16 (Char.chr 0) in
+  let s = match chaddr with
+    | Hwaddr hw -> Macaddr.to_bytes hw
+    | Cliid id -> Bytes.of_string id
+  in
+  let () = Bytes.blit s 0 d 0 (Bytes.length s) in
+  d
 let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
