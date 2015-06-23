@@ -464,6 +464,7 @@ let options_of_buf buf buf_len =
     let len = Cstruct.get_uint8 buf 1 in
     let body = Cstruct.shift buf 2 in
     let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
+    let padding () = collect_options (Cstruct.shift buf 1) options in
     (* discard discards the option from the resulting list *)
     let discard () = collect_options (Cstruct.shift body len) options in
     (* take includes the option in the resulting list *)
@@ -540,6 +541,7 @@ let options_of_buf buf buf_len =
           Cliid s
     in
     match code with
+    | 0 ->   padding ()
     | 1 ->   take (Subnet_mask (get_ip ()))
     | 2 ->   take (Time_offset (get_32 ()))
     | 3 ->   take (Routers (get_ip_list ()))
