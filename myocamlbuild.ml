@@ -22,6 +22,3 @@ dispatch begin function
     pdep ["link"] "linkdep" (fun param -> [param])
   | _ -> ()
 end;;
-
-(* XXX keep this until I figure out how to remove the warning *)
-mark_tag_used("linkdep(stubs.o)");;
