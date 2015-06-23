@@ -769,8 +769,6 @@ let buf_of_options sbuf options =
     let () = BE.set_uint32 sbuf 0 0x63825363l in       (* put cookie *)
     let sbuf = shift sbuf 4 in
     let ebuf = List.fold_left buf_of_option sbuf options in
-    (* Add the "end of dhcp options (255) option" *)
-    (* TODO add padding, it's A MUST *)
     set_uint8 ebuf 0 255; shift ebuf 1
 
 (* Raises invalid_arg if packet is malformed *)
@@ -812,9 +810,21 @@ let buf_of_pkt pkt =
   set_cpkt_sname pkt.sname 0 buf;
   set_cpkt_file pkt.file 0 buf;
   let options_start = Cstruct.shift buf sizeof_cpkt in
-  let buf_end = buf_of_options options_start pkt.options in
-  (* TODO calculate full pkt len, trim len, return buf *)
-  buf
+  let options_end = buf_of_options options_start pkt.options in
+  let partial_len = (Cstruct.len buf) - (Cstruct.len options_end) in
+  let buf_end =
+    if 300 - partial_len > 0 then
+      let pad_len = 300 - partial_len in
+      let () =
+        for i = 0 to pad_len do
+          Cstruct.set_uint8 options_end i 0
+        done
+      in
+      Cstruct.shift options_end pad_len
+    else
+      options_end
+  in
+  Cstruct.set_len buf ((Cstruct.len buf) - (Cstruct.len buf_end))
 
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
