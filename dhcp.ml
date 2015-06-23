@@ -461,166 +461,170 @@ let options_of_buf buf buf_len =
   let rec collect_options buf options =
     let code = Cstruct.get_uint8 buf 0 in
     let () = Log.debug "saw option code %u" code in
-    let len = Cstruct.get_uint8 buf 1 in
-    let body = Cstruct.shift buf 2 in
-    let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
     let padding () = collect_options (Cstruct.shift buf 1) options in
-    (* discard discards the option from the resulting list *)
-    let discard () = collect_options (Cstruct.shift body len) options in
-    (* take includes the option in the resulting list *)
-    let take op = collect_options (Cstruct.shift body len) (op :: options) in
-    let get_8 () = if len <> 1 then invalid_arg bad_len else
-        Cstruct.get_uint8 body 0 in
-    let get_8_list () =
-      let rec loop offset octets =
-        if offset = len then octets else
-          let octet = Cstruct.get_uint8 body offset in
-          loop (succ offset) (octet :: octets)
-      in
-      if len <= 0 then invalid_arg bad_len else
-        List.rev (loop 0 [])
-    in
-    let get_bool () = match (get_8 ()) with
-      | 1 -> true
-      | 0 -> false
-      | v -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
-    in
-    let get_16 () = if len <> 2 then invalid_arg bad_len else
-        Cstruct.BE.get_uint16 body 0 in
-    let get_32 () = if len <> 4 then invalid_arg bad_len else
-        Cstruct.BE.get_uint32 body 0 in
-    let get_ip () = if len <> 4 then invalid_arg bad_len else
-        Ipaddr.V4.of_int32 (get_32 ()) in
-    let get_16_list () =
-      let rec loop offset shorts =
-        if offset = len then shorts else
-          let short = Cstruct.BE.get_uint16 body offset in
-          loop ((succ offset) * 2) (short :: shorts)
-      in
-      if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
-        List.rev (loop 0 [])
-    in
-    (* Fetch ipv4s from options *)
-    let get_ip_list ?(min_len=4) () =
-      let rec loop offset ips =
-        if offset = len then ips else
-          let word = Cstruct.BE.get_uint32 body offset in
-          let ip = Ipaddr.V4.of_int32 word in
-          loop ((succ offset) * 4) (ip :: ips)
-      in
-      if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
-        List.rev (loop 0 [])
-    in
-    (* Get a list of ip pairs *)
-    let get_prefix_list () =
-      let rec loop offset prefixes =
-        if offset = len then
-          prefixes
-        else
-          let addr = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 body offset) in
-          let mask = Ipaddr.V4.of_int32
-              (Cstruct.BE.get_uint32 body (offset + 4)) in
-          try
-            let prefix = Ipaddr.V4.Prefix.of_netmask mask addr in
-            loop ((succ offset) * 8) (prefix :: prefixes)
-          with Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b)
-      in
-      if ((len mod 8) <> 0) || len <= 0 then
-        invalid_arg bad_len
-      else
-        List.rev (loop 0 [])
-    in
-    let get_string () =  if len < 1 then invalid_arg bad_len else
-        Cstruct.copy body 0 len
-    in
-    let get_client_id () =  if len < 2 then invalid_arg bad_len else
-        let s = Cstruct.copy body 1 (len - 1) in
-        if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
-            Hwaddr (Macaddr.of_bytes_exn s)
-        else
-          Cliid s
-    in
+    (* Make sure we never shift into an unexisting body *)
     match code with
-    | 0 ->   padding ()
-    | 1 ->   take (Subnet_mask (get_ip ()))
-    | 2 ->   take (Time_offset (get_32 ()))
-    | 3 ->   take (Routers (get_ip_list ()))
-    | 4 ->   take (Time_servers (get_ip_list ()))
-    | 5 ->   take (Name_servers (get_ip_list ()))
-    | 6 ->   take (Dns_servers (get_ip_list ()))
-    | 7 ->   take (Log_servers (get_ip_list ()))
-    | 8 ->   take (Cookie_servers (get_ip_list ()))
-    | 9 ->   take (Lpr_servers (get_ip_list ()))
-    | 10 ->  take (Impress_servers (get_ip_list ()))
-    | 11 ->  take (Rsclocation_servers (get_ip_list ()))
-    | 12 ->  take (Hostname (get_string ()))
-    | 13 ->  take (Bootfile_size (get_16 ()))
-    | 14 ->  take (Merit_dumpfile (get_string ()))
-    | 15 ->  take (Domain_name (get_string ()))
-    | 16 ->  take (Swap_server (get_ip ()))
-    | 17 ->  take (Root_path (get_string ()))
-    | 18 ->  take (Extension_path (get_string ()))
-    | 19 ->  take (Ipforwarding (get_bool ()))
-    | 20 ->  take (Nlsr (get_bool ()))
-    | 21 ->  take (Policy_filters (get_prefix_list ()))
-    | 22 ->  take (Max_datagram (get_16 ()))
-    | 23 ->  take (Default_ip_ttl (get_8 ()))
-    | 24 ->  take (Pmtu_ageing_timo (get_32 ()))
-    | 25 ->  take (Pmtu_plateau_table (get_16_list ()))
-    | 26 ->  take (Interface_mtu (get_16 ()))
-    | 27 ->  take (All_subnets_local (get_bool ()))
-    | 28 ->  take (Broadcast_addr (get_ip ()))
-    | 29 ->  take (Perform_mask_discovery (get_bool ()))
-    | 30 ->  take (Mask_supplier (get_bool ()))
-    | 31 ->  take (Perform_router_disc (get_bool ()))
-    | 32 ->  take (Router_sol_addr (get_ip ()))
-    | 33 ->  take (Static_routes (get_prefix_list ()))
-    | 34 ->  take (Trailer_encapsulation (get_bool ()))
-    | 35 ->  take (Arp_cache_timo (get_32 ()))
-    | 36 ->  take (Ethernet_encapsulation (get_bool ()))
-    | 37 ->  take (Tcp_default_ttl (get_8 ()))
-    | 38 ->  take (Tcp_keepalive_interval (get_32 ()))
-    | 39 ->  take (Tcp_keepalive_garbage (get_8 ()))
-    | 40 ->  take (Nis_domain (get_string ()))
-    | 41 ->  take (Nis_servers (get_ip_list ()))
-    | 42 ->  take (Ntp_servers (get_ip_list ()))
-    | 43 ->  take (Vendor_specific (get_string ()))
-    | 44 ->  take (Netbios_name_servers (get_ip_list ()))
-    | 45 ->  take (Netbios_datagram_distrib_servers (get_ip_list ()))
-    | 46 ->  take (Netbios_node (get_8 ()))
-    | 47 ->  take (Netbios_scope (get_string ()))
-    | 48 ->  take (Xwindow_font_servers (get_ip_list ()))
-    | 49 ->  take (Xwindow_display_managers (get_ip_list ()))
-    | 50 ->  take (Request_ip (get_ip ()))
-    | 51 ->  take (Ip_lease_time (get_32 ()))
-    | 52 ->  take (Option_overload (get_8 ()))
-    | 53 ->  take (Message_type (msgtype_of_int (get_8 ())))
-    | 54 ->  take (Server_identifier (get_ip ()))
-    | 55 ->  take (Parameter_requests (get_8_list () |>
-                                       List.map parameter_request_of_int))
-    | 56 ->  take (Message (get_string ()))
-    | 57 ->  take (Max_message (get_16 ()))
-    | 58 ->  take (Renewal_t1 (get_32 ()))
-    | 59 ->  take (Rebinding_t2 (get_32 ()))
-    | 60 ->  take (Vendor_class_id (get_string ()))
-    | 61 ->  take (Client_id (get_client_id ()))
-    | 64 ->  take (Nis_plus_domain (get_string ()))
-    | 65 ->  take (Nis_plus_servers (get_ip_list ()))
-    | 66 ->  take (Tftp_server_name (get_string ()))
-    | 67 ->  take (Bootfile_name (get_string ()))
-    | 68 ->  take (Mobile_ip_home_agent (get_ip_list ~min_len:0 ()))
-    | 69 ->  take (Smtp_servers (get_ip_list ()))
-    | 70 ->  take (Pop3_servers (get_ip_list ()))
-    | 71 ->  take (Nntp_servers (get_ip_list ()))
-    | 72 ->  take (Www_servers (get_ip_list ()))
-    | 73 ->  take (Finger_servers (get_ip_list ()))
-    | 74 ->  take (Irc_servers (get_ip_list ()))
-    | 75 ->  take (Streettalk_servers (get_ip_list ()))
-    | 76 ->  take (Streettalk_da (get_ip_list ()))
-    | 255 -> options            (* End of option list *)
-    | code ->
-      Log.warn "Unknown option code %d" code;
-      discard ()
+    | 0 -> padding ()
+    | 255 -> options
+    | _ -> (* Has len:body, generate the get functions *)
+      let len = Cstruct.get_uint8 buf 1 in
+      let body = Cstruct.shift buf 2 in
+      let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
+      (* discard discards the option from the resulting list *)
+      let discard () = collect_options (Cstruct.shift body len) options in
+      (* take includes the option in the resulting list *)
+      let take op = collect_options (Cstruct.shift body len) (op :: options) in
+      let get_8 () = if len <> 1 then invalid_arg bad_len else
+          Cstruct.get_uint8 body 0 in
+      let get_8_list () =
+        let rec loop offset octets =
+          if offset = len then octets else
+            let octet = Cstruct.get_uint8 body offset in
+            loop (succ offset) (octet :: octets)
+        in
+        if len <= 0 then invalid_arg bad_len else
+          List.rev (loop 0 [])
+      in
+      let get_bool () = match (get_8 ()) with
+        | 1 -> true
+        | 0 -> false
+        | v -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
+      in
+      let get_16 () = if len <> 2 then invalid_arg bad_len else
+          Cstruct.BE.get_uint16 body 0 in
+      let get_32 () = if len <> 4 then invalid_arg bad_len else
+          Cstruct.BE.get_uint32 body 0 in
+      let get_ip () = if len <> 4 then invalid_arg bad_len else
+          Ipaddr.V4.of_int32 (get_32 ()) in
+      let get_16_list () =
+        let rec loop offset shorts =
+          if offset = len then shorts else
+            let short = Cstruct.BE.get_uint16 body offset in
+            loop ((succ offset) * 2) (short :: shorts)
+        in
+        if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
+          List.rev (loop 0 [])
+      in
+      (* Fetch ipv4s from options *)
+      let get_ip_list ?(min_len=4) () =
+        let rec loop offset ips =
+          if offset = len then ips else
+            let word = Cstruct.BE.get_uint32 body offset in
+            let ip = Ipaddr.V4.of_int32 word in
+            loop ((succ offset) * 4) (ip :: ips)
+        in
+        if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
+          List.rev (loop 0 [])
+      in
+      (* Get a list of ip pairs *)
+      let get_prefix_list () =
+        let rec loop offset prefixes =
+          if offset = len then
+            prefixes
+          else
+            let addr = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 body offset) in
+            let mask = Ipaddr.V4.of_int32
+                (Cstruct.BE.get_uint32 body (offset + 4)) in
+            try
+              let prefix = Ipaddr.V4.Prefix.of_netmask mask addr in
+              loop ((succ offset) * 8) (prefix :: prefixes)
+            with Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b)
+        in
+        if ((len mod 8) <> 0) || len <= 0 then
+          invalid_arg bad_len
+        else
+          List.rev (loop 0 [])
+      in
+      let get_string () =  if len < 1 then invalid_arg bad_len else
+          Cstruct.copy body 0 len
+      in
+      let get_client_id () =  if len < 2 then invalid_arg bad_len else
+          let s = Cstruct.copy body 1 (len - 1) in
+          if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
+            Hwaddr (Macaddr.of_bytes_exn s)
+          else
+            Cliid s
+      in
+      match code with
+      | 0 ->   padding ()
+      | 1 ->   take (Subnet_mask (get_ip ()))
+      | 2 ->   take (Time_offset (get_32 ()))
+      | 3 ->   take (Routers (get_ip_list ()))
+      | 4 ->   take (Time_servers (get_ip_list ()))
+      | 5 ->   take (Name_servers (get_ip_list ()))
+      | 6 ->   take (Dns_servers (get_ip_list ()))
+      | 7 ->   take (Log_servers (get_ip_list ()))
+      | 8 ->   take (Cookie_servers (get_ip_list ()))
+      | 9 ->   take (Lpr_servers (get_ip_list ()))
+      | 10 ->  take (Impress_servers (get_ip_list ()))
+      | 11 ->  take (Rsclocation_servers (get_ip_list ()))
+      | 12 ->  take (Hostname (get_string ()))
+      | 13 ->  take (Bootfile_size (get_16 ()))
+      | 14 ->  take (Merit_dumpfile (get_string ()))
+      | 15 ->  take (Domain_name (get_string ()))
+      | 16 ->  take (Swap_server (get_ip ()))
+      | 17 ->  take (Root_path (get_string ()))
+      | 18 ->  take (Extension_path (get_string ()))
+      | 19 ->  take (Ipforwarding (get_bool ()))
+      | 20 ->  take (Nlsr (get_bool ()))
+      | 21 ->  take (Policy_filters (get_prefix_list ()))
+      | 22 ->  take (Max_datagram (get_16 ()))
+      | 23 ->  take (Default_ip_ttl (get_8 ()))
+      | 24 ->  take (Pmtu_ageing_timo (get_32 ()))
+      | 25 ->  take (Pmtu_plateau_table (get_16_list ()))
+      | 26 ->  take (Interface_mtu (get_16 ()))
+      | 27 ->  take (All_subnets_local (get_bool ()))
+      | 28 ->  take (Broadcast_addr (get_ip ()))
+      | 29 ->  take (Perform_mask_discovery (get_bool ()))
+      | 30 ->  take (Mask_supplier (get_bool ()))
+      | 31 ->  take (Perform_router_disc (get_bool ()))
+      | 32 ->  take (Router_sol_addr (get_ip ()))
+      | 33 ->  take (Static_routes (get_prefix_list ()))
+      | 34 ->  take (Trailer_encapsulation (get_bool ()))
+      | 35 ->  take (Arp_cache_timo (get_32 ()))
+      | 36 ->  take (Ethernet_encapsulation (get_bool ()))
+      | 37 ->  take (Tcp_default_ttl (get_8 ()))
+      | 38 ->  take (Tcp_keepalive_interval (get_32 ()))
+      | 39 ->  take (Tcp_keepalive_garbage (get_8 ()))
+      | 40 ->  take (Nis_domain (get_string ()))
+      | 41 ->  take (Nis_servers (get_ip_list ()))
+      | 42 ->  take (Ntp_servers (get_ip_list ()))
+      | 43 ->  take (Vendor_specific (get_string ()))
+      | 44 ->  take (Netbios_name_servers (get_ip_list ()))
+      | 45 ->  take (Netbios_datagram_distrib_servers (get_ip_list ()))
+      | 46 ->  take (Netbios_node (get_8 ()))
+      | 47 ->  take (Netbios_scope (get_string ()))
+      | 48 ->  take (Xwindow_font_servers (get_ip_list ()))
+      | 49 ->  take (Xwindow_display_managers (get_ip_list ()))
+      | 50 ->  take (Request_ip (get_ip ()))
+      | 51 ->  take (Ip_lease_time (get_32 ()))
+      | 52 ->  take (Option_overload (get_8 ()))
+      | 53 ->  take (Message_type (msgtype_of_int (get_8 ())))
+      | 54 ->  take (Server_identifier (get_ip ()))
+      | 55 ->  take (Parameter_requests (get_8_list () |>
+                                         List.map parameter_request_of_int))
+      | 56 ->  take (Message (get_string ()))
+      | 57 ->  take (Max_message (get_16 ()))
+      | 58 ->  take (Renewal_t1 (get_32 ()))
+      | 59 ->  take (Rebinding_t2 (get_32 ()))
+      | 60 ->  take (Vendor_class_id (get_string ()))
+      | 61 ->  take (Client_id (get_client_id ()))
+      | 64 ->  take (Nis_plus_domain (get_string ()))
+      | 65 ->  take (Nis_plus_servers (get_ip_list ()))
+      | 66 ->  take (Tftp_server_name (get_string ()))
+      | 67 ->  take (Bootfile_name (get_string ()))
+      | 68 ->  take (Mobile_ip_home_agent (get_ip_list ~min_len:0 ()))
+      | 69 ->  take (Smtp_servers (get_ip_list ()))
+      | 70 ->  take (Pop3_servers (get_ip_list ()))
+      | 71 ->  take (Nntp_servers (get_ip_list ()))
+      | 72 ->  take (Www_servers (get_ip_list ()))
+      | 73 ->  take (Finger_servers (get_ip_list ()))
+      | 74 ->  take (Irc_servers (get_ip_list ()))
+      | 75 ->  take (Streettalk_servers (get_ip_list ()))
+      | 76 ->  take (Streettalk_da (get_ip_list ()))
+      | code ->
+        Log.warn "Unknown option code %d" code;
+        discard ()
   in
   (* Extends options if it finds an Option_overload *)
   let extend_options buf options =
