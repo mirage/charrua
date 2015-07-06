@@ -34,6 +34,28 @@ let valid_pkt pkt =
   else
     true
 
+let nak pkt sid =
+  let open Dhcp in
+  let nakpkt = {
+    op = Bootreply;
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = pkt.xid;
+    secs = 0;
+    flags = pkt.flags;
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    siaddr = Ipaddr.V4.any;
+    giaddr = pkt.giaddr;
+    chaddr = pkt.chaddr;
+    sname = "";
+    file = "";
+    options = [ Message_type DHCPNAK; sid; Client_id (client_id_of_pkt pkt) ]
+  }
+  in
+  () (* TODO, actually send the packet *)
+
 let input_discover config (subnet:Config.subnet) pkt lease_db =
   let open Dhcp in
   let open Config in
