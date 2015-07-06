@@ -447,23 +447,15 @@ let chaddr_of_buf buf htype hlen =
   else
     Cliid (copy_cpkt_chaddr buf)
 let bytes_of_chaddr chaddr =
-  let d = Bytes.make 16 (Char.chr 0) in
   let s = match chaddr with
     | Hwaddr hw -> Macaddr.to_bytes hw
     | Cliid id -> Bytes.of_string id
   in
-  let () = Bytes.blit s 0 d 0 (Bytes.length s) in
-  d
-
-let extend_if_le s m =
-  let n = Bytes.length s in
-  if n > m then
-    invalid_arg ("string is too damn big: " ^ (string_of_int n));
-  Bytes.extend s 0 (m - n)
-let bytes_of_sname s = extend_if_le s 64
-let bytes_of_file s = extend_if_le s 128
-let sname_of_buf buf = copy_cpkt_sname buf
-let file_of_buf buf = copy_cpkt_file buf
+  Util.bytes_extend_if_le s 16
+let bytes_of_sname s = Util.bytes_extend_if_le s 64
+let bytes_of_file s = Util.bytes_extend_if_le s 128
+let sname_of_buf buf = Util.cstruct_copy_normalized copy_cpkt_sname buf
+let file_of_buf buf = Util.cstruct_copy_normalized copy_cpkt_file buf
 
 let options_of_buf buf buf_len =
   let rec collect_options buf options =

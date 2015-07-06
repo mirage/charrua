@@ -36,6 +36,28 @@ let finalize f g =
     g ();
     raise exn
 
+let bytes_extend_if_le s m =
+  let n = Bytes.length s in
+  if n > m then
+    invalid_arg ("string is too damn big: " ^ (string_of_int n));
+  Bytes.extend s 0 (m - n)
+
+let bytes_nul b =
+  let len = Bytes.length b in
+  let rec loop i =
+    if i = len then
+      true
+    else if (Bytes.get b i) <> (Char.chr 0) then
+      false
+    else
+      loop (succ i)
+  in
+  loop 0
+
+let cstruct_copy_normalized f buf =
+  let b = f buf in
+  if bytes_nul b then "" else b
+
 (* C stubs from stubs.c *)
 (* XXX Move all to ctypes some day *)
 external if_indextoname: int -> string = "caml_if_indextoname"
