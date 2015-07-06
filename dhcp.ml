@@ -680,6 +680,12 @@ let buf_of_options sbuf options =
     blit_from_string v 0 buf 0 len;
     shift buf len
   in
+  let put_client_id code v buf = match v with
+    | Hwaddr mac -> let buf = put_code code buf |> put_len 7 |> put_8 1 in
+      blit_from_string (Macaddr.to_bytes mac) 0 buf 0 6;
+      shift buf 6
+    | Cliid id -> failwith "Client id of Cliid is unimplemented"
+  in
   let make_listf f len code l buf =
     let buf = put_code code buf |> put_len (len * (List.length l)) in
     List.fold_left f buf l
@@ -751,7 +757,7 @@ let buf_of_options sbuf options =
     | Renewal_t1 rt -> put_coded_32 58 rt buf                 (* code 58 *)
     | Rebinding_t2 rt -> put_coded_32 59 rt buf               (* code 59 *)
     | Vendor_class_id vci -> put_coded_bytes 60 vci buf       (* code 60 *)
-    (* | Client_id of chaddr                     (\* code 61 *\) *)
+    | Client_id id -> put_client_id 61 id buf                 (* code 61 *)
     | Nis_plus_domain npd -> put_coded_bytes 64 npd buf       (* code 64 *)
     | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf    (* code 65 *)
     | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf      (* code 66 *)
