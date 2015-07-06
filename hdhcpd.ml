@@ -36,6 +36,7 @@ let valid_pkt pkt =
 
 let input_discover config (subnet:Config.subnet) pkt lease_db =
   let open Dhcp in
+  let open Config in
   Log.debug "DISCOVER packet received %s" (Dhcp.string_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
@@ -54,16 +55,16 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
       else if (Lease.addr_available lease.Lease.addr lease_db) then
         Some lease.Lease.addr
       else
-        Lease.get_usable_addr id subnet.Config.range lease_db
+        Lease.get_usable_addr id subnet.range lease_db
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
-        if (Lease.addr_in_range req_addr subnet.Config.range) &&
+        if (Lease.addr_in_range req_addr subnet.range) &&
            (Lease.addr_available req_addr lease_db) then
           Some req_addr
         else
-          Lease.get_usable_addr id subnet.Config.range lease_db
-      | None -> Lease.get_usable_addr id subnet.Config.range lease_db
+          Lease.get_usable_addr id subnet.range lease_db
+      | None -> Lease.get_usable_addr id subnet.range lease_db
   in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with
@@ -77,12 +78,43 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
       | Some lease -> if expired then
           Config.lease_time config subnet
         else
-          Int32.of_float lease.Lease.tm_end
+          Int32.of_float (Lease.timeleft lease)
   in
   match addr with
   | None -> Log.warn "No ips left to offer !"
-  | Some addr -> Log.debug "addr = %s, duration = %lu"
-                   (Ipaddr.V4.to_string addr) duration
+  | Some addr ->
+    (* Make a DHCPOFFER *)
+    let op = Bootreply in
+    let htype = Ethernet_10mb in
+    let hlen = 6 in
+    let hops = 0 in
+    let xid = pkt.xid in
+    let secs = 0 in
+    let flags = pkt.flags in
+    let ciaddr = Ipaddr.V4.any in
+    let yiaddr = addr in
+    let siaddr = subnet.interface.addr in
+    let giaddr = pkt.giaddr in
+    let chaddr = pkt.chaddr in
+    let sname = config.Config.hostname in
+    let file = "" in
+    (* Start building the options *)
+    (* let leases = Lease.to_list lease_db in *)
+    let t1 = Int32.of_float (0.5 *. (Int32.to_float duration)) in
+    let t2 = Int32.of_float (0.875 *. (Int32.to_float duration)) in
+    (* These are the options we always give, even if not asked. *)
+    let options =
+      [ Message_type DHCPOFFER;
+        Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
+        Renewal_t1 t1;
+        Rebinding_t2 t2;
+        Ip_lease_time duration;
+        Server_identifier subnet.interface.addr ]
+    in
+    let pkt = { op; htype; hlen; hops; xid; secs; flags;
+                ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file; options }
+    in
+    Log.debug "discover reply:\n%s" (string_of_pkt pkt)
 
 let input_pkt config ifid pkt lease_db =
   let open Dhcp in
