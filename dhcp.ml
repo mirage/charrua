@@ -861,14 +861,13 @@ let ntp_servers_of_options =
 
 (* might be slow O(preqs * options) *)
 let options_from_parameter_requests preqs options =
+  let maybe fn fnr = match fn options with
+      Some x -> Some (fnr x) | None -> None in
   Util.filter_map
     (function
-      | (Routers : parameter_request) -> (match (routers_of_options options) with
-            Some x -> Some (Routers x) | None -> None)
-      | Dns_servers -> (match (dns_servers_of_options options) with
-            Some x -> Some (Dns_servers x) | None -> None)
-      | Ntp_servers -> (match (ntp_servers_of_options options) with
-            Some x -> Some (Ntp_servers x) | None -> None)
+      | (Routers : parameter_request) -> maybe routers_of_options (fun x -> Routers x)
+      | Dns_servers -> maybe dns_servers_of_options (fun x -> Dns_servers x)
+      | Ntp_servers -> maybe ntp_servers_of_options (fun x -> Ntp_servers x)
       | _ -> None)
     preqs
 
