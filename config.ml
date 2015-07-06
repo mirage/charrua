@@ -45,6 +45,7 @@ type t = {
   interfaces : interface list;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
+  hostname : string;
   default_lease_time : int32;
   max_lease_time : int32;
 } with sexp
@@ -104,6 +105,7 @@ let config_of_ast ast =
   in
   { interfaces; subnets;
     options = ast.options;
+    hostname = Unix.gethostname ();
     default_lease_time = ast.default_lease_time;
     max_lease_time = ast.max_lease_time }
 
