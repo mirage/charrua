@@ -854,6 +854,8 @@ let request_ip_of_options =
   Util.find_map (function Request_ip ip -> Some ip | _ -> None)
 let ip_lease_time_of_options =
   Util.find_map (function Ip_lease_time ip -> Some ip | _ -> None)
+let server_identifier_of_options =
+  Util.find_map (function Server_identifier sid -> Some sid | _ -> None)
 
 let generic_list_of_options f options = match (Util.filter_map f options) with
   | [] -> None

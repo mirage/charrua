@@ -230,6 +230,7 @@ val msgtype_of_options : dhcp_option list -> msgtype option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
+val server_identifier_of_options : dhcp_option list -> Ipaddr.V4.t option
 val routers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val dns_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val ntp_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option
