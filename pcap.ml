@@ -69,10 +69,21 @@ let print_packet p =
         let udplen = Cstruct.BE.get_uint16 udp 4 in
         let dhcp = Cstruct.shift udp 8 in
         let pkt = Dhcp.pkt_of_buf dhcp (udplen - 8) in
-        printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt)
+        printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
+        let buf = Dhcp.buf_of_pkt pkt in
+        let pkt2 = Dhcp.pkt_of_buf buf (udplen - 8) in
+        if pkt2 <> pkt then begin
+          printf "buffers differ !\n";
+          printf "pcap buf:";
+          Cstruct.hexdump dhcp;
+          printf "our buf:";
+          Cstruct.hexdump buf;
+          printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
+          failwith "Serialization bug found !"
+        end
       | _ -> failwith "unknown ip protocol"
     end
-  |_ -> failwith "unknown body"
+  | _ -> failwith "unknown body"
 
 let rec print_pcap_packet (hdr, pkt) =
   let ts_sec = get_pcap_packet_ts_sec hdr in
