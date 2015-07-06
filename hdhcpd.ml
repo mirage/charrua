@@ -103,7 +103,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
     let t1 = Int32.of_float (0.5 *. (Int32.to_float duration)) in
     let t2 = Int32.of_float (0.875 *. (Int32.to_float duration)) in
     (* These are the options we always give, even if not asked. *)
-    let options =
+    let default_options =
       [ Message_type DHCPOFFER;
         Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
         Renewal_t1 t1;
@@ -111,8 +111,13 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
         Ip_lease_time duration;
         Server_identifier subnet.interface.addr ]
     in
+    let extra_options = match (parameter_requests_of_options pkt.options) with
+      | None -> []
+      | Some preqs -> options_from_parameter_requests preqs subnet.options
+    in
     let pkt = { op; htype; hlen; hops; xid; secs; flags;
-                ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file; options }
+                ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
+                options = default_options @ extra_options }
     in
     Log.debug "discover reply:\n%s" (string_of_pkt pkt)
 

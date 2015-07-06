@@ -840,14 +840,37 @@ let buf_of_pkt pkt =
 
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
-let parameter_requests_of_options =
-  Util.find_map (function Parameter_requests pr -> Some pr | _ -> None)
 let client_id_of_options =
   Util.find_map (function Client_id id -> Some id | _ -> None)
 let request_ip_of_options =
   Util.find_map (function Request_ip ip -> Some ip | _ -> None)
 let ip_lease_time_of_options =
   Util.find_map (function Ip_lease_time ip -> Some ip | _ -> None)
+
+let generic_list_of_options f options = match (Util.filter_map f options) with
+  | [] -> None
+  | x -> Some (List.flatten x)
+let parameter_requests_of_options =
+  generic_list_of_options (function Parameter_requests x -> Some x | _ -> None)
+let routers_of_options =
+  generic_list_of_options (function Routers x -> Some x | _ -> None)
+let dns_servers_of_options =
+  generic_list_of_options (function Dns_servers x -> Some x | _ -> None)
+let ntp_servers_of_options =
+  generic_list_of_options (function Ntp_servers x -> Some x | _ -> None)
+
+(* might be slow O(preqs * options) *)
+let options_from_parameter_requests preqs options =
+  Util.filter_map
+    (function
+      | (Routers : parameter_request) -> (match (routers_of_options options) with
+            Some x -> Some (Routers x) | None -> None)
+      | Dns_servers -> (match (dns_servers_of_options options) with
+            Some x -> Some (Dns_servers x) | None -> None)
+      | Ntp_servers -> (match (ntp_servers_of_options options) with
+            Some x -> Some (Ntp_servers x) | None -> None)
+      | _ -> None)
+    preqs
 
 let client_id_of_pkt pkt =
   match client_id_of_options pkt.options with
