@@ -221,7 +221,7 @@ let int_of_parameter_request = function
   | Irc_servers                       -> 74 (* code 74 *)
   | Streettalk_servers                -> 75 (* code 75 *)
   | Streettalk_da                     -> 76 (* code 76 *)
-  | Unknown x		              -> x
+  | Unknown x                         -> x
 
 let parameter_request_of_int = function
   | 1  -> Subnet_mask                        (* code 1 *)
