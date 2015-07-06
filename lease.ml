@@ -34,7 +34,10 @@ let lookup client_id lease_db =
   try Some (Hashtbl.find lease_db client_id) with Not_found -> None
 let replace client_id lease lease_db = Hashtbl.replace lease_db client_id lease
 (* Beware! This is an online state *)
-let expired lease = lease.tm_end >= lease.tm_start
+let timeleft lease =
+  let left = lease.tm_end -. Unix.time () in
+  if left < 0. then 0. else left
+let expired lease = timeleft lease > 0.
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
 
