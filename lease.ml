@@ -26,15 +26,16 @@ type lease = {
   hostname   : string;
 } with sexp
 
-type leases = (Dhcp.chaddr, lease) Hashtbl.t
+(* Database, collection of leases *)
+type lease_db = (Dhcp.chaddr, lease) Hashtbl.t
+
 let empty () = Hashtbl.create 50
-let lookup client_id leases =
-  try Some (Hashtbl.find leases client_id) with Not_found -> None
-let replace client_id lease leases = Hashtbl.replace leases client_id lease
+let lookup client_id lease_db =
+  try Some (Hashtbl.find lease_db client_id) with Not_found -> None
+let replace client_id lease lease_db = Hashtbl.replace lease_db client_id lease
 (* Beware! This is an online state *)
 let expired lease = lease.tm_end >= lease.tm_start
-let to_list leases =
-  Hashtbl.fold (fun _ v acc -> v :: acc ) leases []
+let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
 
 let addr_in_range addr range =
@@ -44,16 +45,16 @@ let addr_in_range addr range =
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
 
-let of_addr addr leases =
-  List.filter (fun l -> l.addr = addr) (to_list leases)
+let of_addr addr lease_db =
+  List.filter (fun l -> l.addr = addr) (to_list lease_db)
 
-let addr_allocated addr leases =
-  match (of_addr addr leases) with
+let addr_allocated addr lease_db =
+  match (of_addr addr lease_db) with
   | [] -> false
   | _ -> true
 
-let addr_available addr leases =
-  match (of_addr addr leases) with
+let addr_available addr lease_db =
+  match (of_addr addr lease_db) with
   | [] -> true
   | leases -> List.exists (fun l -> not (expired l)) leases
 
@@ -61,7 +62,7 @@ let addr_available addr leases =
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-let get_usable_addr id range leases =
+let get_usable_addr id range lease_db =
   let open Dhcp in
   let (low_ip, high_ip) = range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
@@ -93,9 +94,9 @@ let get_usable_addr id range leases =
     else
       linear_loop (Int32.succ off) f
   in
-  if not (addr_allocated hint_ip leases) then
+  if not (addr_allocated hint_ip lease_db) then
     Some hint_ip
-  else match linear_loop Int32.zero (fun a -> not (addr_allocated a leases)) with
+  else match linear_loop Int32.zero (fun a -> not (addr_allocated a lease_db)) with
     | Some ip -> Some ip
-    | None -> linear_loop Int32.zero (fun a -> addr_available a leases)
+    | None -> linear_loop Int32.zero (fun a -> addr_available a lease_db)
 

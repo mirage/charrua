@@ -34,13 +34,13 @@ let valid_pkt pkt =
   else
     true
 
-let input_discover config (subnet:Config.subnet) pkt leases =
+let input_discover config (subnet:Config.subnet) pkt lease_db =
   let open Dhcp in
   Log.debug "DISCOVER packet received %s" (Dhcp.string_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
   let id = client_id_of_pkt pkt in
-  let lease = Lease.lookup id leases in
+  let lease = Lease.lookup id lease_db in
   let expired = match lease with
     | Some lease -> Lease.expired lease
     | None -> false
@@ -51,19 +51,19 @@ let input_discover config (subnet:Config.subnet) pkt leases =
       if not expired then
         Some lease.Lease.addr
       (* If the lease expired, the address might not be available *)
-      else if (Lease.addr_available lease.Lease.addr leases) then
+      else if (Lease.addr_available lease.Lease.addr lease_db) then
         Some lease.Lease.addr
       else
-        Lease.get_usable_addr id subnet.Config.range leases
+        Lease.get_usable_addr id subnet.Config.range lease_db
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
         if (Lease.addr_in_range req_addr subnet.Config.range) &&
-           (Lease.addr_available req_addr leases) then
+           (Lease.addr_available req_addr lease_db) then
           Some req_addr
         else
-          Lease.get_usable_addr id subnet.Config.range leases
-      | None -> Lease.get_usable_addr id subnet.Config.range leases
+          Lease.get_usable_addr id subnet.Config.range lease_db
+      | None -> Lease.get_usable_addr id subnet.Config.range lease_db
   in
   (* Figure out the lease duration *)
   let duration = match (ip_lease_time_of_options pkt.options) with
@@ -84,7 +84,7 @@ let input_discover config (subnet:Config.subnet) pkt leases =
   | Some addr -> Log.debug "addr = %s, duration = %lu"
                    (Ipaddr.V4.to_string addr) duration
 
-let input_pkt config ifid pkt leases =
+let input_pkt config ifid pkt lease_db =
   let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
@@ -92,13 +92,13 @@ let input_pkt config ifid pkt leases =
     | None -> Log.warn "No subnet for interface %s" (Util.if_indextoname ifid)
     | Some subnet ->
       match msgtype_of_options pkt.options with
-      | Some DHCPDISCOVER -> input_discover config subnet pkt leases
+      | Some DHCPDISCOVER -> input_discover config subnet pkt lease_db
       | None -> Log.warn "Got malformed packet: no dhcp msgtype"
       | Some m -> Log.debug "Unhandled msgtype %s" (string_of_msgtype m)
   else
     Log.warn "Invalid packet %s" (string_of_pkt pkt)
 
-let rec dhcp_recv config sock leases =
+let rec dhcp_recv config sock lease_db =
   let buffer = Dhcp.make_buf () in
   lwt (n, ifid) = Util.lwt_cstruct_recvif sock buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
@@ -110,10 +110,10 @@ let rec dhcp_recv config sock leases =
       Log.warn "Dropped packet: %s" e
     | pkt ->
       Log.debug "valid packet from %d bytes" n;
-      try input_pkt config ifid pkt leases
+      try input_pkt config ifid pkt lease_db
       with Invalid_argument e -> Log.warn "Input pkt %s" e
   in
-  dhcp_recv config sock leases
+  dhcp_recv config sock lease_db
 
 let open_dhcp_sock () =
   let open Lwt_unix in
