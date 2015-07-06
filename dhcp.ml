@@ -454,6 +454,14 @@ let bytes_of_chaddr chaddr =
   in
   let () = Bytes.blit s 0 d 0 (Bytes.length s) in
   d
+
+let extend_if_le s m =
+  let n = Bytes.length s in
+  if n > m then
+    invalid_arg ("string is too damn big: " ^ (string_of_int n));
+  Bytes.extend s 0 (m - n)
+let bytes_of_sname s = extend_if_le s 64
+let bytes_of_file s = extend_if_le s 128
 let sname_of_buf buf = copy_cpkt_sname buf
 let file_of_buf buf = copy_cpkt_file buf
 
@@ -819,8 +827,8 @@ let buf_of_pkt pkt =
   set_cpkt_siaddr buf (Ipaddr.V4.to_int32 pkt.siaddr);
   set_cpkt_giaddr buf (Ipaddr.V4.to_int32 pkt.giaddr);
   set_cpkt_chaddr (bytes_of_chaddr pkt.chaddr) 0 buf;
-  set_cpkt_sname pkt.sname 0 buf;
-  set_cpkt_file pkt.file 0 buf;
+  set_cpkt_sname (bytes_of_sname pkt.sname) 0 buf;
+  set_cpkt_file (bytes_of_file pkt.file) 0 buf;
   let options_start = Cstruct.shift buf sizeof_cpkt in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = (Cstruct.len buf) - (Cstruct.len options_end) in
