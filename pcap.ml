@@ -116,9 +116,9 @@ let print_pcap_header buf =
   printf "snaplen %lu\n%!" snaplen;
   printf "lltype %lx\n%!" header_network
 
-let parse () =
-  printf "start parse\n%!";
-  let fd = Unix.(openfile "dhcp.pcap" [O_RDONLY] 0) in
+let parse file =
+  printf "parsing %s\n%!" file;
+  let fd = Unix.(openfile file [O_RDONLY] 0) in
   let t = Unix_cstruct.of_fd fd in
   printf "total pcap file length %d\n%!" (Cstruct.len t);
 
@@ -134,6 +134,9 @@ let parse () =
       (fun a packet -> print_pcap_packet packet; (a+1))
       packets 0
   in
-  printf "total packets %d\n%!" num_packets
+  Unix.close fd;
+  printf "%s had %d packets\n\n%!" file num_packets
 
-let _ = parse ()
+let testfiles = ["dhcp.pcap"; "dhcp2.pcap" ]
+
+let _ = List.iter parse testfiles
