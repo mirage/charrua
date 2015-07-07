@@ -34,20 +34,21 @@ let valid_pkt pkt =
   else
     true
 
-let input_decline config (subnet:Config.subnet) pkt lease_db =
+let input_decline config (subnet:Config.subnet) pkt =
   Log.debug "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
 
-let input_release config (subnet:Config.subnet) pkt lease_db =
+let input_release config (subnet:Config.subnet) pkt =
   Log.debug "RELEASE packet received %s" (Dhcp.string_of_pkt pkt)
 
-let input_inform config (subnet:Config.subnet) pkt lease_db =
+let input_inform config (subnet:Config.subnet) pkt =
   Log.debug "INFORM packet received %s" (Dhcp.string_of_pkt pkt)
 
-let input_request config (subnet:Config.subnet) pkt lease_db =
+let input_request config (subnet:Config.subnet) pkt =
   let open Dhcp in
   let open Config in
   Log.debug "REQUEST packet received %s" (Dhcp.string_of_pkt pkt);
   let drop () = () in
+  let lease_db = subnet.lease_db in
   let client_id = client_id_of_pkt pkt in
   let lease = Lease.lookup client_id lease_db in
   let ourip = subnet.interface.addr in
@@ -161,12 +162,13 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
       ack lease
   | _ -> drop ()
 
-let input_discover config (subnet:Config.subnet) pkt lease_db =
+let input_discover config (subnet:Config.subnet) pkt =
   let open Dhcp in
   let open Config in
   Log.debug "DISCOVER packet received %s" (Dhcp.string_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
+  let lease_db = subnet.lease_db in
   let id = client_id_of_pkt pkt in
   let lease = Lease.lookup id lease_db in
   let ourip = subnet.interface.addr in
@@ -250,7 +252,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
     in
     Log.debug "DISCOVER reply:\n%s" (string_of_pkt pkt)
 
-let input_pkt config ifid pkt lease_db =
+let input_pkt config ifid pkt =
   let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
@@ -258,17 +260,17 @@ let input_pkt config ifid pkt lease_db =
     | None -> Log.warn "No subnet for interface %s" (Util.if_indextoname ifid)
     | Some subnet ->
       match msgtype_of_options pkt.options with
-      | Some DHCPDISCOVER -> input_discover config subnet pkt lease_db
-      | Some DHCPREQUEST  -> input_request config subnet pkt lease_db
-      | Some DHCPDECLINE  -> input_decline config subnet pkt lease_db
-      | Some DHCPRELEASE  -> input_release config subnet pkt lease_db
-      | Some DHCPINFORM   -> input_inform config subnet pkt lease_db
+      | Some DHCPDISCOVER -> input_discover config subnet pkt
+      | Some DHCPREQUEST  -> input_request config subnet pkt
+      | Some DHCPDECLINE  -> input_decline config subnet pkt
+      | Some DHCPRELEASE  -> input_release config subnet pkt
+      | Some DHCPINFORM   -> input_inform config subnet pkt
       | None -> Log.warn "Got malformed packet: no dhcp msgtype"
       | Some m -> Log.debug "Unhandled msgtype %s" (string_of_msgtype m)
   else
     Log.warn "Invalid packet %s" (string_of_pkt pkt)
 
-let rec dhcp_recv config sock lease_db =
+let rec dhcp_recv config sock =
   let buffer = Dhcp.make_buf () in
   lwt (n, ifid) = Util.lwt_cstruct_recvif sock buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
@@ -280,10 +282,10 @@ let rec dhcp_recv config sock lease_db =
       Log.warn "Dropped packet: %s" e
     | pkt ->
       Log.debug "valid packet from %d bytes" n;
-      try input_pkt config ifid pkt lease_db
+      try input_pkt config ifid pkt
       with Invalid_argument e -> Log.warn "Input pkt %s" e
   in
-  dhcp_recv config sock lease_db
+  dhcp_recv config sock
 
 let open_dhcp_sock () =
   let open Lwt_unix in
@@ -335,7 +337,7 @@ let hdhcpd configfile verbosity =
   let config = Config_parser.parse ~path:configfile () in
   let sock = open_dhcp_sock () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv config sock (Lease.empty ()) in
+  let recv_thread = dhcp_recv config sock in
   Lwt_main.run (recv_thread >>= fun () ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 

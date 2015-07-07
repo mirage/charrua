@@ -36,6 +36,7 @@ type subnet = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
+  lease_db : Lease.database;
   hosts : host list;
   default_lease_time : int32 option;
   max_lease_time : int32 option;
@@ -94,10 +95,14 @@ let config_of_ast ast =
                             (Ipaddr.V4.Prefix.to_string subnet.network))))
           subnet.hosts
       in
+      let db_name = interface.name ^ ":" ^
+                    (Ipaddr.V4.Prefix.to_string subnet.network)
+      in
       { interface = interface;
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
+        lease_db = Lease.make_db db_name subnet.network;
         hosts = subnet.hosts;
         default_lease_time = subnet.default_lease_time;
         max_lease_time = subnet.max_lease_time })
