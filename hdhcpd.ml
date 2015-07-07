@@ -34,32 +34,6 @@ let valid_pkt pkt =
   else
     true
 
-let nak pkt sid = () (* TODO *)
-(*
-let nak pkt sid =
-  let open Dhcp in
-  let nakpkt = {
-    op = Bootreply;
-    htype = Ethernet_10mb;
-    hlen = 6;
-    hops = 0;
-    xid = pkt.xid;
-    secs = 0;
-    flags = pkt.flags;
-    ciaddr = Ipaddr.V4.any;
-    yiaddr = Ipaddr.V4.any;
-    siaddr = Ipaddr.V4.any;
-    giaddr = pkt.giaddr;
-    chaddr = pkt.chaddr;
-    sname = "";
-    file = "";
-    options = [ Message_type DHCPNAK; sid; Client_id (client_id_of_pkt pkt) ]
-  }
-  in
-  () (* TODO, actually send the packet *)
-*)
-
-
 let input_decline config (subnet:Config.subnet) pkt lease_db =
   Log.debug "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
 
@@ -78,12 +52,38 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
   let ourip = subnet.interface.addr in
   let reqip = request_ip_of_options pkt.options in
   let sidip = server_identifier_of_options pkt.options in
+  let nak ?msg () =
+    let open Util in
+    let nakpkt = {
+      op = Bootreply;
+      htype = Ethernet_10mb;
+      hlen = 6;
+      hops = 0;
+      xid = pkt.xid;
+      secs = 0;
+      flags = pkt.flags; (* XXX this is WRONG !!! *)
+      ciaddr = Ipaddr.V4.unspecified;
+      yiaddr = Ipaddr.V4.unspecified;
+      siaddr = Ipaddr.V4.unspecified;
+      giaddr = pkt.giaddr; (* XXX this is WRONG !!! *)
+      chaddr = pkt.chaddr;
+      sname = "";
+      file = "";
+      options = List.rev @@
+        cons_if_some_f (client_id_of_options pkt.options) (fun id -> Client_id id) @@
+        cons_if_some_f msg (fun msg -> Message msg) @@
+        [Server_identifier ourip; Message_type DHCPNAK];
+    }
+    in
+    Log.debug "REQUEST->NAK reply:\n%s" (string_of_pkt nakpkt)
+  in
   let ack lease =
     let lease_time, t1, t2 =
       Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
     in
     let options = [
       Message_type DHCPACK;
+      (* Vendor_class_id "TODO" *)
       Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
       Ip_lease_time lease_time;
       Renewal_t1 t1;
@@ -114,7 +114,7 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
       options = options @ extra_options;
     }
     in
-    Log.debug "REQUEST reply:\n%s" (string_of_pkt ackpkt)
+    Log.debug "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
   in
   match sidip, reqip, lease with
   | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -123,9 +123,10 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       let () = Log.warn "Bad DHCPREQUEST, ciaddr is not 0" in
       drop ()
-    else if not (Lease.addr_in_range reqip subnet.range) ||
-            not (Lease.addr_available reqip lease_db) then
-      nak pkt ()
+    else if not (Lease.addr_in_range reqip subnet.range) then
+        nak ~msg:"Requested address is not in subnet range" ()
+    else if not (Lease.addr_available reqip lease_db) then
+      nak ~msg:"Requested address is not available" ()
     else
       () (* Insert lease and ack *)
   | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
@@ -133,13 +134,14 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       let () = Log.warn "Bad DHCPREQUEST, ciaddr is not 0" in
       drop ()
+    else if expired then
+      nak ~msg:"Lease has expired, try again son" ()
     (* TODO check if it's in the correct network when giaddr <> 0 *)
     else if pkt.giaddr = Ipaddr.V4.unspecified &&
             not (Lease.addr_in_range reqip subnet.range) then
-      nak pkt ()
-    (* Does it have the correct address ? *)
-    else if lease.Lease.addr <> reqip || expired then
-      nak pkt ()
+      nak ~msg:"Requested address is not in subnet range" ()
+    else if lease.Lease.addr <> reqip then
+      nak ~msg:"Requested address is incorrect" ()
     else
       ack lease
   | None, None, Some lease -> (* DHCPREQUEST @ RENEWING/REBINDING state *)
@@ -147,8 +149,10 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
       let () = Log.warn "Bad DHCPREQUEST, ciaddr is 0" in
       drop ()
-    else if lease.Lease.addr <> pkt.ciaddr || expired then
-      nak pkt ()
+    else if expired then
+      nak ~msg:"Lease has expired, try again son" ()
+    else if lease.Lease.addr <> pkt.ciaddr then
+      nak ~msg:"Requested address is incorrect" ()
     else
       ack lease
   | _ -> drop ()
