@@ -58,6 +58,11 @@ let cstruct_copy_normalized f buf =
   let b = f buf in
   if bytes_nul b then "" else b
 
+let some_or_default x d = match x with Some x -> x | None -> d
+let some_or_f x f = match x with Some x -> x | None -> f ()
+let some_or_invalid x s = some_or_f x (fun () -> invalid_arg s)
+let some_or_fail x s = some_or_f x (fun () -> failwith s)
+
 (* C stubs from stubs.c *)
 (* XXX Move all to ctypes some day *)
 external if_indextoname: int -> string = "caml_if_indextoname"
