@@ -227,6 +227,7 @@ val client_id_of_pkt : pkt -> client_id
 val string_of_pkt : pkt -> string
 val string_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
+val client_id_of_options : dhcp_option list -> client_id option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
