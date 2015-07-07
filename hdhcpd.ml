@@ -34,7 +34,6 @@ let valid_pkt pkt =
   else
     true
 
-let ack pkt sid = () (* TODO*)
 let nak pkt sid = () (* TODO *)
 (*
 let nak pkt sid =
@@ -76,21 +75,48 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
   Log.debug "REQUEST packet received %s" (Dhcp.string_of_pkt pkt);
   let drop () = () in
   let lease = Lease.lookup (client_id_of_pkt pkt) lease_db in
-  let ourid = Server_identifier subnet.interface.addr in
+  let ourip = subnet.interface.addr in
   let reqip = request_ip_of_options pkt.options in
-  let sid = server_identifier_of_options pkt.options in
-  match sid, reqip, lease with
-  | Some sid, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
-    if sid <> subnet.interface.addr then (* is it for us ? *)
+  let sidip = server_identifier_of_options pkt.options in
+  let ack addr =
+    let extra_options = match (parameter_requests_of_options pkt.options) with
+      | Some preqs -> options_from_parameter_requests preqs subnet.options
+      | None -> []
+    in
+    let ackpkt = {
+      op = Bootreply;
+      htype = Ethernet_10mb;
+      hlen = 6;
+      hops = 0;
+      xid = pkt.xid;
+      secs = 0;
+      flags = pkt.flags; (* XXX this is WRONG !!! *)
+      ciaddr = pkt.ciaddr;
+      yiaddr = addr;
+      siaddr = ourip;
+      giaddr = pkt.giaddr; (* XXX this is WRONG !!! *)
+      chaddr = pkt.chaddr;
+      sname = "";
+      file = "";
+      (* TODO add Message option *)
+      options = [ Message_type DHCPACK; Server_identifier ourip ] @
+                extra_options;
+    }
+    in
+    Log.debug "REQUEST reply:\n%s" (string_of_pkt ackpkt)
+  in
+  match sidip, reqip, lease with
+  | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
+    if sidip <> ourip then (* is it for us ? *)
       drop ()
     else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       let () = Log.warn "Bad DHCPREQUEST, ciaddr is not 0" in
       drop ()
     else if not (Lease.addr_in_range reqip subnet.range) ||
             not (Lease.addr_available reqip lease_db) then
-      nak pkt ourid
+      nak pkt ()
     else
-      ack pkt ourid
+      () (* Insert lease and ack *)
   | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
@@ -99,21 +125,21 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     (* TODO check if it's in the correct network when giaddr <> 0 *)
     else if pkt.giaddr = Ipaddr.V4.unspecified &&
             not (Lease.addr_in_range reqip subnet.range) then
-      nak pkt ourid
+      nak pkt ()
     (* Does it have the correct address ? *)
     else if lease.Lease.addr <> reqip || expired then
-      nak pkt ourid
+      nak pkt ()
     else
-      ack pkt ourid
+      ack lease.Lease.addr
   | None, None, Some lease -> (* DHCPREQUEST @ RENEWING/REBINDING state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
       let () = Log.warn "Bad DHCPREQUEST, ciaddr is 0" in
       drop ()
     else if lease.Lease.addr <> pkt.ciaddr || expired then
-      nak pkt ourid
+      nak pkt ()
     else
-      ack pkt ourid
+      ack lease.Lease.addr
   | _ -> drop ()
 
 let input_discover config (subnet:Config.subnet) pkt lease_db =
@@ -201,7 +227,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
                 ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
                 options = default_options @ extra_options }
     in
-    Log.debug "discover reply:\n%s" (string_of_pkt pkt)
+    Log.debug "DISCOVER reply:\n%s" (string_of_pkt pkt)
 
 let input_pkt config ifid pkt lease_db =
   let open Dhcp in
