@@ -30,6 +30,10 @@ type lease = {
 type lease_db = (Dhcp.client_id, lease) Hashtbl.t
 
 let empty () = Hashtbl.create 50
+let make client_id addr time =
+  let tm_start = Int32.of_float (Unix.time ()) in
+  let tm_end = Int32.add tm_start time in
+  { tm_start; tm_end; addr; client_id; hostname = "TODO" }
 let lookup client_id lease_db =
   try Some (Hashtbl.find lease_db client_id) with Not_found -> None
 let replace client_id lease lease_db = Hashtbl.replace lease_db client_id lease
@@ -45,8 +49,8 @@ let timeleft3 lease t1_ratio t2_ratio =
   (Int32.of_float left,
    Int32.of_float (left *. t1_ratio),
    Int32.of_float (left *. t2_ratio))
-
 let expired lease = timeleft lease > Int32.zero
+
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
 
