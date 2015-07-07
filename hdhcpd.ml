@@ -150,6 +150,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
   (* Figure out the ip address *)
   let id = client_id_of_pkt pkt in
   let lease = Lease.lookup id lease_db in
+  let ourip = subnet.interface.addr in
   let expired = match lease with
     | Some lease -> Lease.expired lease
     | None -> false
@@ -174,8 +175,8 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
           Lease.get_usable_addr id subnet.range lease_db
       | None -> Lease.get_usable_addr id subnet.range lease_db
   in
-  (* Figure out the lease duration *)
-  let duration = match (ip_lease_time_of_options pkt.options) with
+  (* Figure out the lease lease_time *)
+  let lease_time = match (ip_lease_time_of_options pkt.options) with
     | Some ip_lease_time ->
       if Config.lease_time_good config subnet ip_lease_time then
         ip_lease_time
@@ -186,7 +187,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
       | Some lease -> if expired then
           Config.default_lease_time config subnet
         else
-          Int32.of_float (Lease.timeleft lease)
+          Lease.timeleft lease
   in
   match addr with
   | None -> Log.warn "No ips left to offer !"
@@ -201,23 +202,23 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
     let flags = pkt.flags in
     let ciaddr = Ipaddr.V4.any in
     let yiaddr = addr in
-    let siaddr = subnet.interface.addr in
+    let siaddr = ourip in
     let giaddr = pkt.giaddr in
     let chaddr = pkt.chaddr in
     let sname = config.Config.hostname in
     let file = "" in
     (* Start building the options *)
-    (* let leases = Lease.to_list lease_db in *)
-    let t1 = Int32.of_float (0.5 *. (Int32.to_float duration)) in
-    let t2 = Int32.of_float (0.875 *. (Int32.to_float duration)) in
+    let t1 = Int32.of_float (Config.t1_time_ratio *. (Int32.to_float lease_time)) in
+    let t2 = Int32.of_float (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
     (* These are the options we always give, even if not asked. *)
-    let default_options =
-      [ Message_type DHCPOFFER;
-        Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
-        Renewal_t1 t1;
-        Rebinding_t2 t2;
-        Ip_lease_time duration;
-        Server_identifier subnet.interface.addr ]
+    let default_options = [
+      Message_type DHCPOFFER;
+      Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
+      Ip_lease_time lease_time;
+      Renewal_t1 t1;
+      Rebinding_t2 t2;
+      Server_identifier ourip
+    ]
     in
     let extra_options = match (parameter_requests_of_options pkt.options) with
       | None -> []

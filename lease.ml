@@ -19,8 +19,8 @@ open Sexplib.Std
 
 (* Lease (dhcp bindings) operations *)
 type lease = {
-  tm_start   : float;
-  tm_end     : float;
+  tm_start   : int32;
+  tm_end     : int32;
   addr       : Ipaddr.V4.t;
   client_id  : Dhcp.chaddr;
   hostname   : string;
@@ -35,9 +35,18 @@ let lookup client_id lease_db =
 let replace client_id lease lease_db = Hashtbl.replace lease_db client_id lease
 (* Beware! This is an online state *)
 let timeleft lease =
-  let left = lease.tm_end -. Unix.time () in
-  if left < 0. then 0. else left
-let expired lease = timeleft lease > 0.
+  let left = (Int32.to_float lease.tm_end) -. Unix.time () in
+  if left < 0. then Int32.zero else (Int32.of_float left)
+let timeleft_exn lease =
+  let left = timeleft lease in
+  if left = Int32.zero then invalid_arg "No time left for lease" else left
+let timeleft3 lease t1_ratio t2_ratio =
+  let left = Int32.to_float (timeleft lease) in
+  (Int32.of_float left,
+   Int32.of_float (left *. t1_ratio),
+   Int32.of_float (left *. t2_ratio))
+
+let expired lease = timeleft lease > Int32.zero
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
 
