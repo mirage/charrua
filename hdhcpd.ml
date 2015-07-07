@@ -78,7 +78,19 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
   let ourip = subnet.interface.addr in
   let reqip = request_ip_of_options pkt.options in
   let sidip = server_identifier_of_options pkt.options in
-  let ack addr =
+  let ack lease =
+    let lease_time, t1, t2 =
+      Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
+    in
+    let options = [
+      Message_type DHCPACK;
+      Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
+      Ip_lease_time lease_time;
+      Renewal_t1 t1;
+      Rebinding_t2 t2;
+      Server_identifier ourip;
+    ]
+    in
     let extra_options = match (parameter_requests_of_options pkt.options) with
       | Some preqs -> options_from_parameter_requests preqs subnet.options
       | None -> []
@@ -92,15 +104,14 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
       secs = 0;
       flags = pkt.flags; (* XXX this is WRONG !!! *)
       ciaddr = pkt.ciaddr;
-      yiaddr = addr;
+      yiaddr = lease.Lease.addr;
       siaddr = ourip;
       giaddr = pkt.giaddr; (* XXX this is WRONG !!! *)
       chaddr = pkt.chaddr;
       sname = "";
       file = "";
       (* TODO add Message option *)
-      options = [ Message_type DHCPACK; Server_identifier ourip ] @
-                extra_options;
+      options = options @ extra_options;
     }
     in
     Log.debug "REQUEST reply:\n%s" (string_of_pkt ackpkt)
@@ -130,7 +141,7 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     else if lease.Lease.addr <> reqip || expired then
       nak pkt ()
     else
-      ack lease.Lease.addr
+      ack lease
   | None, None, Some lease -> (* DHCPREQUEST @ RENEWING/REBINDING state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
@@ -139,7 +150,7 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     else if lease.Lease.addr <> pkt.ciaddr || expired then
       nak pkt ()
     else
-      ack lease.Lease.addr
+      ack lease
   | _ -> drop ()
 
 let input_discover config (subnet:Config.subnet) pkt lease_db =
