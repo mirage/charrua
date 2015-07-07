@@ -18,7 +18,7 @@ open Sexplib.Conv
 open Sexplib.Std
 
 (* Lease (dhcp bindings) operations *)
-type lease = {
+type t = {
   tm_start   : int32;
   tm_end     : int32;
   addr       : Ipaddr.V4.t;
@@ -30,7 +30,7 @@ type lease = {
 type database = {
   name : string;
   network : Ipaddr.V4.Prefix.t;
-  table : (Dhcp.client_id, lease) Hashtbl.t;
+  table : (Dhcp.client_id, t) Hashtbl.t;
 } with sexp
 
 let make_db name network =
@@ -57,7 +57,7 @@ let timeleft3 lease t1_ratio t2_ratio =
 let expired lease = timeleft lease > Int32.zero
 
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
-let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_lease x)
+let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
 
 let addr_in_range addr range =
   let (low_ip, high_ip) = range in
