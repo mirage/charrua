@@ -83,7 +83,7 @@ let get_usable_addr id range lease_db =
     invalid_arg "invalid range, must be (low * high)";
   let hint_ip =
     let v = match id with
-      | Cliid s -> Int32.of_int 1805 (* XXX who cares *)
+      | Id s -> Int32.of_int 1805 (* XXX who cares *)
       | Hwaddr hw ->
         let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
         let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in

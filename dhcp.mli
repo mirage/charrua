@@ -28,7 +28,7 @@ type flags =
 
 type chaddr =
   | Hwaddr of Macaddr.t
-  | Cliid of string with sexp
+  | Id of string with sexp
 
 type msgtype =
   | DHCPDISCOVER (* value 1 *)

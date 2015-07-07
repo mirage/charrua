@@ -34,7 +34,7 @@ type flags =
 
 type chaddr =
   | Hwaddr of Macaddr.t
-  | Cliid of string with sexp
+  | Id of string with sexp
 
 type msgtype =
   | DHCPDISCOVER (* value 1 *)
@@ -445,11 +445,11 @@ let chaddr_of_buf buf htype hlen =
   if htype = Ethernet_10mb && hlen = 6 then
     Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
   else
-    Cliid (copy_cpkt_chaddr buf)
+    Id (copy_cpkt_chaddr buf)
 let bytes_of_chaddr chaddr =
   let s = match chaddr with
     | Hwaddr hw -> Macaddr.to_bytes hw
-    | Cliid id -> Bytes.of_string id
+    | Id id -> Bytes.of_string id
   in
   Util.bytes_extend_if_le s 16
 let bytes_of_sname s = Util.bytes_extend_if_le s 64
@@ -542,7 +542,7 @@ let options_of_buf buf buf_len =
           if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
             Hwaddr (Macaddr.of_bytes_exn s)
           else
-            Cliid s
+            Id s
       in
       match code with
       | 0 ->   padding ()
@@ -679,11 +679,15 @@ let buf_of_options sbuf options =
     blit_from_string v 0 buf 0 len;
     shift buf len
   in
-  let put_client_id code v buf = match v with
-    | Hwaddr mac -> let buf = put_code code buf |> put_len 7 |> put_8 1 in
-      blit_from_string (Macaddr.to_bytes mac) 0 buf 0 6;
-      shift buf 6
-    | Cliid id -> failwith "Client id of Cliid is unimplemented"
+  let put_client_id code v buf =
+    let htype, s = match v with
+      | Hwaddr mac -> (1, Macaddr.to_bytes mac)
+      | Id id -> (0, id)
+    in
+    let len = String.length s in
+    let buf = put_code code buf |> put_len (succ len) |> put_8 htype in
+    blit_from_string s 0 buf 0 len;
+    shift buf len
   in
   let make_listf f len code l buf =
     let buf = put_code code buf |> put_len (len * (List.length l)) in
