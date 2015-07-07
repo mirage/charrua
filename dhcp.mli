@@ -26,7 +26,7 @@ type flags =
   | Broadcast
   | Unicast with sexp
 
-type chaddr =
+type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
@@ -183,7 +183,7 @@ type dhcp_option =
   | Renewal_t1 of Int32.t                   (* code 58 *)
   | Rebinding_t2 of Int32.t                 (* code 59 *)
   | Vendor_class_id of string               (* code 60 *)
-  | Client_id of chaddr                     (* code 61 *)
+  | Client_id of client_id                  (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
@@ -213,7 +213,7 @@ type pkt = {
   yiaddr  : Ipaddr.V4.t;
   siaddr  : Ipaddr.V4.t;
   giaddr  : Ipaddr.V4.t;
-  chaddr  : chaddr;
+  chaddr  : client_id;
   sname   : string;
   file    : string;
   options : dhcp_option list;
@@ -223,7 +223,7 @@ val pkt_min_len : int
 val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
 val buf_of_pkt : pkt -> Cstruct.t
-val client_id_of_pkt : pkt -> chaddr
+val client_id_of_pkt : pkt -> client_id
 val string_of_pkt : pkt -> string
 val string_of_msgtype : msgtype -> string
 val msgtype_of_options : dhcp_option list -> msgtype option

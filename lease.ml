@@ -22,12 +22,12 @@ type lease = {
   tm_start   : int32;
   tm_end     : int32;
   addr       : Ipaddr.V4.t;
-  client_id  : Dhcp.chaddr;
+  client_id  : Dhcp.client_id;
   hostname   : string;
 } with sexp
 
 (* Database, collection of leases *)
-type lease_db = (Dhcp.chaddr, lease) Hashtbl.t
+type lease_db = (Dhcp.client_id, lease) Hashtbl.t
 
 let empty () = Hashtbl.create 50
 let lookup client_id lease_db =
