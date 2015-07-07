@@ -48,7 +48,8 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
   let open Config in
   Log.debug "REQUEST packet received %s" (Dhcp.string_of_pkt pkt);
   let drop () = () in
-  let lease = Lease.lookup (client_id_of_pkt pkt) lease_db in
+  let client_id = client_id_of_pkt pkt in
+  let lease = Lease.lookup client_id lease_db in
   let ourip = subnet.interface.addr in
   let reqip = request_ip_of_options pkt.options in
   let sidip = server_identifier_of_options pkt.options in
@@ -115,6 +116,8 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
          | None -> []
     }
     in
+    assert (lease.Lease.client_id = client_id);
+    Lease.replace client_id lease lease_db;
     Log.debug "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
   in
   match sidip, reqip, lease with
@@ -129,7 +132,7 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
     else if not (Lease.addr_available reqip lease_db) then
       nak ~msg:"Requested address is not available" ()
     else
-      () (* Insert lease and ack *)
+      ack (Lease.make client_id reqip (Config.default_lease_time config subnet))
   | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
