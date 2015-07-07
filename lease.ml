@@ -48,16 +48,16 @@ let addr_in_range addr range =
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
 
-let of_addr addr lease_db =
+let leases_of_addr addr lease_db =
   List.filter (fun l -> l.addr = addr) (to_list lease_db)
 
 let addr_allocated addr lease_db =
-  match (of_addr addr lease_db) with
+  match (leases_of_addr addr lease_db) with
   | [] -> false
   | _ -> true
 
 let addr_available addr lease_db =
-  match (of_addr addr lease_db) with
+  match (leases_of_addr addr lease_db) with
   | [] -> true
   | leases -> List.exists (fun l -> not (expired l)) leases
 
