@@ -460,7 +460,6 @@ let file_of_buf buf = Util.cstruct_copy_normalized copy_cpkt_file buf
 let options_of_buf buf buf_len =
   let rec collect_options buf options =
     let code = Cstruct.get_uint8 buf 0 in
-    let () = Log.debug "saw option code %u" code in
     let padding () = collect_options (Cstruct.shift buf 1) options in
     (* Make sure we never shift into an unexisting body *)
     match code with
