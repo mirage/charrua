@@ -69,31 +69,22 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
       chaddr = pkt.chaddr;
       sname = "";
       file = "";
-      options = List.rev @@
-        cons_if_some_f (client_id_of_options pkt.options) (fun id -> Client_id id) @@
+      options =
+        cons (Message_type DHCPNAK) @@
+        cons (Server_identifier ourip) @@
         cons_if_some_f msg (fun msg -> Message msg) @@
-        [Server_identifier ourip; Message_type DHCPNAK];
+        cons_if_some_f (client_id_of_options pkt.options)
+          (fun id -> Client_id id) @@
+        cons_if_some_f (vendor_class_id_of_options pkt.options)
+          (fun vid -> Vendor_class_id vid) []
     }
     in
     Log.debug "REQUEST->NAK reply:\n%s" (string_of_pkt nakpkt)
   in
   let ack lease =
+    let open Util in
     let lease_time, t1, t2 =
       Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
-    in
-    let options = [
-      Message_type DHCPACK;
-      (* Vendor_class_id "TODO" *)
-      Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
-      Ip_lease_time lease_time;
-      Renewal_t1 t1;
-      Rebinding_t2 t2;
-      Server_identifier ourip;
-    ]
-    in
-    let extra_options = match (parameter_requests_of_options pkt.options) with
-      | Some preqs -> options_from_parameter_requests preqs subnet.options
-      | None -> []
     in
     let ackpkt = {
       op = Bootreply;
@@ -110,8 +101,18 @@ let input_request config (subnet:Config.subnet) pkt lease_db =
       chaddr = pkt.chaddr;
       sname = "";
       file = "";
-      (* TODO add Message option *)
-      options = options @ extra_options;
+      options =
+        cons (Message_type DHCPACK) @@
+        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
+        cons (Ip_lease_time lease_time) @@
+        cons (Renewal_t1 t1) @@
+        cons (Rebinding_t2 t2) @@
+        cons (Server_identifier ourip) @@
+        cons_if_some_f (vendor_class_id_of_options pkt.options)
+          (fun vid -> Vendor_class_id vid) @@
+        match (parameter_requests_of_options pkt.options) with
+         | Some preqs -> options_from_parameter_requests preqs subnet.options
+         | None -> []
     }
     in
     Log.debug "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
@@ -207,6 +208,7 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
   match addr with
   | None -> Log.warn "No ips left to offer !"
   | Some addr ->
+    let open Util in
     (* Make a DHCPOFFER *)
     let op = Bootreply in
     let htype = Ethernet_10mb in
@@ -226,22 +228,22 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
     let t1 = Int32.of_float (Config.t1_time_ratio *. (Int32.to_float lease_time)) in
     let t2 = Int32.of_float (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
     (* These are the options we always give, even if not asked. *)
-    let default_options = [
-      Message_type DHCPOFFER;
-      Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network);
-      Ip_lease_time lease_time;
-      Renewal_t1 t1;
-      Rebinding_t2 t2;
-      Server_identifier ourip
-    ]
-    in
-    let extra_options = match (parameter_requests_of_options pkt.options) with
-      | None -> []
+    let options =
+      cons (Message_type DHCPOFFER) @@
+      cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
+      cons (Ip_lease_time lease_time) @@
+      cons (Renewal_t1 t1) @@
+      cons (Rebinding_t2 t2) @@
+      cons (Server_identifier ourip) @@
+      cons_if_some_f (vendor_class_id_of_options pkt.options)
+        (fun vid -> Vendor_class_id vid) @@
+      match (parameter_requests_of_options pkt.options) with
       | Some preqs -> options_from_parameter_requests preqs subnet.options
+      | None -> []
     in
     let pkt = { op; htype; hlen; hops; xid; secs; flags;
                 ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
-                options = default_options @ extra_options }
+                options }
     in
     Log.debug "DISCOVER reply:\n%s" (string_of_pkt pkt)
 
