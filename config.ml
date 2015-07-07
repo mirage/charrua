@@ -113,7 +113,7 @@ let subnet_of_ifid (config : t) ifid = try
     Some (List.find (fun subnet -> subnet.interface.id = ifid) config.subnets)
   with Not_found -> None
 
-let lease_time (config : t) (subnet : subnet) =
+let default_lease_time (config : t) (subnet : subnet) =
   match subnet.default_lease_time with
   | Some time -> time
   | None -> config.default_lease_time

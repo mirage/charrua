@@ -180,11 +180,11 @@ let input_discover config (subnet:Config.subnet) pkt lease_db =
       if Config.lease_time_good config subnet ip_lease_time then
         ip_lease_time
       else
-        Config.lease_time config subnet
+        Config.default_lease_time config subnet
     | None -> match lease with
-      | None -> Config.lease_time config subnet
+      | None -> Config.default_lease_time config subnet
       | Some lease -> if expired then
-          Config.lease_time config subnet
+          Config.default_lease_time config subnet
         else
           Int32.of_float (Lease.timeleft lease)
   in
