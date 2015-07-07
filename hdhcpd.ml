@@ -60,7 +60,17 @@ let nak pkt sid =
   () (* TODO, actually send the packet *)
 *)
 
-let input_request config (subnet:Config.subnet) (pkt:Dhcp.pkt) lease_db =
+
+let input_decline config (subnet:Config.subnet) pkt lease_db =
+  Log.debug "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
+
+let input_release config (subnet:Config.subnet) pkt lease_db =
+  Log.debug "RELEASE packet received %s" (Dhcp.string_of_pkt pkt)
+
+let input_inform config (subnet:Config.subnet) pkt lease_db =
+  Log.debug "INFORM packet received %s" (Dhcp.string_of_pkt pkt)
+
+let input_request config (subnet:Config.subnet) pkt lease_db =
   let open Dhcp in
   let open Config in
   Log.debug "REQUEST packet received %s" (Dhcp.string_of_pkt pkt);
@@ -202,7 +212,10 @@ let input_pkt config ifid pkt lease_db =
     | Some subnet ->
       match msgtype_of_options pkt.options with
       | Some DHCPDISCOVER -> input_discover config subnet pkt lease_db
-      | Some DHCPREQUEST -> input_request config subnet pkt lease_db
+      | Some DHCPREQUEST  -> input_request config subnet pkt lease_db
+      | Some DHCPDECLINE  -> input_decline config subnet pkt lease_db
+      | Some DHCPRELEASE  -> input_release config subnet pkt lease_db
+      | Some DHCPINFORM   -> input_inform config subnet pkt lease_db
       | None -> Log.warn "Got malformed packet: no dhcp msgtype"
       | Some m -> Log.debug "Unhandled msgtype %s" (string_of_msgtype m)
   else
