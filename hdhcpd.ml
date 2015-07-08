@@ -270,9 +270,9 @@ let input_pkt config ifid pkt =
   else
     Log.warn "Invalid packet %s" (string_of_pkt pkt)
 
-let rec dhcp_recv config =
+let rec dhcp_recv config socket =
   let buffer = Dhcp.make_buf () in
-  lwt (n, ifid) = Util.lwt_cstruct_recvif config.Config.recv_socket buffer in
+  lwt (n, ifid) = Util.lwt_cstruct_recvif socket buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
@@ -287,7 +287,7 @@ let rec dhcp_recv config =
       with
         Invalid_argument e -> Log.warn "Input pkt %s" e
   in
-  dhcp_recv config
+  dhcp_recv config socket
 
 (* Drop privileges and chroot to _hdhcpd home *)
 let go_safe () =
@@ -324,21 +324,27 @@ let go_safe () =
     failwith "Was able to restore UID, setuid is broken"
 
 let hdhcpd configfile verbosity =
+  let open Config in
   let () = config_log verbosity in
   let () = Log.debug "Using configuration file: %s" configfile in
   let () = Log.notice "Haesbaert DHCPD started" in
   let config = Config_parser.parse ~path:configfile () in
   let () = go_safe () in
-  let rec recv_thread () =
+  let rec recv_thread socket =
     catch (fun () ->
-        dhcp_recv config)
+        dhcp_recv config socket)
       (fun exn ->
          Log.warn "recv_thread exception: %s\n%s"
            (Printexc.to_string exn) (Printexc.get_backtrace ());
-         recv_thread ())
+         recv_thread socket)
   in
-  Lwt_main.run (recv_thread () >>= fun _ ->
-    Log.notice_lwt "Haesbaert DHCPD finished")
+  let threads =
+    recv_thread config.Config.socket ::
+    List.map (fun (subnet : Config.subnet) ->
+        dhcp_recv config subnet.socket) config.subnets
+  in
+  Lwt_main.run
+    (pick threads >>= fun _-> Log.notice_lwt "Haesbaert DHCPD finished")
 
 (* Parse command line and start the ball *)
 open Cmdliner

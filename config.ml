@@ -35,7 +35,7 @@ type socket = Lwt_unix.file_descr sexp_opaque with sexp
 
 type subnet = {
   interface : interface;
-  send_socket : socket;
+  socket : socket;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
@@ -47,7 +47,7 @@ type subnet = {
 
 type t = {
   interfaces : interface list;
-  recv_socket : socket;
+  socket : socket;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
   hostname : string;
@@ -81,26 +81,16 @@ let get_interfaces () =
         { name; id; addr})
     (Tuntap.getifaddrs_v4 ())
 
-let open_recv_sock () =
+let open_socket addr =
   let open Lwt_unix in
-  let sock = socket PF_INET SOCK_DGRAM 0 in
-  let port = 67 in
-  let () = setsockopt sock SO_REUSEADDR true in
-  let () = Util.reqif (unix_file_descr sock) in
-  let () = bind sock (ADDR_INET (Unix.inet_addr_any, port)) in
-  Log.debug "Opened recv socket at %s:%d"
-    (Unix.string_of_inet_addr Unix.inet_addr_any) port;
-  sock
-
-let open_send_sock interface =
-  let open Lwt_unix in
-  let saddr = Ipaddr.V4.to_string interface.addr in
+  let saddr = Ipaddr.V4.to_string addr in
   let sock = socket PF_INET SOCK_DGRAM 0 in
   let port = 67 in
   let () = setsockopt sock SO_REUSEADDR true in
   let () = setsockopt sock SO_BROADCAST true in
+  let () = Util.reqif (unix_file_descr sock) in
   let () = bind sock (ADDR_INET (Unix.inet_addr_of_string saddr, port)) in
-  Log.debug "Opened send socket at %s:%s:%d" interface.name saddr port;
+  Log.debug "Opened socket at %s:%d" saddr port;
   sock
 
 let config_of_ast ast =
@@ -125,7 +115,7 @@ let config_of_ast ast =
                     (Ipaddr.V4.Prefix.to_string subnet.network)
       in
       { interface = interface;
-        send_socket = open_send_sock interface;
+        socket = open_socket interface.addr;
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
@@ -136,7 +126,7 @@ let config_of_ast ast =
       ast.subnets
   in
   { interfaces; subnets;
-    recv_socket = open_recv_sock ();
+    socket = open_socket Ipaddr.V4.any;
     options = ast.options;
     hostname = Unix.gethostname ();
     default_lease_time = ast.default_lease_time;
