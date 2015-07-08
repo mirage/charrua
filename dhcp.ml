@@ -401,6 +401,9 @@ type pkt = {
 
 let pkt_min_len = sizeof_cpkt
 
+let client_port = 68
+let server_port = 67
+
 (* 10KB, maybe there is an asshole doing insane stuff with Jumbo Frames *)
 let make_buf () = Cstruct.create (1024 * 10) 
 

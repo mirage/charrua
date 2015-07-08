@@ -85,7 +85,7 @@ let open_socket addr =
   let open Lwt_unix in
   let saddr = Ipaddr.V4.to_string addr in
   let sock = socket PF_INET SOCK_DGRAM 0 in
-  let port = 67 in
+  let port = Dhcp.server_port in
   let () = setsockopt sock SO_REUSEADDR true in
   let () = setsockopt sock SO_BROADCAST true in
   let () = Util.reqif (unix_file_descr sock) in
