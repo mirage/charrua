@@ -21,29 +21,42 @@ let () = Printexc.record_backtrace true
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
-let send_offer pkt (subnet:Config.subnet) =
+let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
   let open Dhcp in
   let open Config in
-  let addr =
-    if pkt.giaddr <> Ipaddr.V4.unspecified then
-      pkt.giaddr
-    else if pkt.ciaddr <> Ipaddr.V4.unspecified then
-      pkt.ciaddr
-    else if pkt.flags = Unicast then
-      pkt.yiaddr
-    else
-      Ipaddr.V4.broadcast
-  in
-  let iaddr = Ipaddr.V4.to_string addr |> Unix.inet_addr_of_string in
-  let buf = buf_of_pkt pkt in
-  let saddr = Lwt_unix.ADDR_INET (iaddr, client_port) in
-  lwt n = Lwt_cstruct.sendto subnet.socket buf [] saddr in
-  if n = 0 then
-    Lwt.fail_with "sendto returned 0"
-  else
-    return_unit
-
-let send_ack = send_offer
+  match (msgtype_of_options pkt.options) with
+  | None -> Lwt.fail_with "fudeu"
+  | Some m ->
+    lwt addr = match m with
+      | DHCPNAK -> if pkt.giaddr <> Ipaddr.V4.unspecified then
+          return pkt.giaddr
+        else
+          return Ipaddr.V4.broadcast
+      | DHCPOFFER | DHCPACK ->
+        if pkt.giaddr <> Ipaddr.V4.unspecified then
+          return pkt.giaddr
+        else if pkt.ciaddr <> Ipaddr.V4.unspecified then
+          return pkt.ciaddr
+        else if pkt.flags = Unicast then
+          return pkt.yiaddr
+        else
+          return Ipaddr.V4.broadcast
+      | _ -> Lwt.fail_invalid_arg
+               ("Can't send message type " ^ (string_of_msgtype m))
+    in
+    let iaddr = Ipaddr.V4.to_string addr |> Unix.inet_addr_of_string in
+    let buf = buf_of_pkt pkt in
+    let saddr = Lwt_unix.ADDR_INET (iaddr, client_port) in
+    try_lwt
+      lwt n = Lwt_cstruct.sendto subnet.socket buf [] saddr in
+      if n = 0 then
+        Lwt.fail_with (Printf.sprintf "send_pkt sendto(%s) returned 0)"
+                         (string_of_msgtype m))
+      else
+        return_unit
+    with exn -> Log.warn_lwt "send %s error: %s"
+                  (Dhcp.string_of_msgtype m)
+                  (Printexc.to_string exn)
 
 let valid_pkt pkt =
   let open Dhcp in
@@ -275,7 +288,7 @@ let input_discover config (subnet:Config.subnet) pkt =
                 options }
     in
     Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-    send_offer pkt subnet
+    send_pkt pkt subnet
 
 let input_pkt config ifid pkt =
   let open Dhcp in
