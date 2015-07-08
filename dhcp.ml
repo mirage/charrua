@@ -859,7 +859,7 @@ let vendor_class_id_of_options =
 
 let generic_list_of_options f options = match (Util.filter_map f options) with
   | [] -> None
-  | x -> Some (List.flatten x)
+  | l -> Some (List.flatten l)
 let parameter_requests_of_options =
   generic_list_of_options (function Parameter_requests x -> Some x | _ -> None)
 let routers_of_options =
