@@ -282,8 +282,10 @@ let rec dhcp_recv config =
       Log.warn "Dropped packet: %s" e
     | pkt ->
       Log.debug "valid packet from %d bytes" n;
-      try input_pkt config ifid pkt
-      with Invalid_argument e -> Log.warn "Input pkt %s" e
+      try
+        input_pkt config ifid pkt
+      with
+        Invalid_argument e -> Log.warn "Input pkt %s" e
   in
   dhcp_recv config
 
@@ -327,8 +329,15 @@ let hdhcpd configfile verbosity =
   let () = Log.notice "Haesbaert DHCPD started" in
   let config = Config_parser.parse ~path:configfile () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv config in
-  Lwt_main.run (recv_thread >>= fun () ->
+  let rec recv_thread () =
+    catch (fun () ->
+        dhcp_recv config)
+      (fun exn ->
+         Log.warn "recv_thread exception: %s\n%s"
+           (Printexc.to_string exn) (Printexc.get_backtrace ());
+         recv_thread ())
+  in
+  Lwt_main.run (recv_thread () >>= fun _ ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 
 (* Parse command line and start the ball *)

@@ -80,7 +80,7 @@ let lwt_recvif fd buf pos len =
   let open Lwt.Infix in
   let open Lwt_unix in
   let open Lwt_bytes in
-    if pos < 0 || len < 0 || pos > length buf - len then
+  if pos < 0 || len < 0 || pos > length buf - len then
     invalid_arg "bad pos/len"
   else
     blocking fd >>= function
