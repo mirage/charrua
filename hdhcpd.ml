@@ -21,6 +21,30 @@ let () = Printexc.record_backtrace true
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
+let send_offer pkt (subnet:Config.subnet) =
+  let open Dhcp in
+  let open Config in
+  let addr =
+    if pkt.giaddr <> Ipaddr.V4.unspecified then
+      pkt.giaddr
+    else if pkt.ciaddr <> Ipaddr.V4.unspecified then
+      pkt.ciaddr
+    else if pkt.flags = Unicast then
+      pkt.yiaddr
+    else
+      Ipaddr.V4.broadcast
+  in
+  let iaddr = Ipaddr.V4.to_string addr |> Unix.inet_addr_of_string in
+  let buf = buf_of_pkt pkt in
+  let saddr = Lwt_unix.ADDR_INET (iaddr, client_port) in
+  lwt n = Lwt_cstruct.sendto subnet.socket buf [] saddr in
+  if n = 0 then
+    Lwt.fail_with "sendto returned 0"
+  else
+    return_unit
+
+let send_ack = send_offer
+
 let valid_pkt pkt =
   let open Dhcp in
   if pkt.op <> Bootrequest then
@@ -35,19 +59,19 @@ let valid_pkt pkt =
     true
 
 let input_decline config (subnet:Config.subnet) pkt =
-  Log.debug "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
+  Log.debug_lwt "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
 
 let input_release config (subnet:Config.subnet) pkt =
-  Log.debug "RELEASE packet received %s" (Dhcp.string_of_pkt pkt)
+  Log.debug_lwt "RELEASE packet received %s" (Dhcp.string_of_pkt pkt)
 
 let input_inform config (subnet:Config.subnet) pkt =
-  Log.debug "INFORM packet received %s" (Dhcp.string_of_pkt pkt)
+  Log.debug_lwt "INFORM packet received %s" (Dhcp.string_of_pkt pkt)
 
 let input_request config (subnet:Config.subnet) pkt =
   let open Dhcp in
   let open Config in
-  Log.debug "REQUEST packet received %s" (Dhcp.string_of_pkt pkt);
-  let drop () = () in
+  lwt () = Log.debug_lwt "REQUEST packet received %s" (Dhcp.string_of_pkt pkt) in
+  let drop () = return_unit in
   let lease_db = subnet.lease_db in
   let client_id = client_id_of_pkt pkt in
   let lease = Lease.lookup client_id lease_db in
@@ -81,7 +105,7 @@ let input_request config (subnet:Config.subnet) pkt =
           (fun vid -> Vendor_class_id vid) []
     }
     in
-    Log.debug "REQUEST->NAK reply:\n%s" (string_of_pkt nakpkt)
+    Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt nakpkt);
   in
   let ack lease =
     let open Util in
@@ -119,17 +143,17 @@ let input_request config (subnet:Config.subnet) pkt =
     in
     assert (lease.Lease.client_id = client_id);
     Lease.replace client_id lease lease_db;
-    Log.debug "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
+    Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
   in
   match sidip, reqip, lease with
   | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
     if sidip <> ourip then (* is it for us ? *)
       drop ()
     else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
-      let () = Log.warn "Bad DHCPREQUEST, ciaddr is not 0" in
+      lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
       drop ()
     else if not (Lease.addr_in_range reqip subnet.range) then
-        nak ~msg:"Requested address is not in subnet range" ()
+      nak ~msg:"Requested address is not in subnet range" ()
     else if not (Lease.addr_available reqip lease_db) then
       nak ~msg:"Requested address is not available" ()
     else
@@ -137,7 +161,7 @@ let input_request config (subnet:Config.subnet) pkt =
   | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
-      let () = Log.warn "Bad DHCPREQUEST, ciaddr is not 0" in
+      lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
       drop ()
     else if expired then
       nak ~msg:"Lease has expired, try again son" ()
@@ -152,7 +176,7 @@ let input_request config (subnet:Config.subnet) pkt =
   | None, None, Some lease -> (* DHCPREQUEST @ RENEWING/REBINDING state *)
     let expired = Lease.expired lease in
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
-      let () = Log.warn "Bad DHCPREQUEST, ciaddr is 0" in
+      lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is 0" in
       drop ()
     else if expired then
       nak ~msg:"Lease has expired, try again son" ()
@@ -211,7 +235,7 @@ let input_discover config (subnet:Config.subnet) pkt =
           Lease.timeleft lease
   in
   match addr with
-  | None -> Log.warn "No ips left to offer !"
+  | None -> Log.warn_lwt "No ips left to offer !"
   | Some addr ->
     let open Util in
     (* Make a DHCPOFFER *)
@@ -250,14 +274,15 @@ let input_discover config (subnet:Config.subnet) pkt =
                 ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
                 options }
     in
-    Log.debug "DISCOVER reply:\n%s" (string_of_pkt pkt)
+    Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+    send_offer pkt subnet
 
 let input_pkt config ifid pkt =
   let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
     match Config.subnet_of_ifid config ifid with
-    | None -> Log.warn "No subnet for interface %s" (Util.if_indextoname ifid)
+    | None -> Log.warn_lwt "No subnet for interface %s" (Util.if_indextoname ifid)
     | Some subnet ->
       match msgtype_of_options pkt.options with
       | Some DHCPDISCOVER -> input_discover config subnet pkt
@@ -265,10 +290,10 @@ let input_pkt config ifid pkt =
       | Some DHCPDECLINE  -> input_decline config subnet pkt
       | Some DHCPRELEASE  -> input_release config subnet pkt
       | Some DHCPINFORM   -> input_inform config subnet pkt
-      | None -> Log.warn "Got malformed packet: no dhcp msgtype"
-      | Some m -> Log.debug "Unhandled msgtype %s" (string_of_msgtype m)
+      | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
+      | Some m -> Log.debug_lwt "Unhandled msgtype %s" (string_of_msgtype m)
   else
-    Log.warn "Invalid packet %s" (string_of_pkt pkt)
+    Log.warn_lwt "Invalid packet %s" (string_of_pkt pkt)
 
 let rec dhcp_recv config socket =
   let buffer = Dhcp.make_buf () in
@@ -277,15 +302,14 @@ let rec dhcp_recv config socket =
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
   (* Input the packet *)
-  let () = match (Dhcp.pkt_of_buf buffer n) with
-    | exception Invalid_argument e ->
-      Log.warn "Dropped packet: %s" e
+  lwt () = match (Dhcp.pkt_of_buf buffer n) with
+    | exception Invalid_argument e -> Log.warn_lwt "Dropped packet: %s" e
     | pkt ->
-      Log.debug "valid packet from %d bytes" n;
-      try
+      lwt () = Log.debug_lwt "valid packet from %d bytes" n in
+      try_lwt
         input_pkt config ifid pkt
       with
-        Invalid_argument e -> Log.warn "Input pkt %s" e
+        Invalid_argument e -> Log.warn_lwt "Input pkt %s" e
   in
   dhcp_recv config socket
 
