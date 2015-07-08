@@ -96,7 +96,7 @@ let open_send_sock interface =
   let open Lwt_unix in
   let saddr = Ipaddr.V4.to_string interface.addr in
   let sock = socket PF_INET SOCK_DGRAM 0 in
-  let port = 68 in
+  let port = 67 in
   let () = setsockopt sock SO_REUSEADDR true in
   let () = setsockopt sock SO_BROADCAST true in
   let () = bind sock (ADDR_INET (Unix.inet_addr_of_string saddr, port)) in
