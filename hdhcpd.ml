@@ -270,9 +270,9 @@ let input_pkt config ifid pkt =
   else
     Log.warn "Invalid packet %s" (string_of_pkt pkt)
 
-let rec dhcp_recv config sock =
+let rec dhcp_recv config =
   let buffer = Dhcp.make_buf () in
-  lwt (n, ifid) = Util.lwt_cstruct_recvif sock buffer in
+  lwt (n, ifid) = Util.lwt_cstruct_recvif config.Config.recv_socket buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
   if n = 0 then
     failwith "Unexpected EOF in DHCPD socket";
@@ -285,16 +285,7 @@ let rec dhcp_recv config sock =
       try input_pkt config ifid pkt
       with Invalid_argument e -> Log.warn "Input pkt %s" e
   in
-  dhcp_recv config sock
-
-let open_dhcp_sock () =
-  let open Lwt_unix in
-  let sock = socket PF_INET SOCK_DGRAM 0 in
-  let () = setsockopt sock SO_REUSEADDR true in
-  let () = setsockopt sock SO_BROADCAST true in
-  let () = Util.reqif (unix_file_descr sock) in
-  let () = bind sock (ADDR_INET (Unix.inet_addr_any, 67)) in
-  sock
+  dhcp_recv config
 
 (* Drop privileges and chroot to _hdhcpd home *)
 let go_safe () =
@@ -335,9 +326,8 @@ let hdhcpd configfile verbosity =
   let () = Log.debug "Using configuration file: %s" configfile in
   let () = Log.notice "Haesbaert DHCPD started" in
   let config = Config_parser.parse ~path:configfile () in
-  let sock = open_dhcp_sock () in
   let () = go_safe () in
-  let recv_thread = dhcp_recv config sock in
+  let recv_thread = dhcp_recv config in
   Lwt_main.run (recv_thread >>= fun () ->
     Log.notice_lwt "Haesbaert DHCPD finished")
 
