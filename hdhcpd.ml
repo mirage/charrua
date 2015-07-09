@@ -84,7 +84,7 @@ let input_request config (subnet:Config.subnet) pkt =
   let open Dhcp in
   let open Config in
   lwt () = Log.debug_lwt "REQUEST packet received %s" (Dhcp.string_of_pkt pkt) in
-  let drop () = return_unit in
+  let drop = return_unit in
   let lease_db = subnet.lease_db in
   let client_id = client_id_of_pkt pkt in
   let lease = Lease.lookup client_id lease_db in
@@ -163,10 +163,10 @@ let input_request config (subnet:Config.subnet) pkt =
   match sidip, reqip, lease with
   | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
     if sidip <> ourip then (* is it for us ? *)
-      drop ()
+      drop
     else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
-      drop ()
+      drop
     else if not (Lease.addr_in_range reqip subnet.range) then
       nak ~msg:"Requested address is not in subnet range" ()
     else if not (Lease.addr_available reqip lease_db) then
@@ -177,7 +177,7 @@ let input_request config (subnet:Config.subnet) pkt =
     let expired = Lease.expired lease in
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
-      drop ()
+      drop
     else if expired then
       nak ~msg:"Lease has expired, try again son" ()
     (* TODO check if it's in the correct network when giaddr <> 0 *)
@@ -192,14 +192,14 @@ let input_request config (subnet:Config.subnet) pkt =
     let expired = Lease.expired lease in
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
       lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is 0" in
-      drop ()
+      drop
     else if expired then
       nak ~msg:"Lease has expired, try again son" ()
     else if lease.Lease.addr <> pkt.ciaddr then
       nak ~msg:"Requested address is incorrect" ()
     else
       ack lease
-  | _ -> drop ()
+  | _ -> drop
 
 let input_discover config (subnet:Config.subnet) pkt =
   let open Dhcp in
