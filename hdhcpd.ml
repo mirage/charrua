@@ -109,7 +109,40 @@ let input_decline = input_decline_release
 let input_release = input_decline_release
 
 let input_inform config (subnet:Config.subnet) pkt =
-  Log.debug_lwt "INFORM packet received %s" (Dhcp.string_of_pkt pkt)
+  let open Dhcp in
+  lwt () = Log.debug_lwt "INFORM packet received %s" (Dhcp.string_of_pkt pkt) in
+  if pkt.ciaddr = Ipaddr.V4.unspecified then
+    Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
+  else
+    let ourip = Config.(subnet.interface.addr) in
+    let pkt = {
+      op = Bootreply;
+      htype = Ethernet_10mb;
+      hlen = 6;
+      hops = 0;
+      xid = pkt.xid;
+      secs = 0;
+      flags = pkt.flags;
+      ciaddr = pkt.ciaddr;
+      yiaddr = Ipaddr.V4.unspecified;
+      siaddr = ourip;
+      giaddr = pkt.giaddr;
+      chaddr = pkt.chaddr;
+      sname = "";
+      file = "";
+      options =
+        let open Util in
+        cons (Message_type DHCPACK) @@
+        cons (Server_identifier ourip) @@
+        cons_if_some_f (vendor_class_id_of_options pkt.options)
+          (fun vid -> Vendor_class_id vid) @@
+        match (parameter_requests_of_options pkt.options) with
+        | Some preqs -> options_from_parameter_requests preqs subnet.Config.options
+        | None -> []
+    }
+    in
+    Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+    send_pkt pkt subnet
 
 let input_request config (subnet:Config.subnet) pkt =
   let open Dhcp in
