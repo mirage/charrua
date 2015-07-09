@@ -93,7 +93,7 @@ let input_request config (subnet:Config.subnet) pkt =
   let sidip = server_identifier_of_options pkt.options in
   let nak ?msg () =
     let open Util in
-    let nakpkt = {
+    let pkt = {
       op = Bootreply;
       htype = Ethernet_10mb;
       hlen = 6;
@@ -118,14 +118,15 @@ let input_request config (subnet:Config.subnet) pkt =
           (fun vid -> Vendor_class_id vid) []
     }
     in
-    Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt nakpkt);
+    Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+    send_pkt pkt subnet
   in
   let ack lease =
     let open Util in
     let lease_time, t1, t2 =
       Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
     in
-    let ackpkt = {
+    let pkt = {
       op = Bootreply;
       htype = Ethernet_10mb;
       hlen = 6;
@@ -156,7 +157,8 @@ let input_request config (subnet:Config.subnet) pkt =
     in
     assert (lease.Lease.client_id = client_id);
     Lease.replace client_id lease lease_db;
-    Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt ackpkt)
+    Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+    send_pkt pkt subnet
   in
   match sidip, reqip, lease with
   | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
