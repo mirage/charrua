@@ -856,6 +856,8 @@ let server_identifier_of_options =
   Util.find_map (function Server_identifier sid -> Some sid | _ -> None)
 let vendor_class_id_of_options =
   Util.find_map (function Vendor_class_id vid -> Some vid | _ -> None)
+let message_of_options =
+  Util.find_map (function Message m -> Some m | _ -> None)
 
 let generic_list_of_options f options = match (Util.filter_map f options) with
   | [] -> None
@@ -894,6 +896,7 @@ let string_of_hops = string_of_int
 let string_of_xid xid = Printf.sprintf "0x%lx" xid
 let string_of_secs = string_of_int
 let string_of_flags = to_hum sexp_of_flags
+let string_of_client_id = to_hum sexp_of_client_id
 let string_of_ciaddr = Ipaddr.V4.to_string
 let string_of_ciaddr = Ipaddr.V4.to_string
 let string_of_yiaddr = Ipaddr.V4.to_string

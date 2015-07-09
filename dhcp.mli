@@ -228,6 +228,7 @@ val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> client_id
 val string_of_pkt : pkt -> string
 val string_of_msgtype : msgtype -> string
+val string_of_client_id : client_id -> string
 val msgtype_of_options : dhcp_option list -> msgtype option
 val client_id_of_options : dhcp_option list -> client_id option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
@@ -235,6 +236,7 @@ val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
 val server_identifier_of_options : dhcp_option list -> Ipaddr.V4.t option
 val vendor_class_id_of_options : dhcp_option list -> string option
+val message_of_options : dhcp_option list -> string option
 val routers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val dns_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val ntp_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option

@@ -71,11 +71,42 @@ let valid_pkt pkt =
   else
     true
 
-let input_decline config (subnet:Config.subnet) pkt =
-  Log.debug_lwt "DECLINE packet received %s" (Dhcp.string_of_pkt pkt)
-
-let input_release config (subnet:Config.subnet) pkt =
-  Log.debug_lwt "RELEASE packet received %s" (Dhcp.string_of_pkt pkt)
+let input_decline_release config (subnet:Config.subnet) (pkt:Dhcp.pkt) =
+  let open Dhcp in
+  let open Config in
+  let open Util in
+  lwt msgtype = match msgtype_of_options pkt.options with
+    | Some msgtype -> return (string_of_msgtype msgtype)
+    | None -> Lwt.fail_with "Unexpected message type"
+  in
+  lwt () = Log.debug_lwt "%s packet received %s" msgtype
+      (Dhcp.string_of_pkt pkt)
+  in
+  let ourip = subnet.interface.addr in
+  let reqip = request_ip_of_options pkt.options in
+  let sidip = server_identifier_of_options pkt.options in
+  let m = message_of_options pkt.options in
+  let client_id = client_id_of_pkt pkt in
+  match sidip with
+  | None -> Log.warn_lwt "%s without server identifier, ignoring" msgtype
+  | Some sidip ->
+    if ourip <> sidip then
+      return_unit                 (* not for us *)
+    else
+      match reqip with
+      | None -> Log.warn_lwt "%s without request ip, ignoring" msgtype
+      | Some reqip ->  (* check if the lease is actually his *)
+        match Lease.lookup client_id subnet.lease_db with
+        | None -> Log.warn_lwt "%s for unowned lease, ignoring" msgtype
+        | Some _ -> Lease.remove client_id subnet.lease_db;
+          let s = some_or_default m "unspecified" in
+          Log.info_lwt "%s, client %s declined lease for %s, reason %s"
+            msgtype
+            (string_of_client_id client_id)
+            (Ipaddr.V4.to_string reqip)
+            s
+let input_decline = input_decline_release
+let input_release = input_decline_release
 
 let input_inform config (subnet:Config.subnet) pkt =
   Log.debug_lwt "INFORM packet received %s" (Dhcp.string_of_pkt pkt)

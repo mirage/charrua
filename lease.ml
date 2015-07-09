@@ -42,6 +42,7 @@ let make client_id addr time =
 let lookup client_id lease_db =
   try Some (Hashtbl.find lease_db.table client_id) with Not_found -> None
 let replace client_id lease lease_db = Hashtbl.replace lease_db.table client_id lease
+let remove client_id lease_db = Hashtbl.remove lease_db.table client_id
 (* Beware! This is an online state *)
 let timeleft lease =
   let left = (Int32.to_float lease.tm_end) -. Unix.time () in
