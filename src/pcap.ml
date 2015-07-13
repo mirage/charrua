@@ -137,6 +137,6 @@ let parse file =
   Unix.close fd;
   printf "%s had %d packets\n\n%!" file num_packets
 
-let testfiles = ["dhcp.pcap"; "dhcp2.pcap" ]
+let testfiles = ["test/dhcp.pcap"; "test/dhcp2.pcap" ]
 
 let _ = List.iter parse testfiles
