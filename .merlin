@@ -1,4 +1,5 @@
 S .
+S src
 B _build
 PKG cmdliner
 PKG lwt
