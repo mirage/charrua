@@ -29,6 +29,7 @@ type interface = {
   name : string;
   id : int;
   addr : Ipaddr.V4.t;
+  mac : Macaddr.t;
 } with sexp
 
 type socket = Lwt_unix.file_descr sexp_opaque with sexp
@@ -76,9 +77,10 @@ let get_interfaces () =
   List.map (function
       | name, (addr, _) ->
         let id = Util.if_nametoindex name in
-        Log.debug "Got interface name:%s id:%d addr:%s"
-          name id (Ipaddr.V4.to_string addr);
-        { name; id; addr})
+        let mac = Tuntap.get_macaddr name in
+        Log.debug "Got interface name:%s id:%d addr:%s mac:%s"
+          name id (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
+        { name; id; addr; mac })
     (Tuntap.getifaddrs_v4 ())
 
 let open_socket addr =
