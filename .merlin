@@ -1,6 +1,6 @@
 S .
 S src
-B _build
+B _build/src
 PKG cmdliner
 PKG lwt
 PKG cstruct
