@@ -21,6 +21,54 @@ let () = Printexc.record_backtrace true
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
+let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
+    ~ciaddr ~yiaddr ~siaddr ~giaddr options =
+  let open Dhcp in
+  let open Config in
+  let op = Bootreply in
+  let htype = Ethernet_10mb in
+  let hlen = 6 in
+  let hops = 0 in
+  let xid = reqpkt.xid in
+  let secs = 0 in
+  let flags = reqpkt.flags in
+  let chaddr = reqpkt.chaddr in
+  let sname = config.hostname in
+  let file = "" in
+  (* Build the frame header *)
+  (* THIS IS JUST A PLACEHOLDER, IT IS ALL WRONG *)
+  let dstport = if giaddr = Ipaddr.V4.unspecified then
+      client_port
+    else
+      server_port
+  in
+  let srcport = Dhcp.server_port in
+  let srcmac = Macaddr.broadcast in (* XXX FIX ME *)
+  (* old send_pkt crap *)
+  let dstmac, dstip = match (msgtype_of_options options) with
+    | None -> failwith "make_reply: No msgtype in options"
+    | Some m -> match m with
+      | DHCPNAK -> if giaddr <> Ipaddr.V4.unspecified then
+          (reqpkt.srcmac, giaddr) (* XXX confirm mac *)
+        else
+          (Macaddr.broadcast, Ipaddr.V4.broadcast)
+      | DHCPOFFER | DHCPACK ->
+        if giaddr <> Ipaddr.V4.unspecified then
+          (reqpkt.srcmac, giaddr) (* XXX confirm mac *)
+        else if ciaddr <> Ipaddr.V4.unspecified then
+          (reqpkt.srcmac, ciaddr)
+        else if flags = Unicast then
+          (reqpkt.srcmac, yiaddr)
+        else
+          (Macaddr.broadcast, Ipaddr.V4.broadcast)
+      | _ -> invalid_arg ("Can't send message type " ^ (string_of_msgtype m))
+  in
+  let srcip = subnet.interface.addr in
+  { srcmac; dstmac; srcip; dstip; srcport; dstport;
+    op; htype; hlen; hops; xid; secs; flags;
+    ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
+    options }
+
 let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
   let open Dhcp in
   let open Config in
@@ -115,31 +163,19 @@ let input_inform config (subnet:Config.subnet) pkt =
     Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
   else
     let ourip = Config.(subnet.interface.addr) in
-    let pkt = {
-      op = Bootreply;
-      htype = Ethernet_10mb;
-      hlen = 6;
-      hops = 0;
-      xid = pkt.xid;
-      secs = 0;
-      flags = pkt.flags;
-      ciaddr = pkt.ciaddr;
-      yiaddr = Ipaddr.V4.unspecified;
-      siaddr = ourip;
-      giaddr = pkt.giaddr;
-      chaddr = pkt.chaddr;
-      sname = "";
-      file = "";
-      options =
-        let open Util in
-        cons (Message_type DHCPACK) @@
-        cons (Server_identifier ourip) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
-          (fun vid -> Vendor_class_id vid) @@
-        match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.Config.options
-        | None -> []
-    }
+    let options =
+      let open Util in
+      cons (Message_type DHCPACK) @@
+      cons (Server_identifier ourip) @@
+      cons_if_some_f (vendor_class_id_of_options pkt.options)
+        (fun vid -> Vendor_class_id vid) @@
+      match (parameter_requests_of_options pkt.options) with
+      | Some preqs -> options_from_parameter_requests preqs subnet.Config.options
+      | None -> []
+    in
+    let pkt = make_reply config subnet pkt
+        ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
+        ~siaddr:ourip ~giaddr:pkt.giaddr options
     in
     Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
     send_pkt pkt subnet
@@ -157,30 +193,18 @@ let input_request config (subnet:Config.subnet) pkt =
   let sidip = server_identifier_of_options pkt.options in
   let nak ?msg () =
     let open Util in
-    let pkt = {
-      op = Bootreply;
-      htype = Ethernet_10mb;
-      hlen = 6;
-      hops = 0;
-      xid = pkt.xid;
-      secs = 0;
-      flags = pkt.flags;
-      ciaddr = Ipaddr.V4.unspecified;
-      yiaddr = Ipaddr.V4.unspecified;
-      siaddr = Ipaddr.V4.unspecified;
-      giaddr = pkt.giaddr;
-      chaddr = pkt.chaddr;
-      sname = "";
-      file = "";
-      options =
-        cons (Message_type DHCPNAK) @@
-        cons (Server_identifier ourip) @@
-        cons_if_some_f msg (fun msg -> Message msg) @@
-        cons_if_some_f (client_id_of_options pkt.options)
-          (fun id -> Client_id id) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
-          (fun vid -> Vendor_class_id vid) []
-    }
+    let options =
+      cons (Message_type DHCPNAK) @@
+      cons (Server_identifier ourip) @@
+      cons_if_some_f msg (fun msg -> Message msg) @@
+      cons_if_some_f (client_id_of_options pkt.options)
+        (fun id -> Client_id id) @@
+      cons_if_some_f (vendor_class_id_of_options pkt.options)
+        (fun vid -> Vendor_class_id vid) []
+    in
+    let pkt = make_reply config subnet pkt
+        ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
+        ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
     in
     Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
     send_pkt pkt subnet
@@ -190,34 +214,22 @@ let input_request config (subnet:Config.subnet) pkt =
     let lease_time, t1, t2 =
       Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
     in
-    let pkt = {
-      op = Bootreply;
-      htype = Ethernet_10mb;
-      hlen = 6;
-      hops = 0;
-      xid = pkt.xid;
-      secs = 0;
-      flags = pkt.flags;
-      ciaddr = pkt.ciaddr;
-      yiaddr = lease.Lease.addr;
-      siaddr = ourip;
-      giaddr = pkt.giaddr;
-      chaddr = pkt.chaddr;
-      sname = "";
-      file = "";
-      options =
-        cons (Message_type DHCPACK) @@
-        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
-        cons (Ip_lease_time lease_time) @@
-        cons (Renewal_t1 t1) @@
-        cons (Rebinding_t2 t2) @@
-        cons (Server_identifier ourip) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
-          (fun vid -> Vendor_class_id vid) @@
-        match (parameter_requests_of_options pkt.options) with
-         | Some preqs -> options_from_parameter_requests preqs subnet.options
-         | None -> []
-    }
+    let options =
+      cons (Message_type DHCPACK) @@
+      cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
+      cons (Ip_lease_time lease_time) @@
+      cons (Renewal_t1 t1) @@
+      cons (Rebinding_t2 t2) @@
+      cons (Server_identifier ourip) @@
+      cons_if_some_f (vendor_class_id_of_options pkt.options)
+        (fun vid -> Vendor_class_id vid) @@
+      match (parameter_requests_of_options pkt.options) with
+      | Some preqs -> options_from_parameter_requests preqs subnet.options
+      | None -> []
+    in
+    let pkt = make_reply config subnet pkt
+        ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
+        ~siaddr:ourip ~giaddr:pkt.giaddr options
     in
     assert (lease.Lease.client_id = client_id);
     Lease.replace client_id lease lease_db;
@@ -317,25 +329,9 @@ let input_discover config (subnet:Config.subnet) pkt =
   | None -> Log.warn_lwt "No ips left to offer !"
   | Some addr ->
     let open Util in
-    (* Make a DHCPOFFER *)
-    let op = Bootreply in
-    let htype = Ethernet_10mb in
-    let hlen = 6 in
-    let hops = 0 in
-    let xid = pkt.xid in
-    let secs = 0 in
-    let flags = pkt.flags in
-    let ciaddr = Ipaddr.V4.any in
-    let yiaddr = addr in
-    let siaddr = ourip in
-    let giaddr = pkt.giaddr in
-    let chaddr = pkt.chaddr in
-    let sname = config.Config.hostname in
-    let file = "" in
     (* Start building the options *)
     let t1 = Int32.of_float (Config.t1_time_ratio *. (Int32.to_float lease_time)) in
     let t2 = Int32.of_float (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
-    (* These are the options we always give, even if not asked. *)
     let options =
       cons (Message_type DHCPOFFER) @@
       cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
@@ -349,9 +345,9 @@ let input_discover config (subnet:Config.subnet) pkt =
       | Some preqs -> options_from_parameter_requests preqs subnet.options
       | None -> []
     in
-    let pkt = { op; htype; hlen; hops; xid; secs; flags;
-                ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
-                options }
+    let pkt = make_reply config subnet pkt
+        ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
+        ~siaddr:ourip ~giaddr:pkt.giaddr options
     in
     Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
     send_pkt pkt subnet
