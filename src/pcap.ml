@@ -36,54 +36,22 @@ cstruct pcap_packet {
   uint32_t orig_len;       (* actual length of packet *)
 } as little_endian
 
-cstruct ethernet {
-  uint8_t        dst[6];
-  uint8_t        src[6];
-  uint16_t       ethertype;
-} as big_endian
-
-cstruct ipv4 {
-  uint8_t        hlen_version;
-  uint8_t        tos;
-  uint16_t       len;
-  uint16_t       id;
-  uint16_t       off;
-  uint8_t        ttl;
-  uint8_t        proto;
-  uint16_t       csum;
-  uint8_t        src[4];
-  uint8_t        dst[4]
-} as big_endian
-
 let num_packets = ref 0
 
-let print_packet p =
-  let ethertype = get_ethernet_ethertype p in
-  match ethertype with
-  | 0x0800 -> begin
-      let ip = Cstruct.shift p sizeof_ethernet in
-      let proto = get_ipv4_proto ip in
-      match proto with
-      | 17 -> (* UDP *)
-        let udp = Cstruct.shift ip sizeof_ipv4 in
-        let udplen = Cstruct.BE.get_uint16 udp 4 in
-        let dhcp = Cstruct.shift udp 8 in
-        let pkt = Dhcp.pkt_of_buf dhcp (udplen - 8) in
-        printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
-        let buf = Dhcp.buf_of_pkt pkt in
-        let pkt2 = Dhcp.pkt_of_buf buf (udplen - 8) in
-        if pkt2 <> pkt then begin
-          printf "buffers differ !\n";
-          printf "pcap buf:";
-          Cstruct.hexdump dhcp;
-          printf "our buf:";
-          Cstruct.hexdump buf;
-          printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
-          failwith "Serialization bug found !"
-        end
-      | _ -> failwith "unknown ip protocol"
-    end
-  | _ -> failwith "unknown body"
+let print_packet p len =
+  let pkt = Dhcp.pkt_of_buf p len in
+  printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
+  let buf = Dhcp.buf_of_pkt pkt in
+  let pkt2 = Dhcp.pkt_of_buf buf len in
+  if pkt2 <> pkt then begin
+    printf "buffers differ !\n";
+    printf "pcap buf:";
+    Cstruct.hexdump p;
+    printf "our buf:";
+    Cstruct.hexdump buf;
+    printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
+    failwith "Serialization bug found !"
+  end
 
 let rec print_pcap_packet (hdr, pkt) =
   let ts_sec = get_pcap_packet_ts_sec hdr in
@@ -92,7 +60,7 @@ let rec print_pcap_packet (hdr, pkt) =
   let orig_len = get_pcap_packet_orig_len hdr in
   printf "***** %lu.%lu  bytes %lu (of %lu)\n%!"
     ts_sec ts_usec incl_len orig_len;
-  print_packet pkt
+  print_packet pkt (Int32.to_int incl_len)
 
 let print_pcap_header buf =
   let magic = get_pcap_header_magic_number buf in

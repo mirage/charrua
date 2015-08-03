@@ -202,6 +202,12 @@ type dhcp_option =
 
 (* Describes a packed DHCP packet *)
 type pkt = {
+  srcmac  : Macaddr.t;
+  dstmac  : Macaddr.t;
+  srcip   : Ipaddr.V4.t;
+  dstip   : Ipaddr.V4.t;
+  srcport : int;
+  dstport : int;
   op      : op;
   htype   : htype;
   hlen    : int;
@@ -219,7 +225,7 @@ type pkt = {
   options : dhcp_option list;
 } with sexp
 
-val pkt_min_len : int
+val dhcp_min_len : int
 val client_port : int
 val server_port : int
 val make_buf : unit -> Cstruct.t

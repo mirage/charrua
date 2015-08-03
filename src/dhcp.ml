@@ -382,6 +382,12 @@ let string_of_option = to_hum sexp_of_dhcp_option
 let string_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
 
 type pkt = {
+  srcmac  : Macaddr.t;
+  dstmac  : Macaddr.t;
+  srcip   : Ipaddr.V4.t;
+  dstip   : Ipaddr.V4.t;
+  srcport : int;
+  dstport : int;
   op      : op;
   htype   : htype;
   hlen    : int;
@@ -399,7 +405,7 @@ type pkt = {
   options : dhcp_option list;
 } with sexp
 
-let pkt_min_len = sizeof_cpkt
+let dhcp_min_len = sizeof_cpkt
 
 let client_port = 68
 let server_port = 67
@@ -646,14 +652,14 @@ let options_of_buf buf buf_len =
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
-  if buf_len = pkt_min_len then
+  if buf_len = dhcp_min_len then
     []
   else
     (* Look for magic cookie *)
-    let cookie = Cstruct.BE.get_uint32 buf pkt_min_len in
+    let cookie = Cstruct.BE.get_uint32 buf dhcp_min_len in
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
-    let options_start = Cstruct.shift buf (pkt_min_len + 4) in
+    let options_start = Cstruct.shift buf (dhcp_min_len + 4) in
     (* Jump over cookie and start options, also extend them if necessary *)
     collect_options options_start [] |>
     extend_options buf |>
@@ -791,8 +797,29 @@ let buf_of_options sbuf options =
 
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
-  if len < pkt_min_len then
-    invalid_arg (Printf.sprintf "packet too small %d < %d" len pkt_min_len);
+  let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
+  if len < min_len then
+    invalid_arg (Printf.sprintf "packet too small %d < %d" len min_len);
+  (* Handle ethernet *)
+  let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
+  let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
+  let () = if (get_ethernet_ethertype buf) <> 0x0800 then
+      invalid_arg "packet is not IPv4"
+  in
+  let buf = Cstruct.shift buf sizeof_ethernet in
+  (* Handle IPv4 *)
+  let () = if (get_ipv4_proto buf) <> 17 then
+      invalid_arg "packet is not UDP"
+  in
+  let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
+  let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
+  (* XXX get hlen from hlen_version, assumes no ip-options ! *)
+  let buf = Cstruct.shift buf sizeof_ipv4 in
+  (* Handle UDP *)
+  let srcport = get_udp_src buf in
+  let dstport = get_udp_dst buf in
+  let buf = Cstruct.shift buf sizeof_udp in
+  (* Get the DHCP stuff *)
   let op = op_of_buf buf in
   let htype = htype_of_buf buf in
   let hlen = hlen_of_buf buf in
@@ -808,28 +835,30 @@ let pkt_of_buf buf len =
   let sname = sname_of_buf buf in
   let file = file_of_buf buf in
   let options = options_of_buf buf len in
-  { op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
+  { srcmac; dstmac; srcip; dstip; srcport; dstport;
+    op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
     siaddr; giaddr; chaddr; sname; file; options }
 
 let buf_of_pkt pkt =
-  let buf = make_buf () in
-  set_cpkt_op buf (int_of_op pkt.op);
-  set_cpkt_htype buf (int_of_htype pkt.htype);
-  set_cpkt_hlen buf pkt.hlen;
-  set_cpkt_hops buf pkt.hops;
-  set_cpkt_xid buf pkt.xid;
-  set_cpkt_secs buf pkt.secs;
-  set_cpkt_flags buf (int_of_flags pkt.flags);
-  set_cpkt_ciaddr buf (Ipaddr.V4.to_int32 pkt.ciaddr);
-  set_cpkt_yiaddr buf (Ipaddr.V4.to_int32 pkt.yiaddr);
-  set_cpkt_siaddr buf (Ipaddr.V4.to_int32 pkt.siaddr);
-  set_cpkt_giaddr buf (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_cpkt_chaddr (bytes_of_chaddr pkt.chaddr) 0 buf;
-  set_cpkt_sname (bytes_of_sname pkt.sname) 0 buf;
-  set_cpkt_file (bytes_of_file pkt.file) 0 buf;
-  let options_start = Cstruct.shift buf sizeof_cpkt in
+  let buf = make_buf () in      (* XXX This is kinda overkill *)
+  let dhcp = Cstruct.shift buf (sizeof_ethernet + sizeof_udp + sizeof_ipv4) in
+  set_cpkt_op dhcp (int_of_op pkt.op);
+  set_cpkt_htype dhcp (int_of_htype pkt.htype);
+  set_cpkt_hlen dhcp pkt.hlen;
+  set_cpkt_hops dhcp pkt.hops;
+  set_cpkt_xid dhcp pkt.xid;
+  set_cpkt_secs dhcp pkt.secs;
+  set_cpkt_flags dhcp (int_of_flags pkt.flags);
+  set_cpkt_ciaddr dhcp (Ipaddr.V4.to_int32 pkt.ciaddr);
+  set_cpkt_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
+  set_cpkt_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
+  set_cpkt_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
+  set_cpkt_chaddr (bytes_of_chaddr pkt.chaddr) 0 dhcp;
+  set_cpkt_sname (bytes_of_sname pkt.sname) 0 dhcp;
+  set_cpkt_file (bytes_of_file pkt.file) 0 dhcp;
+  let options_start = Cstruct.shift dhcp sizeof_cpkt in
   let options_end = buf_of_options options_start pkt.options in
-  let partial_len = (Cstruct.len buf) - (Cstruct.len options_end) in
+  let partial_len = (Cstruct.len dhcp) - (Cstruct.len options_end) in
   let buf_end =
     if 300 - partial_len > 0 then
       let pad_len = 300 - partial_len in
@@ -842,6 +871,30 @@ let buf_of_pkt pkt =
     else
       options_end
   in
+  let dhcp_len = (Cstruct.len dhcp) - (Cstruct.len buf_end) in
+  (* Ethernet *)
+  let ethernet = buf in
+  set_ethernet_src (Macaddr.to_bytes pkt.srcmac) 0 ethernet;
+  set_ethernet_dst (Macaddr.to_bytes pkt.dstmac) 0 ethernet;
+  set_ethernet_ethertype ethernet 0x0800;
+  (* IPv4 *)
+  let ip = Cstruct.shift ethernet sizeof_ethernet in
+  set_ipv4_hlen_version ip 0x45;
+  set_ipv4_tos ip 0;
+  set_ipv4_len ip (20 + 8 + dhcp_len); (* ipv4 + udp + dhcp *)
+  set_ipv4_id ip (Random.int 65535);
+  set_ipv4_off ip 0;
+  set_ipv4_ttl ip 255;
+  set_ipv4_proto ip 17; (* UDP *)
+  (* set_ipv4_csum ip XXX; *)
+  set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
+  set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
+  (* UDP *)
+  let udp = Cstruct.shift ip sizeof_ipv4 in
+  set_udp_src udp pkt.srcport;
+  set_udp_dst udp pkt.dstport;
+  set_udp_len udp (dhcp_len + 8);
+  (* set_udp_csum udp XXX; *)
   Cstruct.set_len buf ((Cstruct.len buf) - (Cstruct.len buf_end))
 
 let msgtype_of_options =

@@ -18,3 +18,28 @@ cstruct cpkt {
   uint8_t      file[128];
 } as big_endian
 
+cstruct ethernet {
+  uint8_t        dst[6];
+  uint8_t        src[6];
+  uint16_t       ethertype;
+} as big_endian
+
+cstruct ipv4 {
+  uint8_t        hlen_version;
+  uint8_t        tos;
+  uint16_t       len;
+  uint16_t       id;
+  uint16_t       off;
+  uint8_t        ttl;
+  uint8_t        proto;
+  uint16_t       csum;
+  uint32_t       src;
+  uint32_t       dst;
+} as big_endian
+
+cstruct udp {
+  uint16_t       src;
+  uint16_t       dst;
+  uint16_t       len;
+  uint16_t       csum;
+} as big_endian
