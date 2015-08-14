@@ -198,3 +198,64 @@ caml_recvif(value vfd, value vbuf, value vofs, value vlen)
 
 	CAMLreturn (vres);
 }
+
+/* From Mirage */
+/* Copyright (c) 2010-2011 Anil Madhavapeddy <anil@recoil.org> */
+
+/* WARNING: This code assumes that it is running on a little endian machine (x86) */
+static inline uint16_t
+local_htons(uint16_t v)
+{
+	return (((v & 0xFF) << 8) | ((v & 0xFF00) >> 8));
+}
+
+static inline uint16_t
+local_ntohs(uint16_t v)
+{
+	return (local_htons(v));
+}
+
+static uint16_t
+ones_complement_checksum_bigarray(unsigned char *addr, size_t ofs, size_t count, uint64_t sum64)
+{
+	addr += ofs;
+	uint64_t *data64 = (uint64_t *) addr;
+	while (count >= 8) {
+		uint64_t s = *data64++;
+		sum64 += s;
+		if (sum64 < s) sum64++;
+		count -= 8;
+	}
+
+	addr = (unsigned char *) data64;
+	while (count > 1) {
+		uint16_t v = *((uint16_t *) addr);
+		sum64 += v;
+		if (sum64 < v) sum64++;
+		count -= 2;
+		addr += 2;
+	}
+
+	if (count > 0) {
+		uint16_t v = local_ntohs((*addr) << 8);
+		sum64 += v;
+		if (sum64 < v) sum64++;
+	}
+
+	while (sum64 >> 16)
+		sum64 = (sum64 & 0xffff) + (sum64 >> 16);
+	return local_htons(~sum64);
+}
+
+CAMLprim value
+caml_tcpip_ones_complement_checksum(value v_cstruct)
+{
+	CAMLparam1(v_cstruct);
+	CAMLlocal3(v_ba, v_ofs, v_len);
+	uint16_t checksum = 0;
+	v_ba = Field(v_cstruct, 0);
+	v_ofs = Field(v_cstruct, 1);
+	v_len = Field(v_cstruct, 2);
+	checksum = ones_complement_checksum_bigarray(Caml_ba_data_val(v_ba), Int_val(v_ofs), Int_val(v_len), 0);
+	CAMLreturn(Val_int(checksum));
+}
