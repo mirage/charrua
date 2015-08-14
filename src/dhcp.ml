@@ -840,8 +840,7 @@ let pkt_of_buf buf len =
     siaddr; giaddr; chaddr; sname; file; options }
 
 let buf_of_pkt pkt =
-  let buf = make_buf () in      (* XXX This is kinda overkill *)
-  let dhcp = Cstruct.shift buf (sizeof_ethernet + sizeof_udp + sizeof_ipv4) in
+  let dhcp = Cstruct.create 2048 in
   set_cpkt_op dhcp (int_of_op pkt.op);
   set_cpkt_htype dhcp (int_of_htype pkt.htype);
   set_cpkt_hlen dhcp pkt.hlen;
@@ -871,17 +870,17 @@ let buf_of_pkt pkt =
     else
       options_end
   in
-  let dhcp_len = (Cstruct.len dhcp) - (Cstruct.len buf_end) in
+  let dhcp = Cstruct.set_len dhcp ((Cstruct.len dhcp) - (Cstruct.len buf_end)) in
   (* Ethernet *)
-  let ethernet = buf in
+  let ethernet = Cstruct.create 14 in
   set_ethernet_src (Macaddr.to_bytes pkt.srcmac) 0 ethernet;
   set_ethernet_dst (Macaddr.to_bytes pkt.dstmac) 0 ethernet;
   set_ethernet_ethertype ethernet 0x0800;
   (* IPv4 *)
-  let ip = Cstruct.shift ethernet sizeof_ethernet in
+  let ip = Cstruct.create 20 in
   set_ipv4_hlen_version ip 0x45;
   set_ipv4_tos ip 0;
-  set_ipv4_len ip (20 + 8 + dhcp_len); (* ipv4 + udp + dhcp *)
+  set_ipv4_len ip (20 + 8 + (Cstruct.len dhcp)); (* ipv4 + udp + dhcp *)
   set_ipv4_id ip (Random.int 65535);
   set_ipv4_off ip 0;
   set_ipv4_ttl ip 255;
@@ -891,12 +890,20 @@ let buf_of_pkt pkt =
   set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
   set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
   (* UDP *)
-  let udp = Cstruct.shift ip sizeof_ipv4 in
+  let udp = Cstruct.create 8 in
   set_udp_src udp pkt.srcport;
   set_udp_dst udp pkt.dstport;
-  set_udp_len udp (dhcp_len + 8);
-  (* set_udp_csum udp XXX; *)
-  Cstruct.set_len buf ((Cstruct.len buf) - (Cstruct.len buf_end))
+  set_udp_len udp ((Cstruct.len dhcp) + 8);
+  (* UDP checksum pseudo header *)
+  let pbuf = Cstruct.create 4 in
+  Cstruct.set_uint8 pbuf 0 0;
+  Cstruct.set_uint8 pbuf 1 17;
+  Cstruct.BE.set_uint16 pbuf 2 ((Cstruct.len udp) + (Cstruct.len dhcp));
+  let src_dst = Cstruct.sub ip 12 (2 * 4) in
+  set_udp_csum udp 0;
+  let udp_csum = Util.ones_complement_list (src_dst :: pbuf :: udp :: dhcp :: []) in
+  set_udp_csum udp udp_csum;
+  Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
 let msgtype_of_options =
   Util.find_map (function Message_type m -> Some m | _ -> None)
