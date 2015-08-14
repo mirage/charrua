@@ -886,7 +886,8 @@ let buf_of_pkt pkt =
   set_ipv4_off ip 0;
   set_ipv4_ttl ip 255;
   set_ipv4_proto ip 17; (* UDP *)
-  (* set_ipv4_csum ip XXX; *)
+  let csum = Util.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
+  set_ipv4_csum ip csum;
   set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
   set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
   (* UDP *)
