@@ -76,6 +76,8 @@ external reqif: Unix.file_descr -> unit = "caml_reqif"
 external recvif: Unix.file_descr -> Lwt_bytes.t -> int -> int -> (int * int) =
   "caml_recvif"
 external ones_complement: Cstruct.t -> int = "caml_tcpip_ones_complement_checksum"
+external ones_complement_list: Cstruct.t list -> int =
+  "caml_tcpip_ones_complement_checksum_list"
 
 let lwt_recvif fd buf pos len =
   let open Lwt.Infix in
