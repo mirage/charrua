@@ -71,39 +71,8 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
 let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
   let open Dhcp in
   let open Config in
-  match (msgtype_of_options pkt.options) with
-  | None -> Lwt.fail_with "fudeu"
-  | Some m ->
-    lwt addr = match m with
-      | DHCPNAK -> if pkt.giaddr <> Ipaddr.V4.unspecified then
-          return pkt.giaddr
-        else
-          return Ipaddr.V4.broadcast
-      | DHCPOFFER | DHCPACK ->
-        if pkt.giaddr <> Ipaddr.V4.unspecified then
-          return pkt.giaddr
-        else if pkt.ciaddr <> Ipaddr.V4.unspecified then
-          return pkt.ciaddr
-        else if pkt.flags = Unicast then
-          return pkt.yiaddr
-        else
-          return Ipaddr.V4.broadcast
-      | _ -> Lwt.fail_invalid_arg
-               ("Can't send message type " ^ (string_of_msgtype m))
-    in
-    let iaddr = Ipaddr.V4.to_string addr |> Unix.inet_addr_of_string in
-    let buf = buf_of_pkt pkt in
-    let saddr = Lwt_unix.ADDR_INET (iaddr, client_port) in
-    try_lwt
-      lwt n = Lwt_cstruct.sendto subnet.socket buf [] saddr in
-      if n = 0 then
-        Lwt.fail_with (Printf.sprintf "send_pkt sendto(%s) returned 0)"
-                         (string_of_msgtype m))
-      else
-        return_unit
-    with exn -> Log.warn_lwt "send %s error: %s"
-                  (Dhcp.string_of_msgtype m)
-                  (Printexc.to_string exn)
+  let buf = Dhcp.buf_of_pkt pkt |> Cstruct.to_string in
+  Lwt_rawlink.put_packet subnet.Config.link buf
 
 let valid_pkt pkt =
   let open Dhcp in
@@ -351,41 +320,39 @@ let input_discover config (subnet:Config.subnet) pkt =
     Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
     send_pkt pkt subnet
 
-let input_pkt config ifid pkt =
+let input_pkt config subnet pkt =
   let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
-    match Config.subnet_of_ifid config ifid with
-    | None -> Log.warn_lwt "No subnet for interface %s" (Util.if_indextoname ifid)
-    | Some subnet ->
-      match msgtype_of_options pkt.options with
-      | Some DHCPDISCOVER -> input_discover config subnet pkt
-      | Some DHCPREQUEST  -> input_request config subnet pkt
-      | Some DHCPDECLINE  -> input_decline config subnet pkt
-      | Some DHCPRELEASE  -> input_release config subnet pkt
-      | Some DHCPINFORM   -> input_inform config subnet pkt
-      | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
-      | Some m -> Log.debug_lwt "Unhandled msgtype %s" (string_of_msgtype m)
+    match msgtype_of_options pkt.options with
+    | Some DHCPDISCOVER -> input_discover config subnet pkt
+    | Some DHCPREQUEST  -> input_request config subnet pkt
+    | Some DHCPDECLINE  -> input_decline config subnet pkt
+    | Some DHCPRELEASE  -> input_release config subnet pkt
+    | Some DHCPINFORM   -> input_inform config subnet pkt
+    | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
+    | Some m -> Log.debug_lwt "Unhandled msgtype %s" (string_of_msgtype m)
   else
     Log.warn_lwt "Invalid packet %s" (string_of_pkt pkt)
 
-let rec dhcp_recv config socket =
-  let buffer = Dhcp.make_buf () in
-  lwt (n, ifid) = Util.lwt_cstruct_recvif socket buffer in
-  Log.debug "dhcp sock read %d bytes on interface %s" n (Util.if_indextoname ifid);
-  if n = 0 then
-    failwith "Unexpected EOF in DHCPD socket";
+let rec dhcp_recv config subnet =
+  let open Config in
+  lwt s = Lwt_rawlink.get_packet subnet.Config.link in
+  let buffer = Cstruct.of_string s in
+  let n = Cstruct.len buffer in
+  Log.debug "dhcp sock read %d bytes on interface %s" n
+    subnet.interface.name;
   (* Input the packet *)
   lwt () = match (Dhcp.pkt_of_buf buffer n) with
     | exception Invalid_argument e -> Log.warn_lwt "Dropped packet: %s" e
     | pkt ->
       lwt () = Log.debug_lwt "valid packet from %d bytes" n in
       try_lwt
-        input_pkt config ifid pkt
+        input_pkt config subnet pkt
       with
         Invalid_argument e -> Log.warn_lwt "Input pkt %s" e
   in
-  dhcp_recv config socket
+  dhcp_recv config subnet
 
 (* Drop privileges and chroot to _hdhcpd home *)
 let go_safe () =
@@ -428,18 +395,8 @@ let hdhcpd configfile verbosity =
   let () = Log.notice "Haesbaert DHCPD started" in
   let config = Config_parser.parse ~path:configfile () in
   let () = go_safe () in
-  let rec recv_thread socket =
-    catch (fun () ->
-        dhcp_recv config socket)
-      (fun exn ->
-         Log.warn "recv_thread exception: %s\n%s"
-           (Printexc.to_string exn) (Printexc.get_backtrace ());
-         recv_thread socket)
-  in
-  let threads =
-    recv_thread config.Config.socket ::
-    List.map (fun (subnet : Config.subnet) ->
-        dhcp_recv config subnet.socket) config.subnets
+  let threads = List.map (fun (subnet : Config.subnet) ->
+      dhcp_recv config subnet) config.subnets
   in
   Lwt_main.run
     (pick threads >>= fun _-> Log.notice_lwt "Haesbaert DHCPD finished")

@@ -32,11 +32,11 @@ type interface = {
   mac : Macaddr.t;
 } with sexp
 
-type socket = Lwt_unix.file_descr sexp_opaque with sexp
+type link = Lwt_rawlink.t sexp_opaque with sexp
 
 type subnet = {
   interface : interface;
-  socket : socket;
+  link : link;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
@@ -48,7 +48,6 @@ type subnet = {
 
 type t = {
   interfaces : interface list;
-  socket : socket;
   subnets : subnet list;
   options : Dhcp.dhcp_option list;
   hostname : string;
@@ -82,6 +81,10 @@ let get_interfaces () =
           name id (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
         { name; id; addr; mac })
     (Tuntap.getifaddrs_v4 ())
+
+let open_link ifname =
+  let open Lwt_rawlink in
+  open_link ~filter:(dhcp_filter ()) ifname
 
 let open_socket addr =
   let open Lwt_unix in
@@ -117,7 +120,7 @@ let config_of_ast ast =
                     (Ipaddr.V4.Prefix.to_string subnet.network)
       in
       { interface = interface;
-        socket = open_socket interface.addr;
+        link = open_link interface.name;
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
@@ -128,7 +131,6 @@ let config_of_ast ast =
       ast.subnets
   in
   { interfaces; subnets;
-    socket = open_socket Ipaddr.V4.any;
     options = ast.options;
     hostname = Unix.gethostname ();
     default_lease_time = ast.default_lease_time;

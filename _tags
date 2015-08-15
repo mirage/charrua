@@ -5,5 +5,6 @@ true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
 true: package(cstruct.unix), package(tuntap)
 true: package(cmdliner), package(ipaddr)
 true: package(sexplib), package(sexplib.syntax)
+true: package(rawlink)
 <**/*.byte>: linkdep(src/stubs.o), custom
 <**/*.native>: linkdep(src/stubs.o)
