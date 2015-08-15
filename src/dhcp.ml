@@ -804,7 +804,8 @@ let pkt_of_buf buf len =
   let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
   let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
   let () = if (get_ethernet_ethertype buf) <> 0x0800 then
-      invalid_arg "packet is not IPv4"
+      invalid_arg ("packet is not IPv4: " ^
+                   (string_of_int (get_ethernet_ethertype buf)));
   in
   let buf = Cstruct.shift buf sizeof_ethernet in
   (* Handle IPv4 *)
@@ -885,10 +886,11 @@ let buf_of_pkt pkt =
   set_ipv4_off ip 0;
   set_ipv4_ttl ip 255;
   set_ipv4_proto ip 17; (* UDP *)
-  let csum = Util.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
-  set_ipv4_csum ip csum;
   set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
   set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
+  set_ipv4_csum ip 0;
+  let csum = Util.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
+  set_ipv4_csum ip csum;
   (* UDP *)
   let udp = Cstruct.create 8 in
   set_udp_src udp pkt.srcport;
