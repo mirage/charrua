@@ -36,25 +36,24 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
   let sname = config.hostname in
   let file = "" in
   (* Build the frame header *)
-  (* THIS IS JUST A PLACEHOLDER, IT IS ALL WRONG *)
   let dstport = if giaddr = Ipaddr.V4.unspecified then
       client_port
     else
       server_port
   in
   let srcport = Dhcp.server_port in
-  let srcmac = Macaddr.broadcast in (* XXX FIX ME *)
+  let srcmac = Macaddr.of_string_exn "00:00:00:00:00:00" in (* XXX FIX ME *)
   (* old send_pkt crap *)
   let dstmac, dstip = match (msgtype_of_options options) with
     | None -> failwith "make_reply: No msgtype in options"
     | Some m -> match m with
       | DHCPNAK -> if giaddr <> Ipaddr.V4.unspecified then
-          (reqpkt.srcmac, giaddr) (* XXX confirm mac *)
+          (reqpkt.srcmac, giaddr)
         else
           (Macaddr.broadcast, Ipaddr.V4.broadcast)
       | DHCPOFFER | DHCPACK ->
         if giaddr <> Ipaddr.V4.unspecified then
-          (reqpkt.srcmac, giaddr) (* XXX confirm mac *)
+          (reqpkt.srcmac, giaddr)
         else if ciaddr <> Ipaddr.V4.unspecified then
           (reqpkt.srcmac, ciaddr)
         else if flags = Unicast then
