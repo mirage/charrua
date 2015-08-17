@@ -55,7 +55,7 @@ let timeleft3 lease t1_ratio t2_ratio =
   (Int32.of_float left,
    Int32.of_float (left *. t1_ratio),
    Int32.of_float (left *. t2_ratio))
-let expired lease = timeleft lease > Int32.zero
+let expired lease = timeleft lease = Int32.zero
 
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
