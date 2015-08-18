@@ -222,8 +222,8 @@ let input_request config (subnet:Config.subnet) pkt =
     if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
       lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
       drop
-    else if expired then
-      nak ~msg:"Lease has expired, try again son" ()
+    else if expired && not (Lease.addr_available reqip lease_db) then
+      nak ~msg:"Lease has expired and address is taken" ()
     (* TODO check if it's in the correct network when giaddr <> 0 *)
     else if pkt.giaddr = Ipaddr.V4.unspecified &&
             not (Lease.addr_in_range reqip subnet.range) then
@@ -237,8 +237,8 @@ let input_request config (subnet:Config.subnet) pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
       lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is 0" in
       drop
-    else if expired then
-      nak ~msg:"Lease has expired, try again son" ()
+    else if expired && not (Lease.addr_available lease.Lease.addr lease_db) then
+      nak ~msg:"Lease has expired and address is taken" ()
     else if lease.Lease.addr <> pkt.ciaddr then
       nak ~msg:"Requested address is incorrect" ()
     else
