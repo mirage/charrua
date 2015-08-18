@@ -42,8 +42,8 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
       server_port
   in
   let srcport = Dhcp.server_port in
-  let srcmac = Macaddr.of_string_exn "00:00:00:00:00:00" in (* XXX FIX ME *)
-  (* old send_pkt crap *)
+  (* kernel fills in srcmac *)
+  let srcmac = Macaddr.of_string_exn "00:00:00:00:00:00" in
   let dstmac, dstip = match (msgtype_of_options options) with
     | None -> failwith "make_reply: No msgtype in options"
     | Some m -> match m with
