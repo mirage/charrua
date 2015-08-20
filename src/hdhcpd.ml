@@ -69,10 +69,7 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
     options }
 
 let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
-  let open Dhcp in
-  let open Config in
-  let buf = Dhcp.buf_of_pkt pkt |> Cstruct.to_string in
-  Lwt_rawlink.put_packet subnet.Config.link buf
+  Lwt_rawlink.send_packet subnet.Config.link (Dhcp.buf_of_pkt pkt)
 
 let valid_pkt pkt =
   let open Dhcp in
@@ -337,8 +334,7 @@ let input_pkt config subnet pkt =
 
 let rec dhcp_recv config subnet =
   let open Config in
-  lwt s = Lwt_rawlink.get_packet subnet.Config.link in
-  let buffer = Cstruct.of_string s in
+  lwt buffer = Lwt_rawlink.read_packet subnet.Config.link in
   let n = Cstruct.len buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n
     subnet.interface.name;
