@@ -15,10 +15,10 @@
  *)
 
 open Lwt
+open Dhcp
 
 let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
     ~ciaddr ~yiaddr ~siaddr ~giaddr options =
-  let open Dhcp in
   let open Config in
   let op = Bootreply in
   let htype = Ethernet_10mb in
@@ -36,7 +36,7 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
     else
       server_port
   in
-  let srcport = Dhcp.server_port in
+  let srcport = server_port in
   (* kernel fills in srcmac *)
   let srcmac = Macaddr.of_string_exn "00:00:00:00:00:00" in
   let dstmac, dstip = match (msgtype_of_options options) with
@@ -64,10 +64,9 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
     options }
 
 let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
-  Lwt_rawlink.send_packet subnet.Config.link (Dhcp.buf_of_pkt pkt)
+  Lwt_rawlink.send_packet subnet.Config.link (buf_of_pkt pkt)
 
 let valid_pkt pkt =
-  let open Dhcp in
   if pkt.op <> Bootrequest then
     false
   else if pkt.htype <> Ethernet_10mb then
@@ -80,7 +79,6 @@ let valid_pkt pkt =
     true
 
 let input_decline_release config (subnet:Config.subnet) (pkt:Dhcp.pkt) =
-  let open Dhcp in
   let open Config in
   let open Util in
   lwt msgtype = match msgtype_of_options pkt.options with
@@ -88,7 +86,7 @@ let input_decline_release config (subnet:Config.subnet) (pkt:Dhcp.pkt) =
     | None -> Lwt.fail_with "Unexpected message type"
   in
   lwt () = Log.debug_lwt "%s packet received %s" msgtype
-      (Dhcp.string_of_pkt pkt)
+      (string_of_pkt pkt)
   in
   let ourip = subnet.interface.addr in
   let reqip = request_ip_of_options pkt.options in
@@ -117,8 +115,7 @@ let input_decline = input_decline_release
 let input_release = input_decline_release
 
 let input_inform config (subnet:Config.subnet) pkt =
-  let open Dhcp in
-  lwt () = Log.debug_lwt "INFORM packet received %s" (Dhcp.string_of_pkt pkt) in
+  lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
   if pkt.ciaddr = Ipaddr.V4.unspecified then
     Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
   else
@@ -141,9 +138,8 @@ let input_inform config (subnet:Config.subnet) pkt =
     send_pkt pkt subnet
 
 let input_request config (subnet:Config.subnet) pkt =
-  let open Dhcp in
   let open Config in
-  lwt () = Log.debug_lwt "REQUEST packet received %s" (Dhcp.string_of_pkt pkt) in
+  lwt () = Log.debug_lwt "REQUEST packet received %s" (string_of_pkt pkt) in
   let drop = return_unit in
   let lease_db = subnet.lease_db in
   let client_id = client_id_of_pkt pkt in
@@ -238,9 +234,8 @@ let input_request config (subnet:Config.subnet) pkt =
   | _ -> drop
 
 let input_discover config (subnet:Config.subnet) pkt =
-  let open Dhcp in
   let open Config in
-  Log.debug "DISCOVER packet received %s" (Dhcp.string_of_pkt pkt);
+  Log.debug "DISCOVER packet received %s" (string_of_pkt pkt);
   (* RFC section 4.3.1 *)
   (* Figure out the ip address *)
   let lease_db = subnet.lease_db in
@@ -313,7 +308,6 @@ let input_discover config (subnet:Config.subnet) pkt =
     send_pkt pkt subnet
 
 let input_pkt config subnet pkt =
-  let open Dhcp in
   if valid_pkt pkt then
     (* Check if we have a subnet configured on the receiving interface *)
     match msgtype_of_options pkt.options with
@@ -334,7 +328,7 @@ let rec dhcp_recv config subnet =
   Log.debug "dhcp sock read %d bytes on interface %s" n
     subnet.interface.name;
   (* Input the packet *)
-  lwt () = match (Dhcp.pkt_of_buf buffer n) with
+  lwt () = match (pkt_of_buf buffer n) with
     | exception Invalid_argument e -> Log.warn_lwt "Dropped packet: %s" e
     | pkt ->
       lwt () = Log.debug_lwt "valid packet from %d bytes" n in
