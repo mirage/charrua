@@ -71,21 +71,11 @@ type ast = {
   max_lease_time : int32;
 } with sexp
 
-let get_interfaces () =
-  List.map (function
-      | name, (addr, _) ->
-        let mac = Tuntap.get_macaddr name in
-        Log.debug "Got interface name:%s addr:%s mac:%s"
-          name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
-        { name; addr; mac })
-    (Tuntap.getifaddrs_v4 ())
-
 let open_link ifname =
   let open Lwt_rawlink in
   open_link ~filter:(dhcp_filter ()) ifname
 
-let config_of_ast ast =
-  let interfaces = get_interfaces () in
+let config_of_ast ast interfaces =
   let subnets = List.map (fun subnet ->
       let interface = try List.find (function ifnet ->
           Ipaddr.V4.Prefix.mem ifnet.addr subnet.network) interfaces

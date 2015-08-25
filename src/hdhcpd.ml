@@ -55,11 +55,21 @@ let go_safe () =
   if canrestore then
     failwith "Was able to restore UID, setuid is broken"
 
+let get_interfaces () =
+  List.map (function
+      | name, (addr, _) ->
+        let mac = Tuntap.get_macaddr name in
+        Log.debug "Got interface name:%s addr:%s mac:%s"
+          name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
+        Config.{ name; addr; mac })
+    (Tuntap.getifaddrs_v4 ())
+
 let hdhcpd configfile verbosity =
   let open Config in
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Haesbaert DHCPD started\n%!";
-  let config = Config_parser.parse ~path:configfile () in
+  let interfaces = get_interfaces () in
+  let config = Config_parser.parse ~path:configfile interfaces in
   let () = go_safe () in
   Lwt_main.run
     (Dhcp_server.start config verbosity >>=
