@@ -64,12 +64,19 @@ let get_interfaces () =
         Config.{ name; addr; mac })
     (Tuntap.getifaddrs_v4 ())
 
+let read_file f =
+  let ic = open_in f in
+  let n = in_channel_length ic in
+  let buf = Bytes.create n in
+  really_input ic buf 0 n;
+  close_in ic;
+  buf
+
 let hdhcpd configfile verbosity =
   let open Config in
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Haesbaert DHCPD started\n%!";
-  let interfaces = get_interfaces () in
-  let config = Config_parser.parse ~path:configfile interfaces in
+  let config = Config_parser.parse (read_file configfile) (get_interfaces ()) in
   let () = go_safe () in
   Lwt_main.run
     (Dhcp_server.start config verbosity >>=
