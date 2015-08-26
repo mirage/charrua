@@ -51,6 +51,6 @@ let info fmt = log ~pre:"info" Info fmt
 let debug fmt = log ~pre:"debug" Debug fmt
 
 let notice_lwt fmt = log_lwt Notice fmt
-let warn_lwt fmt = log_lwt Notice fmt
-let info_lwt fmt = log_lwt Info fmt
-let debug_lwt fmt = log_lwt Debug fmt
+let warn_lwt fmt = log_lwt ~pre:"warn" Notice fmt
+let info_lwt fmt = log_lwt ~pre:"info" Info fmt
+let debug_lwt fmt = log_lwt ~pre:"debug" Debug fmt
