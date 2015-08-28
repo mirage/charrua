@@ -87,7 +87,8 @@ let hdhcpd configfile verbosity =
   let open Config in
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Haesbaert DHCPD started\n%!";
-  let config = Config_parser.parse (read_file configfile) (get_interfaces ()) in
+  let config = Dhcp_server.parse_config
+      (read_file configfile) (get_interfaces ()) in
   let () = go_safe () in
   Lwt_main.run
     (DS.start config verbosity >>=

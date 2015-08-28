@@ -24,3 +24,8 @@ module type SERVER = sig
 end
 
 module Make (D : DATAGRAM) : SERVER
+
+
+exception Syntax_error of string
+
+val parse_config : string -> Config.interface list -> Config.t

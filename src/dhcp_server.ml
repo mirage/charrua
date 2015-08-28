@@ -360,3 +360,22 @@ module Make (D : DATAGRAM) = struct
     in
     pick threads
 end
+
+exception Syntax_error of string
+
+let parse_config configtxt interfaces =
+  let lex = Lexing.from_string configtxt in
+  let choke s =
+    let open Lexing in
+    let pos = lex.lex_curr_p in
+    let str = Printf.sprintf "%s at line %d around `%s`"
+        s pos.pos_lnum (Lexing.lexeme lex)
+    in
+    raise (Syntax_error str)
+  in
+  try
+    Config.config_of_ast (Parser.main Lexer.lex lex) interfaces
+  with
+  | Parser.Error -> choke "Parser error"
+  | Lexer.Error e -> raise (Syntax_error e)
+  | Config.Error e -> choke e
