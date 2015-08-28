@@ -14,4 +14,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t
+module type INTERFACE = sig
+  type t
+  val send : t -> Cstruct.t -> unit Lwt.t
+  val recv : t -> Cstruct.t Lwt.t
+  val name : t -> string
+  val addr : t -> Ipaddr.V4.t
+end
+
+module type SERVER = sig
+  type interface
+  val create : string -> string -> interface list -> 'a Lwt.t
+  val parse_networks : string -> Ipaddr.V4.Prefix.t list
+end

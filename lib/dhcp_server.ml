@@ -14,22 +14,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module type DATAGRAM = sig
-  val send : Config.interface -> Cstruct.t -> unit Lwt.t
-  val recv : Config.interface -> Cstruct.t Lwt.t
-end
-
-module type SERVER = sig
-  val start : Config.t -> string -> 'a Lwt.t
-end
-
-module Make (D : DATAGRAM) : SERVER = struct
+module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
+  module C = Config.Make (I)
+  open C
   open Lwt
   open Dhcp
 
-  let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
+  type interface = I.t
+
+  let make_reply config (subnet:C.subnet) (reqpkt:Dhcp.pkt)
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
-    let open Config in
     let op = Bootreply in
     let htype = Ethernet_10mb in
     let hlen = 6 in
@@ -67,14 +61,14 @@ module Make (D : DATAGRAM) : SERVER = struct
             (Macaddr.broadcast, Ipaddr.V4.broadcast)
         | _ -> invalid_arg ("Can't send message type " ^ (string_of_msgtype m))
     in
-    let srcip = subnet.interface.addr in
+    let srcip = I.addr subnet.interface in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
       op; htype; hlen; hops; xid; secs; flags;
       ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
       options }
 
-  let send_pkt (pkt:Dhcp.pkt) (interface:Config.interface) =
-    D.send interface (buf_of_pkt pkt)
+  let send_pkt (pkt:Dhcp.pkt) interface =
+    I.send interface (buf_of_pkt pkt)
 
   let valid_pkt pkt =
     if pkt.op <> Bootrequest then
@@ -88,8 +82,7 @@ module Make (D : DATAGRAM) : SERVER = struct
     else
       true
 
-  let input_decline_release config (subnet:Config.subnet) (pkt:Dhcp.pkt) =
-    let open Config in
+  let input_decline_release config (subnet:C.subnet) (pkt:Dhcp.pkt) =
     let open Util in
     lwt msgtype = match msgtype_of_options pkt.options with
       | Some msgtype -> return (string_of_msgtype msgtype)
@@ -98,7 +91,7 @@ module Make (D : DATAGRAM) : SERVER = struct
     lwt () = Log.debug_lwt "%s packet received %s" msgtype
         (string_of_pkt pkt)
     in
-    let ourip = subnet.interface.addr in
+    let ourip = I.addr subnet.interface in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
     let m = message_of_options pkt.options in
@@ -124,12 +117,12 @@ module Make (D : DATAGRAM) : SERVER = struct
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform config (subnet:Config.subnet) pkt =
+  let input_inform config (subnet : C.subnet) pkt =
     lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
     else
-      let ourip = Config.(subnet.interface.addr) in
+      let ourip = I.addr subnet.interface in
       let options =
         let open Util in
         cons (Message_type DHCPACK) @@
@@ -138,7 +131,7 @@ module Make (D : DATAGRAM) : SERVER = struct
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
         | Some preqs ->
-          options_from_parameter_requests preqs subnet.Config.options
+          options_from_parameter_requests preqs subnet.options
         | None -> []
       in
       let pkt = make_reply config subnet pkt
@@ -146,16 +139,15 @@ module Make (D : DATAGRAM) : SERVER = struct
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet.Config.interface
+      send_pkt pkt subnet.interface
 
-  let input_request config (subnet:Config.subnet) pkt =
-    let open Config in
+  let input_request config (subnet:C.subnet) pkt =
     lwt () = Log.debug_lwt "REQUEST packet received %s" (string_of_pkt pkt) in
     let drop = return_unit in
     let lease_db = subnet.lease_db in
     let client_id = client_id_of_pkt pkt in
     let lease = Lease.lookup client_id lease_db in
-    let ourip = subnet.interface.addr in
+    let ourip = I.addr subnet.interface in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
     let nak ?msg () =
@@ -174,12 +166,12 @@ module Make (D : DATAGRAM) : SERVER = struct
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet.Config.interface
+      send_pkt pkt subnet.interface
     in
     let ack lease =
       let open Util in
       let lease_time, t1, t2 =
-        Lease.timeleft3 lease Config.t1_time_ratio Config.t1_time_ratio
+        Lease.timeleft3 lease C.t1_time_ratio C.t1_time_ratio
       in
       let options =
         cons (Message_type DHCPACK) @@
@@ -201,7 +193,7 @@ module Make (D : DATAGRAM) : SERVER = struct
       assert (lease.Lease.client_id = client_id);
       Lease.replace client_id lease lease_db;
       Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet.Config.interface
+      send_pkt pkt subnet.interface
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -215,7 +207,7 @@ module Make (D : DATAGRAM) : SERVER = struct
       else if not (Lease.addr_available reqip lease_db) then
         nak ~msg:"Requested address is not available" ()
       else
-        ack (Lease.make client_id reqip (Config.default_lease_time config subnet))
+        ack (Lease.make client_id reqip (C.default_lease_time config subnet))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       let expired = Lease.expired lease in
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
@@ -244,15 +236,14 @@ module Make (D : DATAGRAM) : SERVER = struct
         ack lease
     | _ -> drop
 
-  let input_discover config (subnet:Config.subnet) pkt =
-    let open Config in
+  let input_discover config (subnet:C.subnet) pkt =
     Log.debug "DISCOVER packet received %s" (string_of_pkt pkt);
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let lease_db = subnet.lease_db in
     let id = client_id_of_pkt pkt in
     let lease = Lease.lookup id lease_db in
-    let ourip = subnet.interface.addr in
+    let ourip = I.addr subnet.interface in
     let expired = match lease with
       | Some lease -> Lease.expired lease
       | None -> false
@@ -280,14 +271,14 @@ module Make (D : DATAGRAM) : SERVER = struct
     (* Figure out the lease lease_time *)
     let lease_time = match (ip_lease_time_of_options pkt.options) with
       | Some ip_lease_time ->
-        if Config.lease_time_good config subnet ip_lease_time then
+        if C.lease_time_good config subnet ip_lease_time then
           ip_lease_time
         else
-          Config.default_lease_time config subnet
+          C.default_lease_time config subnet
       | None -> match lease with
-        | None -> Config.default_lease_time config subnet
+        | None -> C.default_lease_time config subnet
         | Some lease -> if expired then
-            Config.default_lease_time config subnet
+            C.default_lease_time config subnet
           else
             Lease.timeleft lease
     in
@@ -297,9 +288,9 @@ module Make (D : DATAGRAM) : SERVER = struct
       let open Util in
       (* Start building the options *)
       let t1 = Int32.of_float
-          (Config.t1_time_ratio *. (Int32.to_float lease_time)) in
+          (C.t1_time_ratio *. (Int32.to_float lease_time)) in
       let t2 = Int32.of_float
-          (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
+          (C.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
         cons (Message_type DHCPOFFER) @@
         cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
@@ -318,7 +309,7 @@ module Make (D : DATAGRAM) : SERVER = struct
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet.Config.interface
+      send_pkt pkt subnet.interface
 
   let input_pkt config subnet pkt =
     if valid_pkt pkt then
@@ -335,11 +326,10 @@ module Make (D : DATAGRAM) : SERVER = struct
       Log.warn_lwt "Invalid packet %s" (string_of_pkt pkt)
 
   let rec dhcp_recv config subnet =
-    let open Config in
-    lwt buffer = D.recv subnet.interface in
+    lwt buffer = I.recv subnet.interface in
     let n = Cstruct.len buffer in
     Log.debug "dhcp sock read %d bytes on interface %s" n
-      subnet.interface.name;
+      (I.name subnet.interface);
     (* Input the packet *)
     lwt () = match (pkt_of_buf buffer n) with
       | exception Invalid_argument e -> Log.warn_lwt "Dropped packet: %s" e
@@ -352,30 +342,41 @@ module Make (D : DATAGRAM) : SERVER = struct
     in
     dhcp_recv config subnet
 
-  let start config verbosity =
-    let open Config in
-    Log.current_level := Log.level_of_str verbosity;
-    let threads = List.map (fun (subnet : Config.subnet) ->
-        dhcp_recv config subnet) config.subnets
-    in
-    pick threads
-end
+  exception Syntax_error of string
 
-exception Syntax_error of string
-
-let parse_config configtxt interfaces =
-  let lex = Lexing.from_string configtxt in
-  let choke s =
+  let parse_choke lex s =
     let open Lexing in
     let pos = lex.lex_curr_p in
     let str = Printf.sprintf "%s at line %d around `%s`"
         s pos.pos_lnum (Lexing.lexeme lex)
     in
     raise (Syntax_error str)
-  in
-  try
-    Config.config_of_ast (Parser.main Lexer.lex lex) interfaces
-  with
-  | Parser.Error -> choke "Parser error"
-  | Lexer.Error e -> raise (Syntax_error e)
-  | Config.Error e -> choke e
+
+  let parse_networks configtxt =
+    let lex = Lexing.from_string configtxt in
+    try
+      let ast = Parser.main Lexer.lex lex in
+      List.map (fun s -> s.Config.network) ast.Config.subnets
+    with
+    | Parser.Error -> parse_choke lex "Parser error"
+    | Lexer.Error e -> raise (Syntax_error e)
+    | Config.Error e -> parse_choke lex e
+
+  let parse_config configtxt interfaces =
+    let lex = Lexing.from_string configtxt in
+    try
+      C.config_of_ast (Parser.main Lexer.lex lex) interfaces
+    with
+    | Parser.Error -> parse_choke lex "Parser error"
+    | Lexer.Error e -> raise (Syntax_error e)
+    | C.Error e -> parse_choke lex e
+    | Config.Error e -> parse_choke lex e
+
+  let create configtxt verbosity interfaces =
+    Log.current_level := Log.level_of_str verbosity;
+    let config = parse_config configtxt interfaces in
+    let threads = List.map (fun (subnet : C.subnet) ->
+        dhcp_recv config subnet) config.subnets
+    in
+    pick threads
+end
