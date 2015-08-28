@@ -55,15 +55,6 @@ let go_safe () =
   if canrestore then
     failwith "Was able to restore UID, setuid is broken"
 
-let get_interfaces () =
-  List.map (function
-      | name, (addr, _) ->
-        let mac = Tuntap.get_macaddr name in
-        Log.debug "Got interface name:%s addr:%s mac:%s"
-          name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
-        Config.{ name; addr; mac })
-    (Tuntap.getifaddrs_v4 ())
-
 let read_file f =
   let ic = open_in f in
   let n = in_channel_length ic in
@@ -72,26 +63,52 @@ let read_file f =
   close_in ic;
   buf
 
-let send (subnet:Config.subnet) buf =
-  Lwt_rawlink.send_packet subnet.Config.link buf
+let filter_map f l =
+  List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
 
-let recv (subnet:Config.subnet) =
-  Lwt_rawlink.read_packet subnet.Config.link
+module I = struct
 
-module DS = Dhcp_server.Make (struct
-      let send = send
-      let recv = recv
-  end)
+  type t = {
+    name : string;
+    addr : Ipaddr.V4.t;
+    mac  : Macaddr.t;
+    link : Lwt_rawlink.t;
+  }
+
+  let name t = t.name
+  let addr t = t.addr
+  let send t buf = Lwt_rawlink.send_packet t.link buf
+  let recv t = Lwt_rawlink.read_packet t.link
+  let interface_list networks =
+    filter_map (function
+      | name, (addr, _) ->
+        let mac = Tuntap.get_macaddr name in
+        Log.debug "Got interface name:%s addr:%s mac:%s"
+          name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
+        try
+          let _ = List.find
+              (fun network -> Ipaddr.V4.Prefix.mem addr network) networks
+          in
+          Some { name; addr; mac;
+                 link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) name) }
+        with Not_found ->
+          None)
+            (Tuntap.getifaddrs_v4 ())
+
+end
+
+module D = Dhcp_server.Make (I)
 
 let charruad configfile verbosity =
-  let open Config in
+  Log.current_level := Log.level_of_str verbosity;
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Charrua DHCPD started\n%!";
-  let config = Dhcp_server.parse_config
-      (read_file configfile) (get_interfaces ()) in
+  let conf = read_file configfile in
+  let networks = D.parse_networks conf in
+  let interfaces = I.interface_list networks in
+  let server = D.create conf verbosity interfaces in
   let () = go_safe () in
-  Lwt_main.run
-    (DS.start config verbosity >>=
+  Lwt_main.run (server >>=
      (fun _ -> return (Printf.printf "Charrua DHCPD finished\n%!")))
 
 (* Parse command line and start the ball *)
