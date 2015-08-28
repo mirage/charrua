@@ -1,0 +1,9 @@
+version = "0.1"
+description = "Charrua core TODO"
+requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
+archive(byte) = "charrua.cma"
+archive(byte, plugin) = "charrua.cma"
+archive(native) = "charrua.cmxa"
+archive(native, plugin) = "charrua.cmxs"
+exists_if = "charrua.cma"
+

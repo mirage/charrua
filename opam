@@ -1,28 +1,16 @@
 opam-version: "1.2"
-name: "hdhcp"
-maintainer: "haesbaert@haesbaert.org"
-version: "0.0.1"
-authors: [ "Christiano F. Haesbaert" ]
+name: "charrua-core"
+version: "0.1"
+maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
+authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
+homepage: "https://github.com/haesbaert/charrua-core"
+bug-reports: "https://github.com/haesbaert/charrua-core/issues"
 license: "ISC"
-homepage: "https://github.com/haesbaert/hdhcp"
-dev-repo: "https://github.com/haesbaert/hdhcp.git"
-bug-reports: "https://github.com/haesbaert/hdhcp/issues"
-tags: [ "org:mirage" ]
-build: [ "./build.sh" ]
-install: [ ]
-remove: [ ]
-depends: [
-  "base-bytes"
-  "type_conv"
-  "ocamlfind" {build}
-  "cmdliner" {build & >= "0.9.4"}
-  "cstruct" {>= "1.3.0"}
-  "sexplib" {>= "109.53.00"}
-  "lwt"     {>= "2.4.3"}
-  "ipaddr"  {>= "2.5.0"}
-  "ctypes"  {>= "0.4.0"}
-  "ctypes-foreign"
-  "extunix"
-  "menhir"
+dev-repo: "https://github.com/haesbaert/charrua-core.git"
+available: [ocaml-version >= "4.02"]
+build: [
+  ["sh" "build.sh"]
 ]
-available: [ocaml-version >= "4.01.0"]
+depends: [
+  "ocamlfind" {build} "lwt" "cstruct" "sexplib" "rawlink" "menhir" "ipaddr"
+]

@@ -1,2 +1,3 @@
-src/hdhcpd.native
-src/pcap.native
+lib/charrua.cma
+lib/charrua.cmxa
+lib/libcharrua_stubs.a
