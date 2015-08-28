@@ -23,7 +23,7 @@ module type SERVER = sig
   val start : Config.t -> string -> 'a Lwt.t
 end
 
-module Make (D : DATAGRAM) = struct
+module Make (D : DATAGRAM) : SERVER = struct
   open Lwt
   open Dhcp
 
