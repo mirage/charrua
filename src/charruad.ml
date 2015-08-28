@@ -21,16 +21,16 @@ let () = Printexc.record_backtrace true
 let config_log verbosity =
   Log.current_level := Log.level_of_str verbosity
 
-(* Drop privileges and chroot to _hdhcpd home *)
+(* Drop privileges and chroot to _charruad home *)
 let go_safe () =
   let (pw, gr) = try
-      (Unix.getpwnam "_hdhcpd", Unix.getgrnam "_hdhcpd")
+      (Unix.getpwnam "_charruad", Unix.getgrnam "_charruad")
     with _  ->
-      failwith "No user and/or group _hdhcpd found, please create them."
+      failwith "No user and/or group _charruad found, please create them."
   in
   Unix.chroot pw.Unix.pw_dir;
   Unix.chdir "/";
-  (* Unix.setproctitle "hdhcpd"; XXX implement me *)
+  (* Unix.setproctitle "charruad"; XXX implement me *)
   Log.info "Chrooted to %s" pw.Unix.pw_dir;
   let ogid = Unix.getgid () in
   let oegid = Unix.getegid () in
@@ -83,16 +83,16 @@ module DS = Dhcp_server.Make (struct
       let recv = recv
   end)
 
-let hdhcpd configfile verbosity =
+let charruad configfile verbosity =
   let open Config in
   Printf.printf "Using configuration file: %s\n%!" configfile;
-  Printf.printf "Haesbaert DHCPD started\n%!";
+  Printf.printf "Charrua DHCPD started\n%!";
   let config = Dhcp_server.parse_config
       (read_file configfile) (get_interfaces ()) in
   let () = go_safe () in
   Lwt_main.run
     (DS.start config verbosity >>=
-     (fun _ -> return (Printf.printf "Haesbaert DHCPD finished\n%!")))
+     (fun _ -> return (Printf.printf "Charrua DHCPD finished\n%!")))
 
 (* Parse command line and start the ball *)
 open Cmdliner
@@ -101,6 +101,6 @@ let cmd =
                          ~doc:"Log verbosity, debug|info|notice") in
   let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path") in
-  Term.(pure hdhcpd $ configfile $ verbosity),
-  Term.info "hdhcpd" ~version:"0.1" ~doc:"Haesbaert DHCP"
+  Term.(pure charruad $ configfile $ verbosity),
+  Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
