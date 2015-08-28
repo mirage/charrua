@@ -1,0 +1,29 @@
+lib: [
+  "lib/META"                       {"META"}
+
+  "_build/lib/libcharrua_stubs.a"  {"libcharrua_stubs.a"}
+
+  "_build/lib/charrua.a"           {"charrua.a"}
+  "_build/lib/charrua.cma"         {"charrua.cma"}
+  "_build/lib/charrua.cmxa"        {"charrua.cmxa"}
+
+  "_build/lib/config.cmi"         {"config.cmi"}
+  "_build/lib/config.cmt"         {"config.cmt"}
+  "_build/lib/config.cmx"         {"config.cmx"}
+
+  "_build/lib/dhcp.cmi"         {"dhcp.cmi"}
+  "_build/lib/dhcp.cmt"         {"dhcp.cmt"}
+  "_build/lib/dhcp.cmx"         {"dhcp.cmx"}
+
+  "_build/lib/dhcp_cpkt.cmi"         {"dhcp_cpkt.cmi"}
+  "_build/lib/dhcp_cpkt.cmt"         {"dhcp_cpkt.cmt"}
+  "_build/lib/dhcp_cpkt.cmx"         {"dhcp_cpkt.cmx"}
+
+  "_build/lib/dhcp_server.cmi"         {"dhcp_server.cmi"}
+  "_build/lib/dhcp_server.cmt"         {"dhcp_server.cmt"}
+  "_build/lib/dhcp_server.cmx"         {"dhcp_server.cmx"}
+
+  "_build/lib/log.cmi"         {"log.cmi"}
+  "_build/lib/log.cmt"         {"log.cmt"}
+  "_build/lib/log.cmx"         {"log.cmx"}
+]
