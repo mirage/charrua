@@ -14,12 +14,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module type Datagram = sig
+module type DATAGRAM = sig
   val send : Config.subnet -> Cstruct.t -> unit Lwt.t
   val recv : Config.subnet -> Cstruct.t Lwt.t
 end
 
-module Make (D : Datagram) = struct
+module type SERVER = sig
+  val start : Config.t -> string -> 'a Lwt.t
+end
+
+module Make (D : DATAGRAM) = struct
 open Lwt
 open Dhcp
 
