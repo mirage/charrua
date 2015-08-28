@@ -72,6 +72,17 @@ let read_file f =
   close_in ic;
   buf
 
+let send (subnet:Config.subnet) buf =
+  Lwt_rawlink.send_packet subnet.Config.link buf
+
+let recv (subnet:Config.subnet) =
+  Lwt_rawlink.read_packet subnet.Config.link
+
+module DS = Dhcp_server.Make (struct
+      let send = send
+      let recv = recv
+  end)
+
 let hdhcpd configfile verbosity =
   let open Config in
   Printf.printf "Using configuration file: %s\n%!" configfile;
@@ -79,7 +90,7 @@ let hdhcpd configfile verbosity =
   let config = Config_parser.parse (read_file configfile) (get_interfaces ()) in
   let () = go_safe () in
   Lwt_main.run
-    (Dhcp_server.start config verbosity >>=
+    (DS.start config verbosity >>=
      (fun _ -> return (Printf.printf "Haesbaert DHCPD finished\n%!")))
 
 (* Parse command line and start the ball *)

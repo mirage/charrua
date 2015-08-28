@@ -14,6 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+module type Datagram = sig
+  val send : Config.subnet -> Cstruct.t -> unit Lwt.t
+  val recv : Config.subnet -> Cstruct.t Lwt.t
+end
+
+module Make (D : Datagram) = struct
 open Lwt
 open Dhcp
 
@@ -64,7 +70,7 @@ let make_reply config (subnet:Config.subnet) (reqpkt:Dhcp.pkt)
     options }
 
 let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
-  Lwt_rawlink.send_packet subnet.Config.link (buf_of_pkt pkt)
+  D.send subnet (buf_of_pkt pkt)
 
 let valid_pkt pkt =
   if pkt.op <> Bootrequest then
@@ -323,7 +329,7 @@ let input_pkt config subnet pkt =
 
 let rec dhcp_recv config subnet =
   let open Config in
-  lwt buffer = Lwt_rawlink.read_packet subnet.Config.link in
+  lwt buffer = D.recv subnet in
   let n = Cstruct.len buffer in
   Log.debug "dhcp sock read %d bytes on interface %s" n
     subnet.interface.name;
@@ -346,3 +352,4 @@ let start config verbosity =
       dhcp_recv config subnet) config.subnets
   in
   pick threads
+end
