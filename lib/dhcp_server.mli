@@ -15,8 +15,8 @@
  *)
 
 module type DATAGRAM = sig
-  val send : Config.subnet -> Cstruct.t -> unit Lwt.t
-  val recv : Config.subnet -> Cstruct.t Lwt.t
+  val send : Config.interface -> Cstruct.t -> unit Lwt.t
+  val recv : Config.interface -> Cstruct.t Lwt.t
 end
 
 module type SERVER = sig

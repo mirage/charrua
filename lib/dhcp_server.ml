@@ -15,8 +15,8 @@
  *)
 
 module type DATAGRAM = sig
-  val send : Config.subnet -> Cstruct.t -> unit Lwt.t
-  val recv : Config.subnet -> Cstruct.t Lwt.t
+  val send : Config.interface -> Cstruct.t -> unit Lwt.t
+  val recv : Config.interface -> Cstruct.t Lwt.t
 end
 
 module type SERVER = sig
@@ -73,8 +73,8 @@ module Make (D : DATAGRAM) = struct
       ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
       options }
 
-  let send_pkt (pkt:Dhcp.pkt) (subnet:Config.subnet) =
-    D.send subnet (buf_of_pkt pkt)
+  let send_pkt (pkt:Dhcp.pkt) (interface:Config.interface) =
+    D.send interface (buf_of_pkt pkt)
 
   let valid_pkt pkt =
     if pkt.op <> Bootrequest then
@@ -146,7 +146,7 @@ module Make (D : DATAGRAM) = struct
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet
+      send_pkt pkt subnet.Config.interface
 
   let input_request config (subnet:Config.subnet) pkt =
     let open Config in
@@ -174,7 +174,7 @@ module Make (D : DATAGRAM) = struct
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet
+      send_pkt pkt subnet.Config.interface
     in
     let ack lease =
       let open Util in
@@ -201,7 +201,7 @@ module Make (D : DATAGRAM) = struct
       assert (lease.Lease.client_id = client_id);
       Lease.replace client_id lease lease_db;
       Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet
+      send_pkt pkt subnet.Config.interface
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -318,7 +318,7 @@ module Make (D : DATAGRAM) = struct
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
-      send_pkt pkt subnet
+      send_pkt pkt subnet.Config.interface
 
   let input_pkt config subnet pkt =
     if valid_pkt pkt then
@@ -336,7 +336,7 @@ module Make (D : DATAGRAM) = struct
 
   let rec dhcp_recv config subnet =
     let open Config in
-    lwt buffer = D.recv subnet in
+    lwt buffer = D.recv subnet.interface in
     let n = Cstruct.len buffer in
     Log.debug "dhcp sock read %d bytes on interface %s" n
       subnet.interface.name;

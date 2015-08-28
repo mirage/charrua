@@ -31,11 +31,8 @@ type interface = {
   mac : Macaddr.t;
 } with sexp
 
-type link = Lwt_rawlink.t sexp_opaque with sexp
-
 type subnet = {
   interface : interface;
-  link : link;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   options : Dhcp.dhcp_option list;
@@ -71,10 +68,6 @@ type ast = {
   max_lease_time : int32;
 } with sexp
 
-let open_link ifname =
-  let open Lwt_rawlink in
-  open_link ~filter:(dhcp_filter ()) ifname
-
 let config_of_ast ast interfaces =
   let subnets = List.map (fun subnet ->
       let interface = try List.find (function ifnet ->
@@ -96,7 +89,6 @@ let config_of_ast ast interfaces =
                     (Ipaddr.V4.Prefix.to_string subnet.network)
       in
       { interface = interface;
-        link = open_link interface.name;
         network = subnet.network;
         range = subnet.range;
         options = subnet.options;
