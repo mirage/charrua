@@ -3,6 +3,6 @@ install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/ma
 script: bash -ex .travis-opam.sh
 sudo: true
 env:
-  - PACKAGE="hdhcp" OCAML_VERSION=4.01
-  - PACKAGE="hdhcp" OCAML_VERSION=latest
-  - PACKAGE="hdhcp" OCAML_VERSION=latest
+  - PACKAGE="charrua-core" OCAML_VERSION=4.01
+  - PACKAGE="charrua-core" OCAML_VERSION=latest
+  - PACKAGE="charrua-core" OCAML_VERSION=latest
