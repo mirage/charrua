@@ -1,11 +1,5 @@
-# hdhcp
+### Charrua Unix
 
-Hdhcp is an _ISC-licensed_ dhcpd implementation in ocaml, it supports a
-stripped-down ISC dhcpd.conf configuration.  This is project was an excuse to
-learn more of ocaml.
-
-Basic functionality is in place, it should be able to work with multiple
-interfaces in a simple environment, currently only a few options can be
-advertised.
-
-Work can now begin on adapting it to Mirage to run it as a unikernel.
+[charrua-unix](http://www.github.com/haesbaert/charrua-unix) is a Unix DHCP
+server based on [charrua-core](http://www.github.com/haesbaert/charrua-core).
+This is work in progress software.
