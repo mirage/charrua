@@ -7,17 +7,9 @@ lib: [
   "_build/lib/charrua.cma"         {"charrua.cma"}
   "_build/lib/charrua.cmxa"        {"charrua.cmxa"}
 
-  "_build/lib/config.cmi"         {"config.cmi"}
-  "_build/lib/config.cmt"         {"config.cmt"}
-  "_build/lib/config.cmx"         {"config.cmx"}
-
   "_build/lib/dhcp.cmi"         {"dhcp.cmi"}
   "_build/lib/dhcp.cmt"         {"dhcp.cmt"}
   "_build/lib/dhcp.cmx"         {"dhcp.cmx"}
-
-  "_build/lib/dhcp_structs.cmi"         {"dhcp_structs.cmi"}
-  "_build/lib/dhcp_structs.cmt"         {"dhcp_structs.cmt"}
-  "_build/lib/dhcp_structs.cmx"         {"dhcp_structs.cmx"}
 
   "_build/lib/dhcp_server.cmi"         {"dhcp_server.cmi"}
   "_build/lib/dhcp_server.cmt"         {"dhcp_server.cmt"}
