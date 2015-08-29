@@ -1,6 +1,6 @@
 Dhcp
 Dhcp_server
-Dhcp_cpkt
+Dhcp_structs
 Log
 Parser
 Util

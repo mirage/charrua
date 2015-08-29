@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-open Dhcp_cpkt
+open Dhcp_structs
 open Sexplib.Conv
 open Sexplib.Std
 
@@ -405,7 +405,7 @@ type pkt = {
   options : dhcp_option list;
 } with sexp
 
-let dhcp_min_len = sizeof_cpkt
+let dhcp_min_len = sizeof_dhcp
 
 let client_port = 68
 let server_port = 67
@@ -413,7 +413,7 @@ let server_port = 67
 (* 10KB, maybe there is an asshole doing insane stuff with Jumbo Frames *)
 let make_buf () = Cstruct.create (1024 * 10) 
 
-let op_of_buf buf = match get_cpkt_op buf with
+let op_of_buf buf = match get_dhcp_op buf with
   | 1 -> Bootrequest
   | 2 -> Bootreply
   | _ as op -> invalid_arg ("Unknown op value: " ^ string_of_int(op))
@@ -422,7 +422,7 @@ let int_of_op = function
   | Bootrequest -> 1
   | Bootreply -> 2
 
-let htype_of_buf buf = match get_cpkt_htype buf with
+let htype_of_buf buf = match get_dhcp_htype buf with
   | 1 -> Ethernet_10mb
   | _ -> Other
 
@@ -430,13 +430,13 @@ let int_of_htype = function
   | Ethernet_10mb -> 1
   | Other -> invalid_arg "Can't make int of Other htype"
 
-let hlen_of_buf = get_cpkt_hlen
-let hops_of_buf = get_cpkt_hops
-let xid_of_buf = get_cpkt_xid
-let secs_of_buf = get_cpkt_secs
+let hlen_of_buf = get_dhcp_hlen
+let hops_of_buf = get_dhcp_hops
+let xid_of_buf = get_dhcp_xid
+let secs_of_buf = get_dhcp_secs
 
 let flags_of_buf buf =
-  if ((get_cpkt_flags buf) land 0x8000) <> 0 then
+  if ((get_dhcp_flags buf) land 0x8000) <> 0 then
     Broadcast
   else
     Unicast
@@ -445,16 +445,16 @@ let int_of_flags = function
   | Broadcast -> 0x8000
   | Unicast -> 0
 
-let ciaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_ciaddr buf)
-let yiaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_yiaddr buf)
-let siaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_siaddr buf)
-let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_cpkt_giaddr buf)
+let ciaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_ciaddr buf)
+let yiaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf)
+let siaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf)
+let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf)
 let chaddr_of_buf buf htype hlen =
-  let s = copy_cpkt_chaddr buf in
+  let s = copy_dhcp_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
     Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
   else
-    Id (copy_cpkt_chaddr buf)
+    Id (copy_dhcp_chaddr buf)
 let bytes_of_chaddr chaddr =
   let s = match chaddr with
     | Hwaddr hw -> Macaddr.to_bytes hw
@@ -463,8 +463,8 @@ let bytes_of_chaddr chaddr =
   Util.bytes_extend_if_le s 16
 let bytes_of_sname s = Util.bytes_extend_if_le s 64
 let bytes_of_file s = Util.bytes_extend_if_le s 128
-let sname_of_buf buf = Util.cstruct_copy_normalized copy_cpkt_sname buf
-let file_of_buf buf = Util.cstruct_copy_normalized copy_cpkt_file buf
+let sname_of_buf buf = Util.cstruct_copy_normalized copy_dhcp_sname buf
+let file_of_buf buf = Util.cstruct_copy_normalized copy_dhcp_file buf
 
 let options_of_buf buf buf_len =
   let rec collect_options buf options =
@@ -645,10 +645,10 @@ let options_of_buf buf buf_len =
     match search options with
     | None -> options           (* Nothing to do, identity function *)
     | Some v -> match v with
-      | 1 -> collect_options (get_cpkt_file buf) options    (* It's in file *)
-      | 2 -> collect_options (get_cpkt_sname buf) options   (* It's in sname *)
-      | 3 -> collect_options (get_cpkt_file buf) options |> (* OMG both *)
-             collect_options (get_cpkt_sname buf)
+      | 1 -> collect_options (get_dhcp_file buf) options    (* It's in file *)
+      | 2 -> collect_options (get_dhcp_sname buf) options   (* It's in sname *)
+      | 3 -> collect_options (get_dhcp_file buf) options |> (* OMG both *)
+             collect_options (get_dhcp_sname buf)
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
@@ -842,21 +842,21 @@ let pkt_of_buf buf len =
 
 let buf_of_pkt pkt =
   let dhcp = Cstruct.create 2048 in
-  set_cpkt_op dhcp (int_of_op pkt.op);
-  set_cpkt_htype dhcp (int_of_htype pkt.htype);
-  set_cpkt_hlen dhcp pkt.hlen;
-  set_cpkt_hops dhcp pkt.hops;
-  set_cpkt_xid dhcp pkt.xid;
-  set_cpkt_secs dhcp pkt.secs;
-  set_cpkt_flags dhcp (int_of_flags pkt.flags);
-  set_cpkt_ciaddr dhcp (Ipaddr.V4.to_int32 pkt.ciaddr);
-  set_cpkt_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
-  set_cpkt_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
-  set_cpkt_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_cpkt_chaddr (bytes_of_chaddr pkt.chaddr) 0 dhcp;
-  set_cpkt_sname (bytes_of_sname pkt.sname) 0 dhcp;
-  set_cpkt_file (bytes_of_file pkt.file) 0 dhcp;
-  let options_start = Cstruct.shift dhcp sizeof_cpkt in
+  set_dhcp_op dhcp (int_of_op pkt.op);
+  set_dhcp_htype dhcp (int_of_htype pkt.htype);
+  set_dhcp_hlen dhcp pkt.hlen;
+  set_dhcp_hops dhcp pkt.hops;
+  set_dhcp_xid dhcp pkt.xid;
+  set_dhcp_secs dhcp pkt.secs;
+  set_dhcp_flags dhcp (int_of_flags pkt.flags);
+  set_dhcp_ciaddr dhcp (Ipaddr.V4.to_int32 pkt.ciaddr);
+  set_dhcp_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
+  set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
+  set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
+  set_dhcp_chaddr (bytes_of_chaddr pkt.chaddr) 0 dhcp;
+  set_dhcp_sname (bytes_of_sname pkt.sname) 0 dhcp;
+  set_dhcp_file (bytes_of_file pkt.file) 0 dhcp;
+  let options_start = Cstruct.shift dhcp sizeof_dhcp in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = (Cstruct.len dhcp) - (Cstruct.len options_end) in
   let buf_end =

@@ -15,9 +15,9 @@ lib: [
   "_build/lib/dhcp.cmt"         {"dhcp.cmt"}
   "_build/lib/dhcp.cmx"         {"dhcp.cmx"}
 
-  "_build/lib/dhcp_cpkt.cmi"         {"dhcp_cpkt.cmi"}
-  "_build/lib/dhcp_cpkt.cmt"         {"dhcp_cpkt.cmt"}
-  "_build/lib/dhcp_cpkt.cmx"         {"dhcp_cpkt.cmx"}
+  "_build/lib/dhcp_structs.cmi"         {"dhcp_structs.cmi"}
+  "_build/lib/dhcp_structs.cmt"         {"dhcp_structs.cmt"}
+  "_build/lib/dhcp_structs.cmx"         {"dhcp_structs.cmx"}
 
   "_build/lib/dhcp_server.cmi"         {"dhcp_server.cmi"}
   "_build/lib/dhcp_server.cmt"         {"dhcp_server.cmt"}
