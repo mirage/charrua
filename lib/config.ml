@@ -14,15 +14,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+open Sexplib.Conv
+open Sexplib.Std
 
-exception Error of string       (* XXXXXXXX *)
+exception Ast_error of string
 
 type host = {
     hostname : string;
     options : Dhcp.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t option;
-} (* XXXXXX with sexp *)
+} with sexp
 
 type subnet_ast = {
   network : Ipaddr.V4.Prefix.t;
@@ -31,21 +33,21 @@ type subnet_ast = {
   hosts : host list;
   default_lease_time : int32 option;
   max_lease_time : int32 option;
-} (* XXXXXX with sexp *)
+} with sexp
 
 type ast = {
   subnets : subnet_ast list;
   options : Dhcp.dhcp_option list;
   default_lease_time : int32;
   max_lease_time : int32;
-} (* XXXXXX with sexp *)
+} with sexp
 
 module Make (I : S.INTERFACE) = struct
   open Sexplib.Conv
 
-  exception Error of string     (* XXXXXXXXX *)
+  exception Error of string
 
-  type interface = I.t
+  type interface = I.t sexp_opaque with sexp
 
   type subnet = {
     interface : interface;
@@ -56,7 +58,7 @@ module Make (I : S.INTERFACE) = struct
     hosts : host list;
     default_lease_time : int32 option;
     max_lease_time : int32 option;
-  } (* XXXX with sexp *)
+  } with sexp
 
   type t = {
     interfaces : interface list;
@@ -65,7 +67,7 @@ module Make (I : S.INTERFACE) = struct
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
-  } (* XXXX with sexp *)
+  } with sexp
 
   (* The structures returned when parsing the config file *)
   let config_of_ast (ast : ast) interfaces =

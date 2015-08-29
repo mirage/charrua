@@ -360,7 +360,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
     with
     | Parser.Error -> parse_choke lex "Parser error"
     | Lexer.Error e -> raise (Syntax_error e)
-    | Config.Error e -> parse_choke lex e
+    | Config.Ast_error e -> parse_choke lex e
 
   let parse_config configtxt interfaces =
     let lex = Lexing.from_string configtxt in
@@ -370,7 +370,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
     | Parser.Error -> parse_choke lex "Parser error"
     | Lexer.Error e -> raise (Syntax_error e)
     | C.Error e -> parse_choke lex e
-    | Config.Error e -> parse_choke lex e
+    | Config.Ast_error e -> parse_choke lex e
 
   let create configtxt verbosity interfaces =
     Log.current_level := Log.level_of_str verbosity;

@@ -24,7 +24,7 @@
     | Max_lease_time of int32
 
   let choke s =
-    raise (Config.Error s)
+    raise (Config.Ast_error s)
 %}
 
 %token <Ipaddr.V4.t> IP
