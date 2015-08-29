@@ -18,9 +18,6 @@ open Lwt
 
 let () = Printexc.record_backtrace true
 
-let config_log verbosity =
-  Log.current_level := Log.level_of_str verbosity
-
 (* Drop privileges and chroot to _charruad home *)
 let go_safe () =
   let (pw, gr) = try
@@ -31,7 +28,7 @@ let go_safe () =
   Unix.chroot pw.Unix.pw_dir;
   Unix.chdir "/";
   (* Unix.setproctitle "charruad"; XXX implement me *)
-  Log.info "Chrooted to %s" pw.Unix.pw_dir;
+  Printf.printf "Chrooted to %s\n%!" pw.Unix.pw_dir;
   let ogid = Unix.getgid () in
   let oegid = Unix.getegid () in
   let ouid = Unix.getuid () in
@@ -83,7 +80,7 @@ module I = struct
     filter_map (function
       | name, (addr, _) ->
         let mac = Tuntap.get_macaddr name in
-        Log.debug "Got interface name:%s addr:%s mac:%s"
+        Printf.printf "Got interface name:%s addr:%s mac:%s\n%!"
           name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
         try
           let _ = List.find
@@ -100,7 +97,6 @@ end
 module D = Dhcp_server.Make (I)
 
 let charruad configfile verbosity =
-  Log.current_level := Log.level_of_str verbosity;
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Charrua DHCPD started\n%!";
   let conf = read_file configfile in
