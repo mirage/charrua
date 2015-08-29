@@ -18,8 +18,4 @@ lib: [
   "_build/lib/S.cmi"         {"S.cmi"}
   "_build/lib/S.cmti"        {"S.cmti"}
   "_build/lib/S.mli"         {"S.mli"}
-
-  "_build/lib/log.cmi"         {"log.cmi"}
-  "_build/lib/log.cmt"         {"log.cmt"}
-  "_build/lib/log.cmx"         {"log.cmx"}
 ]
