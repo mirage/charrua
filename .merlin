@@ -6,6 +6,5 @@ PKG lwt
 PKG cstruct
 PKG ipaddr
 PKG tuntap
-PKG rawlink
 EXT lwt
 EXT nonrec

@@ -4,6 +4,5 @@ true: package(lwt.unix), package(lwt.syntax), ppopt(-lwt-debug)
 true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
 true: package(cstruct.unix), package(ipaddr)
 true: package(sexplib), package(sexplib.syntax)
-true: package(rawlink)
 <**/*.byte>: linkdep(lib/charrua_stubs.o), custom
 <**/*.native>: linkdep(lib/charrua_stubs.o)
