@@ -20,6 +20,7 @@ module type INTERFACE = sig
   val recv : t -> Cstruct.t Lwt.t
   val name : t -> string
   val addr : t -> Ipaddr.V4.t
+  val mac  : t -> Macaddr.t
 end
 
 module type SERVER = sig

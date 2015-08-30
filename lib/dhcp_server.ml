@@ -42,7 +42,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
     in
     let srcport = server_port in
     (* kernel fills in srcmac *)
-    let srcmac = Macaddr.of_string_exn "00:00:00:00:00:00" in
+    let srcmac = I.mac subnet.interface in
     let dstmac, dstip = match (msgtype_of_options options) with
       | None -> failwith "make_reply: No msgtype in options"
       | Some m -> match m with
