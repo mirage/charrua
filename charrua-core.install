@@ -7,15 +7,15 @@ lib: [
   "_build/lib/charrua.cma"         {"charrua.cma"}
   "_build/lib/charrua.cmxa"        {"charrua.cmxa"}
 
-  "_build/lib/dhcp.cmi"         {"dhcp.cmi"}
-  "_build/lib/dhcp.cmt"         {"dhcp.cmt"}
-  "_build/lib/dhcp.cmx"         {"dhcp.cmx"}
+  "_build/lib/dhcp.cmi"            {"dhcp.cmi"}
+  "_build/lib/dhcp.cmt"            {"dhcp.cmt"}
+  "_build/lib/dhcp.cmx"            {"dhcp.cmx"}
 
-  "_build/lib/dhcp_server.cmi"         {"dhcp_server.cmi"}
-  "_build/lib/dhcp_server.cmt"         {"dhcp_server.cmt"}
-  "_build/lib/dhcp_server.cmx"         {"dhcp_server.cmx"}
+  "_build/lib/dhcp_server.cmi"     {"dhcp_server.cmi"}
+  "_build/lib/dhcp_server.cmt"     {"dhcp_server.cmt"}
+  "_build/lib/dhcp_server.cmx"     {"dhcp_server.cmx"}
 
-  "_build/lib/S.cmi"         {"S.cmi"}
-  "_build/lib/S.cmti"        {"S.cmti"}
-  "_build/lib/S.mli"         {"S.mli"}
+  "_build/lib/S.cmi"               {"S.cmi"}
+  "_build/lib/S.cmti"              {"S.cmti"}
+  "_build/lib/S.mli"               {"S.mli"}
 ]
