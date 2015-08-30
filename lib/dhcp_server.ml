@@ -22,7 +22,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
 
   type interface = I.t
 
-  let make_reply config (subnet:C.subnet) (reqpkt:Dhcp.pkt)
+  let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
     let op = Bootreply in
     let htype = Ethernet_10mb in
@@ -67,7 +67,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
       ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
       options }
 
-  let send_pkt (pkt:Dhcp.pkt) interface =
+  let send_pkt pkt interface =
     I.send interface (buf_of_pkt pkt)
 
   let valid_pkt pkt =
@@ -82,7 +82,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
     else
       true
 
-  let input_decline_release config (subnet:C.subnet) (pkt:Dhcp.pkt) =
+  let input_decline_release config subnet pkt =
     let open Util in
     lwt msgtype = match msgtype_of_options pkt.options with
       | Some msgtype -> return (string_of_msgtype msgtype)
@@ -117,7 +117,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform config (subnet : C.subnet) pkt =
+  let input_inform config subnet pkt =
     lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
@@ -141,7 +141,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
       send_pkt pkt subnet.interface
 
-  let input_request config (subnet:C.subnet) pkt =
+  let input_request config subnet pkt =
     lwt () = Log.debug_lwt "REQUEST packet received %s" (string_of_pkt pkt) in
     let drop = return_unit in
     let lease_db = subnet.lease_db in
@@ -236,7 +236,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
         ack lease
     | _ -> drop
 
-  let input_discover config (subnet:C.subnet) pkt =
+  let input_discover config subnet pkt =
     Log.debug "DISCOVER packet received %s" (string_of_pkt pkt);
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
@@ -375,7 +375,7 @@ module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
   let create configtxt verbosity interfaces =
     Log.current_level := Log.level_of_str verbosity;
     let config = parse_config configtxt interfaces in
-    let threads = List.map (fun (subnet : C.subnet) ->
+    let threads = List.map (fun subnet ->
         dhcp_recv config subnet) config.subnets
     in
     pick threads
