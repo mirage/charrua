@@ -12,5 +12,5 @@ build: [
   ["sh" "build.sh"]
 ]
 depends: [
-  "ocamlfind" {build} "charrua-core" "cmdliner"
+  "ocamlfind" {build} "charrua-core" "cmdliner" "rawlink"
 ]
