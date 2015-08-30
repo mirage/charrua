@@ -76,6 +76,7 @@ module I = struct
   let addr t = t.addr
   let send t buf = Lwt_rawlink.send_packet t.link buf
   let recv t = Lwt_rawlink.read_packet t.link
+  let mac t = t.mac
   let interface_list networks =
     filter_map (function
       | name, (addr, _) ->
