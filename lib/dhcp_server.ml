@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make (I : S.INTERFACE) : S.SERVER with type interface = I.t = struct
+module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = struct
   module C = Config.Make (I)
   open C
   open Lwt

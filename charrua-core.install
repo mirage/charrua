@@ -15,7 +15,7 @@ lib: [
   "_build/lib/dhcp_server.cmt"     {"dhcp_server.cmt"}
   "_build/lib/dhcp_server.cmx"     {"dhcp_server.cmx"}
 
-  "_build/lib/S.cmi"               {"S.cmi"}
-  "_build/lib/S.cmti"              {"S.cmti"}
-  "_build/lib/S.mli"               {"S.mli"}
+  "_build/lib/dhcp_S.cmi"          {"dhcp_S.cmi"}
+  "_build/lib/dhcp_S.cmti"         {"dhcp_S.cmti"}
+  "_build/lib/dhcp_S.mli"          {"dhcp_S.mli"}
 ]

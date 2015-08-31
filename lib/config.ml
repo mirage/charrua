@@ -42,7 +42,7 @@ type ast = {
   max_lease_time : int32;
 } with sexp
 
-module Make (I : S.INTERFACE) = struct
+module Make (I : Dhcp_S.INTERFACE) = struct
   open Sexplib.Conv
 
   exception Error of string
