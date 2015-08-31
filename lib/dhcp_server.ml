@@ -41,7 +41,6 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         server_port
     in
     let srcport = server_port in
-    (* kernel fills in srcmac *)
     let srcmac = I.mac subnet.interface in
     let dstmac, dstip = match (msgtype_of_options options) with
       | None -> failwith "make_reply: No msgtype in options"
