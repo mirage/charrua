@@ -69,6 +69,13 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
   let send_pkt pkt interface =
     I.send interface (buf_of_pkt pkt)
 
+  let for_us pkt interface =
+    (pkt.dstmac = I.mac interface ||
+     pkt.dstmac = Macaddr.broadcast)
+    &&
+    (pkt.dstip = I.addr interface ||
+     pkt.dstip = Ipaddr.V4.broadcast)
+
   let valid_pkt pkt =
     if pkt.op <> Bootrequest then
       false
@@ -311,7 +318,9 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       send_pkt pkt subnet.interface
 
   let input_pkt config subnet pkt =
-    if valid_pkt pkt then
+    if not (for_us pkt subnet.interface) then
+      return_unit
+    else if valid_pkt pkt then
       (* Check if we have a subnet configured on the receiving interface *)
       match msgtype_of_options pkt.options with
       | Some DHCPDISCOVER -> input_discover config subnet pkt
@@ -331,7 +340,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       (I.name subnet.interface);
     (* Input the packet *)
     lwt () = match (pkt_of_buf buffer n) with
-      | exception Invalid_argument e -> Log.warn_lwt "Dropped packet: %s" e
+      | exception Dhcp.Not_dhcp s -> Log.debug_lwt "Packet isn't dhcp: %s" s
+      | exception Invalid_argument e -> Log.warn_lwt "Bad packet: %s" e
       | pkt ->
         lwt () = Log.debug_lwt "valid packet from %d bytes" n in
         try_lwt

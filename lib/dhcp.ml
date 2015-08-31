@@ -792,22 +792,25 @@ let buf_of_options sbuf options =
     let ebuf = List.fold_left buf_of_option sbuf options in
     set_uint8 ebuf 0 255; shift ebuf 1
 
+exception Not_dhcp of string
+
+let not_dhcp fmt = Printf.ksprintf (fun s -> raise (Not_dhcp s)) fmt
+
 (* Raises invalid_arg if packet is malformed *)
 let pkt_of_buf buf len =
   let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
   if len < min_len then
-    invalid_arg (Printf.sprintf "packet too small %d < %d" len min_len);
+    not_dhcp "too small %d < %d" len min_len;
   (* Handle ethernet *)
   let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
   let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
   let () = if (get_ethernet_ethertype buf) <> 0x0800 then
-      invalid_arg ("packet is not IPv4: " ^
-                   (string_of_int (get_ethernet_ethertype buf)));
+      not_dhcp "not ipv4: %d" (get_ethernet_ethertype buf);
   in
   let buf = Cstruct.shift buf sizeof_ethernet in
   (* Handle IPv4 *)
   let () = if (get_ipv4_proto buf) <> 17 then
-      invalid_arg "packet is not UDP"
+      not_dhcp "not udp: %d" (get_ipv4_proto buf);
   in
   let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
   let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
