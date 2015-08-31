@@ -228,7 +228,6 @@ type pkt = {
 val dhcp_min_len : int
 val client_port : int
 val server_port : int
-val make_buf : unit -> Cstruct.t
 val pkt_of_buf : Cstruct.t -> int -> pkt
 val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> client_id
