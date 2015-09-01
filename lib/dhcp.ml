@@ -796,7 +796,8 @@ exception Not_dhcp of string
 
 let not_dhcp fmt = Printf.ksprintf (fun s -> raise (Not_dhcp s)) fmt
 
-(* Raises invalid_arg if packet is malformed *)
+(* Raises Not_dhcp if packet is not DHCP
+   May raise Invalid_argument if packet is DHCP but malformed *)
 let pkt_of_buf buf len =
   let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
   if len < min_len then
