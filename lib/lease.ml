@@ -55,6 +55,9 @@ let timeleft3 lease t1_ratio t2_ratio =
   (Int32.of_float left,
    Int32.of_float (left *. t1_ratio),
    Int32.of_float (left *. t2_ratio))
+let extend lease =
+  let original = Int32.sub lease.tm_end lease.tm_start in
+  make lease.client_id lease.addr original
 let expired lease = timeleft lease = Int32.zero
 
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []

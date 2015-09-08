@@ -174,8 +174,9 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
       send_pkt pkt subnet.interface
     in
-    let ack lease =
+    let ack ?(renew=false) lease =
       let open Util in
+      let lease = if renew then Lease.extend lease else lease in
       let lease_time, t1, t2 =
         Lease.timeleft3 lease C.t1_time_ratio C.t2_time_ratio
       in
@@ -249,7 +250,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       else if lease.Lease.addr <> pkt.ciaddr then
         nak ~msg:"Requested address is incorrect" ()
       else
-        ack lease
+        ack ~renew:true lease
     | _ -> drop
 
   let input_discover config subnet pkt =
