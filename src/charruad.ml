@@ -28,7 +28,6 @@ let go_safe () =
   Unix.chroot pw.Unix.pw_dir;
   Unix.chdir "/";
   (* Unix.setproctitle "charruad"; XXX implement me *)
-  Printf.printf "Chrooted to %s\n%!" pw.Unix.pw_dir;
   let ogid = Unix.getgid () in
   let oegid = Unix.getegid () in
   let ouid = Unix.getuid () in
@@ -96,32 +95,50 @@ end
 
 module D = Dhcp_server.Make (I)
 
-let logger cur_level level s =
+let logger_std cur_level level s =
   if cur_level >= level then
     match level with
     | Dhcp_logger.Notice -> print_endline s
     | _ -> prerr_endline s
 
-let charruad configfile verbosity =
-  Printf.printf "Using configuration file: %s\n%!" configfile;
-  Printf.printf "Charrua DHCPD started\n%!";
+let go_daemon () =
+  let syslogger = Lwt_log.syslog
+      ~facility:`Daemon
+      ~paths:["/dev/log"; "/var/run/log"; "/var/run/syslog"]
+      ~template:"$(date) $(name)[$(pid)]: $(message)"
+      ()
+  in
+  Lwt_log.default := syslogger;
+  (* XXX Magic, don't remove this print...
+     This print does the openlog in syslog, it has to be done now, before we
+     drop priviledges, sadly Lwt doesn't provide a better way to do this.  *)
+  Lwt_log.ign_warning "daemonized.";
+  Lwt_daemon.daemonize ~syslog:false ()
+
+let charruad configfile verbosity daemonize =
   let level = Dhcp_logger.level_of_str verbosity in
-  let () = Dhcp_logger.init (logger level) in
+  let logger = logger_std level in
+  Dhcp_logger.init logger;
+  logger Dhcp_logger.Notice "Charrua DHCPD started";
   let conf = read_file configfile in
   let networks = D.parse_networks conf in
   let interfaces = I.interface_list networks in
   let server = D.create conf interfaces in
-  let () = go_safe () in
-  Lwt_main.run (server >>=
-     (fun _ -> return (Printf.printf "Charrua DHCPD finished\n%!")))
+  if daemonize then
+    go_daemon ();
+  go_safe ();
+  Lwt_main.run (server >>= fun _ ->
+                return (logger Dhcp_logger.Notice "Charrua DHCPD finished"))
 
 (* Parse command line and start the ball *)
 open Cmdliner
 let cmd =
-  let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
-                         ~doc:"Log verbosity, warn|notice|debug") in
   let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path") in
-  Term.(pure charruad $ configfile $ verbosity),
+  let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
+                         ~doc:"Log verbosity, warn|notice|debug") in
+  let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
+                          ~doc:"Daemonize") in
+  Term.(pure charruad $ configfile $ verbosity $ daemonize),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
