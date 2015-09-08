@@ -25,6 +25,6 @@ end
 
 module type SERVER = sig
   type interface
-  val create : string -> string -> interface list -> 'a Lwt.t
+  val create : string -> interface list -> 'a Lwt.t
   val parse_networks : string -> Ipaddr.V4.Prefix.t list
 end

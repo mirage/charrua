@@ -18,7 +18,6 @@
 open Printf
 module Log = Dhcp_logger
 let () = Printexc.record_backtrace true
-let () = Log.current_level := Log.Debug
 
 cstruct pcap_header {
   uint32_t magic_number;   (* magic number *)

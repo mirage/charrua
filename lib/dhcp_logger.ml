@@ -19,8 +19,6 @@ type level =
   | Info
   | Debug
 
-let current_level = ref Notice
-
 let str_of_level = function
   | Notice -> "notice"
   | Info -> "info"
@@ -32,25 +30,25 @@ let level_of_str l = match (String.lowercase l) with
   | "debug" -> Debug
   | _ -> invalid_arg ("Invalid level: " ^ l)
 
-let klog k ?pre level fmt =
-  let p = match pre with
-    | None -> ""
-    | Some pre -> pre ^ ": "
-  in
-  if !current_level >= level then
-    Printf.kfprintf k stderr ("%s" ^^ fmt ^^ "\n%!") p
-  else
-    Printf.ikfprintf k stderr fmt
+let default_logger level s =
+  match level with
+  | Notice -> print_endline s
+  | _ -> prerr_endline s
 
-let log ?pre level fmt = klog (fun _ -> ()) ?pre level fmt
-let log_lwt ?pre level fmt = klog (fun _ -> Lwt.return_unit) ?pre level fmt
+let logger = ref default_logger
+
+let log level fmt = Printf.ksprintf (fun s -> !logger level s) fmt
+let log_lwt level fmt = Printf.ksprintf (fun _ -> Lwt.return_unit) fmt
 
 let notice fmt = log Notice fmt
-let warn fmt = log ~pre:"warn" Notice fmt
-let info fmt = log ~pre:"info" Info fmt
-let debug fmt = log ~pre:"debug" Debug fmt
+let warn fmt = log Notice fmt
+let info fmt = log Info fmt
+let debug fmt = log Debug fmt
 
 let notice_lwt fmt = log_lwt Notice fmt
-let warn_lwt fmt = log_lwt ~pre:"warn" Notice fmt
-let info_lwt fmt = log_lwt ~pre:"info" Info fmt
-let debug_lwt fmt = log_lwt ~pre:"debug" Debug fmt
+let warn_lwt fmt = log_lwt Notice fmt
+let info_lwt fmt = log_lwt Info fmt
+let debug_lwt fmt = log_lwt Debug fmt
+
+let init loggerf =
+  logger := loggerf

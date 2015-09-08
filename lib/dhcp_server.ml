@@ -393,8 +393,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     | C.Error e -> parse_choke lex e
     | Config.Ast_error e -> parse_choke lex e
 
-  let create configtxt verbosity interfaces =
-    Log.current_level := Log.level_of_str verbosity;
+  let create configtxt interfaces =
     let config = parse_config configtxt interfaces in
     let threads = List.map (fun subnet ->
         dhcp_recv config subnet) config.subnets

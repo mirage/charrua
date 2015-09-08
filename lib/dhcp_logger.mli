@@ -19,30 +19,30 @@
 type level = Notice | Info | Debug
 (** All valid verbosity levels **)
 
-val current_level : level ref
-(** Current verbosity level, might be changed any time **)
-
 val str_of_level : level -> string
 (** Conver level to string **)
 
 val level_of_str : string -> level
 (** Convert string to level, raising invalid_arg if string is invalid **)
 
-val notice : ('a, out_channel, unit) format -> 'a
+val notice : ('a, unit, string, unit) format4 -> 'a
 (** Normal, high priority logging, always on **)
 
-val warn : ('a, out_channel, unit) format -> 'a
+val warn : ('a, unit, string, unit) format4 -> 'a
 (** Like notice, but prepend "warning: " **)
 
-val info : ('a, out_channel, unit) format -> 'a
+val info : ('a, unit, string, unit) format4 -> 'a
 (** Print if level is >= Info **)
 
-val debug : ('a, out_channel, unit) format -> 'a
+val debug : ('a, unit, string, unit) format4 -> 'a
 (** Print if level is >= Debug **)
 
 (** Lwt variants, same as above, but return unit Lwt.t
     Useful for using with Lwt.bind and friends **)
-val notice_lwt : ('a, out_channel, unit, unit, unit, unit Lwt.t) format6 -> 'a
-val warn_lwt : ('a, out_channel, unit, unit, unit, unit Lwt.t) format6 -> 'a
-val info_lwt : ('a, out_channel, unit, unit, unit, unit Lwt.t) format6 -> 'a
-val debug_lwt : ('a, out_channel, unit, unit, unit, unit Lwt.t) format6 -> 'a
+val notice_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
+val warn_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
+val info_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
+val debug_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
+
+val init : (level -> string -> unit) -> unit
+(** Set the logger function, if not set, everything will be printed out **)
