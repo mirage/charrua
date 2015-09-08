@@ -38,7 +38,7 @@ let default_logger level s =
 let logger = ref default_logger
 
 let log level fmt = Printf.ksprintf (fun s -> !logger level s) fmt
-let log_lwt level fmt = Printf.ksprintf (fun _ -> Lwt.return_unit) fmt
+let log_lwt level fmt = Printf.ksprintf (fun s -> Lwt.return (!logger level s)) fmt
 
 let warn fmt = log Warn fmt
 let notice fmt = log Notice fmt
