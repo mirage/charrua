@@ -89,9 +89,8 @@ module I = struct
           in
           Some { name; addr; mac;
                  link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) name) }
-        with Not_found ->
-          None)
-            (Tuntap.getifaddrs_v4 ())
+        with Not_found -> None)
+      (Tuntap.getifaddrs_v4 ())
 
 end
 
