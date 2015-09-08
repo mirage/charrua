@@ -127,6 +127,7 @@ let get_usable_addr id range lease_db =
         Int32.logor b2 |> Int32.logor b3
     in
     Int32.rem v (Int32.sub (Int32.succ high_32) low_32) |>
+    Int32.abs |>
     Int32.add low_32 |>
     Ipaddr.V4.of_int32
   in
