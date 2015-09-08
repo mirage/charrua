@@ -177,7 +177,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     let ack lease =
       let open Util in
       let lease_time, t1, t2 =
-        Lease.timeleft3 lease C.t1_time_ratio C.t1_time_ratio
+        Lease.timeleft3 lease C.t1_time_ratio C.t2_time_ratio
       in
       let options =
         cons (Message_type DHCPACK) @@
