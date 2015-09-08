@@ -96,13 +96,21 @@ end
 
 module D = Dhcp_server.Make (I)
 
+let logger cur_level level s =
+  if cur_level >= level then
+    match level with
+    | Dhcp_logger.Notice -> print_endline s
+    | _ -> prerr_endline s
+
 let charruad configfile verbosity =
   Printf.printf "Using configuration file: %s\n%!" configfile;
   Printf.printf "Charrua DHCPD started\n%!";
+  let level = Dhcp_logger.level_of_str verbosity in
+  let () = Dhcp_logger.init (logger level) in
   let conf = read_file configfile in
   let networks = D.parse_networks conf in
   let interfaces = I.interface_list networks in
-  let server = D.create conf verbosity interfaces in
+  let server = D.create conf interfaces in
   let () = go_safe () in
   Lwt_main.run (server >>=
      (fun _ -> return (Printf.printf "Charrua DHCPD finished\n%!")))
