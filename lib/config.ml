@@ -81,11 +81,27 @@ module Make (I : Dhcp_S.INTERFACE) = struct
         let () = List.iter (fun host ->
             match host.fixed_addr with
             | None -> ()
-            | Some addr -> if not (Ipaddr.V4.Prefix.mem addr s.network) then
-                raise (Error ("Fixed address " ^ (Ipaddr.V4.to_string addr) ^
-                              " does not belong to s " ^
-                              (Ipaddr.V4.Prefix.to_string s.network))))
+            | Some addr ->
+              if not (Ipaddr.V4.Prefix.mem addr s.network) then
+                raise (Error (Printf.sprintf "Fixed address %s does not \
+                                              belong to subnet %s"
+                                (Ipaddr.V4.to_string addr)
+                                (Ipaddr.V4.Prefix.to_string s.network)))
+              else if Util.addr_in_range addr s.range then
+                match s.range with
+                | low, high ->
+                  raise (Error (Printf.sprintf "Fixed address %s must be \
+                                                outside of range %s:%s"
+                                  (Ipaddr.V4.to_string addr)
+                                  (Ipaddr.V4.to_string low)
+                                  (Ipaddr.V4.to_string high))))
             s.hosts
+        in
+        let fixed_addrs = List.fold_left
+            (fun alist host -> match (host.fixed_addr, host.hw_addr) with
+               | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
+               | _ -> alist)
+            [] s.hosts
         in
         let db_name = (I.name interface) ^ ":" ^
                       (Ipaddr.V4.Prefix.to_string s.network)
@@ -94,7 +110,7 @@ module Make (I : Dhcp_S.INTERFACE) = struct
           network = s.network;
           range = s.range;
           options = s.options;
-          lease_db = Lease.make_db db_name s.network;
+          lease_db = Lease.make_db db_name s.network s.range fixed_addrs;
           hosts = s.hosts;
           default_lease_time = s.default_lease_time;
           max_lease_time = s.max_lease_time }

@@ -23,26 +23,41 @@ type t = {
   tm_end     : int32;
   addr       : Ipaddr.V4.t;
   client_id  : Dhcp.client_id;
-  hostname   : string;
 } with sexp
 
 (* Database, collection of leases *)
 type database = {
   name : string;
   network : Ipaddr.V4.Prefix.t;
+  range : Ipaddr.V4.t * Ipaddr.V4.t;
   table : (Dhcp.client_id, t) Hashtbl.t;
+  fixed_table : (Macaddr.t, Ipaddr.V4.t) Hashtbl.t;
 } with sexp
 
-let make_db name network =
-  { name; network; table = Hashtbl.create 50 }
+let make_db name network range fixed_addrs =
+  let fixed_table = Hashtbl.create 10 in
+  List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
+  { name; network; range; table = Hashtbl.create 10; fixed_table }
 let make client_id addr time =
   let tm_start = Int32.of_float (Unix.time ()) in
   let tm_end = Int32.add tm_start time in
-  { tm_start; tm_end; addr; client_id; hostname = "TODO" }
-let lookup client_id lease_db =
-  try Some (Hashtbl.find lease_db.table client_id) with Not_found -> None
-let replace client_id lease lease_db = Hashtbl.replace lease_db.table client_id lease
-let remove client_id lease_db = Hashtbl.remove lease_db.table client_id
+  { tm_start; tm_end; addr; client_id }
+(* XXX defaults fixed leases to one hour, policy does not belong here. *)
+let make_fixed mac addr = make (Dhcp.Hwaddr mac) addr (Int32.of_int (60 * 60))
+let lookup client_id mac lease_db =
+  match (Hashtbl.find lease_db.fixed_table mac) with
+  | addr -> Some (make_fixed mac addr)
+  | exception Not_found -> match Hashtbl.find lease_db.table client_id with
+    | lease -> Some lease
+    | exception Not_found -> None
+let replace client_id mac lease lease_db =
+  match (Hashtbl.find lease_db.fixed_table mac) with
+  | addr -> ()
+  | exception Not_found -> Hashtbl.replace lease_db.table client_id lease
+let remove client_id mac lease_db =
+  match (Hashtbl.find lease_db.fixed_table mac) with
+  | addr -> ()
+  | exception Not_found -> Hashtbl.remove lease_db.table client_id
 (* Beware! This is an online state *)
 let timeleft lease =
   let left = (Int32.to_float lease.tm_end) -. Unix.time () in
@@ -63,12 +78,17 @@ let expired lease = timeleft lease = Int32.zero
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
 
-let addr_in_range addr range =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-  let high_32 = Ipaddr.V4.to_int32 high_ip in
-  let addr_32 = Ipaddr.V4.to_int32 addr in
-  addr_32 >= low_32 && addr_32 <= high_32
+let addr_in_range mac addr lease_db =
+  match (Hashtbl.find lease_db.fixed_table mac) with
+  (* If this is a fixed address, it's always good. *)
+  | fixed_addr -> addr = fixed_addr
+  | exception Not_found ->
+  (* When not, address should respect the range. *)
+    let (low_ip, high_ip) = lease_db.range in
+    let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+    let high_32 = Ipaddr.V4.to_int32 high_ip in
+    let addr_32 = Ipaddr.V4.to_int32 addr in
+    addr_32 >= low_32 && addr_32 <= high_32
 
 let leases_of_addr addr lease_db =
   List.filter (fun l -> l.addr = addr) (to_list lease_db)
