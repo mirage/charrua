@@ -210,10 +210,20 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         drop
       else if not (Lease.addr_in_range reqip subnet.range) then
         nak ~msg:"Requested address is not in subnet range" ()
-      else if not (Lease.addr_available reqip lease_db) then
-        nak ~msg:"Requested address is not available" ()
       else
-        ack (Lease.make client_id reqip (C.default_lease_time config subnet))
+        (match lease with
+         | Some lease ->
+           if Lease.expired lease && not (Lease.addr_available reqip lease_db) then
+             nak ~msg:"Lease has expired and address is taken" ()
+           else if lease.Lease.addr <> reqip then
+             nak ~msg:"Requested address is incorrect" ()
+           else
+             ack lease
+         | None ->
+           if not (Lease.addr_available reqip lease_db) then
+             nak ~msg:"Requested address is not available" ()
+           else
+             ack (Lease.make client_id reqip (C.default_lease_time config subnet)))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       let expired = Lease.expired lease in
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
