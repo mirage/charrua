@@ -18,6 +18,8 @@ open Dhcp_structs
 open Sexplib.Conv
 open Sexplib.Std
 
+module Log = Dhcp_logger
+
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 
 type op =

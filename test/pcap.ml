@@ -16,6 +16,7 @@
  *)
 
 open Printf
+module Log = Dhcp_logger
 let () = Printexc.record_backtrace true
 let () = Log.current_level := Log.Debug
 

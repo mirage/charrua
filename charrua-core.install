@@ -15,6 +15,10 @@ lib: [
   "_build/lib/dhcp_server.cmt"     {"dhcp_server.cmt"}
   "_build/lib/dhcp_server.cmx"     {"dhcp_server.cmx"}
 
+  "_build/lib/dhcp_logger.cmi"     {"dhcp_logger.cmi"}
+  "_build/lib/dhcp_logger.cmt"     {"dhcp_logger.cmt"}
+  "_build/lib/dhcp_logger.cmx"     {"dhcp_logger.cmx"}
+
   "_build/lib/dhcp_S.cmi"          {"dhcp_S.cmi"}
   "_build/lib/dhcp_S.cmti"         {"dhcp_S.cmti"}
   "_build/lib/dhcp_S.mli"          {"dhcp_S.mli"}
