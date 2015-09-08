@@ -119,7 +119,7 @@ let charruad configfile verbosity =
 open Cmdliner
 let cmd =
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
-                         ~doc:"Log verbosity, debug|info|notice") in
+                         ~doc:"Log verbosity, warn|notice|debug") in
   let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path") in
   Term.(pure charruad $ configfile $ verbosity),
