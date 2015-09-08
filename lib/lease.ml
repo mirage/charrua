@@ -107,9 +107,9 @@ let addr_available addr lease_db =
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-let get_usable_addr id range lease_db =
+let get_usable_addr id lease_db =
   let open Dhcp in
-  let (low_ip, high_ip) = range in
+  let (low_ip, high_ip) = lease_db.range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   if (Int32.compare low_32 high_32) >= 0 then

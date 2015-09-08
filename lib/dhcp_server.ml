@@ -274,7 +274,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         else if (Lease.addr_available lease.Lease.addr lease_db) then
           Some lease.Lease.addr
         else
-          Lease.get_usable_addr id subnet.range lease_db
+          Lease.get_usable_addr id lease_db
       (* Handle the case where we have no lease *)
       | None -> match (request_ip_of_options pkt.options) with
         | Some req_addr ->
@@ -282,8 +282,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
              (Lease.addr_available req_addr lease_db) then
             Some req_addr
           else
-            Lease.get_usable_addr id subnet.range lease_db
-        | None -> Lease.get_usable_addr id subnet.range lease_db
+            Lease.get_usable_addr id lease_db
+        | None -> Lease.get_usable_addr id lease_db
     in
     (* Figure out the lease lease_time *)
     let lease_time = match (ip_lease_time_of_options pkt.options) with
