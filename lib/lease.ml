@@ -78,7 +78,7 @@ let addr_allocated addr lease_db =
 let addr_available addr lease_db =
   match (leases_of_addr addr lease_db) with
   | [] -> true
-  | leases -> List.exists (fun l -> not (expired l)) leases
+  | leases -> not (List.exists (fun l -> not (expired l)) leases)
 
 (*
  * We try to use the last 4 bytes of the mac address as a hint for the ip
