@@ -80,8 +80,6 @@ module I = struct
     filter_map (function
       | name, (addr, _) ->
         let mac = Tuntap.get_macaddr name in
-        Printf.printf "Got interface name:%s addr:%s mac:%s\n%!"
-          name (Ipaddr.V4.to_string addr) (Macaddr.to_string mac);
         try
           let _ = List.find
               (fun network -> Ipaddr.V4.Prefix.mem addr network) networks
@@ -112,14 +110,13 @@ let go_daemon () =
   (* XXX Magic, don't remove this print...
      This print does the openlog in syslog, it has to be done now, before we
      drop priviledges, sadly Lwt doesn't provide a better way to do this.  *)
-  Lwt_log.ign_warning "daemonized.";
+  Lwt_log.ign_warning "Garra Charrua !";
   Lwt_daemon.daemonize ~syslog:false ()
 
 let charruad configfile verbosity daemonize =
   let level = Dhcp_logger.level_of_str verbosity in
   let logger = logger_std level in
   Dhcp_logger.init logger;
-  logger Dhcp_logger.Notice "Charrua DHCPD started";
   let conf = read_file configfile in
   let networks = D.parse_networks conf in
   let interfaces = I.interface_list networks in
@@ -127,6 +124,7 @@ let charruad configfile verbosity daemonize =
   if daemonize then
     go_daemon ();
   go_safe ();
+  logger Dhcp_logger.Notice "Charrua DHCPD started";
   Lwt_main.run (server >>= fun _ ->
                 return (logger Dhcp_logger.Notice "Charrua DHCPD finished"))
 
