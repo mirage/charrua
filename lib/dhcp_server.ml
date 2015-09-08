@@ -116,7 +116,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
           | None -> Log.warn_lwt "%s for unowned lease, ignoring" msgtype
           | Some _ -> Lease.remove client_id pkt.srcmac subnet.lease_db;
             let s = some_or_default m "unspecified" in
-            Log.info_lwt "%s, client %s declined lease for %s, reason %s"
+            Log.warn_lwt "%s, client %s declined lease for %s, reason %s"
               msgtype
               (string_of_client_id client_id)
               (Ipaddr.V4.to_string reqip)

@@ -15,18 +15,18 @@
  *)
 
 type level =
+  | Warn
   | Notice
-  | Info
   | Debug
 
 let str_of_level = function
+  | Warn -> "warn"
   | Notice -> "notice"
-  | Info -> "info"
   | Debug -> "debug"
 
 let level_of_str l = match (String.lowercase l) with
+  | "warn" -> Warn
   | "notice" -> Notice
-  | "info" -> Info
   | "debug" -> Debug
   | _ -> invalid_arg ("Invalid level: " ^ l)
 
@@ -40,14 +40,12 @@ let logger = ref default_logger
 let log level fmt = Printf.ksprintf (fun s -> !logger level s) fmt
 let log_lwt level fmt = Printf.ksprintf (fun _ -> Lwt.return_unit) fmt
 
+let warn fmt = log Warn fmt
 let notice fmt = log Notice fmt
-let warn fmt = log Notice fmt
-let info fmt = log Info fmt
 let debug fmt = log Debug fmt
 
+let warn_lwt fmt = log_lwt Warn fmt
 let notice_lwt fmt = log_lwt Notice fmt
-let warn_lwt fmt = log_lwt Notice fmt
-let info_lwt fmt = log_lwt Info fmt
 let debug_lwt fmt = log_lwt Debug fmt
 
 let init loggerf =

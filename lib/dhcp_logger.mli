@@ -16,7 +16,7 @@
 
 (** Simple log framework since I didn't any other **)
 
-type level = Notice | Info | Debug
+type level = Warn | Notice | Debug
 (** All valid verbosity levels **)
 
 val str_of_level : level -> string
@@ -25,23 +25,19 @@ val str_of_level : level -> string
 val level_of_str : string -> level
 (** Convert string to level, raising invalid_arg if string is invalid **)
 
-val notice : ('a, unit, string, unit) format4 -> 'a
-(** Normal, high priority logging, always on **)
-
 val warn : ('a, unit, string, unit) format4 -> 'a
-(** Like notice, but prepend "warning: " **)
+(** Warning, bad juju and such **)
 
-val info : ('a, unit, string, unit) format4 -> 'a
-(** Print if level is >= Info **)
+val notice : ('a, unit, string, unit) format4 -> 'a
+(** Normal, medium priority logging **)
 
 val debug : ('a, unit, string, unit) format4 -> 'a
-(** Print if level is >= Debug **)
+(** Debugging messages **)
 
 (** Lwt variants, same as above, but return unit Lwt.t
     Useful for using with Lwt.bind and friends **)
-val notice_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
 val warn_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
-val info_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
+val notice_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
 val debug_lwt : ('a, unit, string, unit Lwt.t) format4 -> 'a
 
 val init : (level -> string -> unit) -> unit
