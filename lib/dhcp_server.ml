@@ -145,7 +145,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+      Log.debug_lwt "INFORM->ACK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
       send_pkt pkt subnet.interface
 
   let input_request config subnet pkt =
