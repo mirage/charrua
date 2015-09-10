@@ -39,7 +39,7 @@ let make_db name network range fixed_addrs =
   List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
   { name; network; range; table = Hashtbl.create 10; fixed_table }
 let make client_id addr time =
-  let tm_start = Int32.of_float (Unix.time ()) in
+  let tm_start = Int32.of_float (Clock.time ()) in
   let tm_end = Int32.add tm_start time in
   { tm_start; tm_end; addr; client_id }
 (* XXX defaults fixed leases to one hour, policy does not belong here. *)
@@ -60,7 +60,7 @@ let remove client_id mac lease_db =
   | exception Not_found -> Hashtbl.remove lease_db.table client_id
 (* Beware! This is an online state *)
 let timeleft lease =
-  let left = (Int32.to_float lease.tm_end) -. Unix.time () in
+  let left = (Int32.to_float lease.tm_end) -. Clock.time () in
   if left < 0. then Int32.zero else (Int32.of_float left)
 let timeleft_exn lease =
   let left = timeleft lease in
