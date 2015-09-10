@@ -118,7 +118,7 @@ module Make (I : Dhcp_S.INTERFACE) = struct
     let subnets = List.map subnet_of_subnet_ast ast.subnets in
     { interfaces; subnets;
       options = ast.options;
-      hostname = "TODO";
+      hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
       default_lease_time = ast.default_lease_time;
       max_lease_time = ast.max_lease_time }
 
