@@ -1,8 +1,6 @@
 lib: [
   "lib/META"                       {"META"}
 
-  "_build/lib/libcharrua_stubs.a"  {"libcharrua_stubs.a"}
-
   "_build/lib/charrua.a"           {"charrua.a"}
   "_build/lib/charrua.cma"         {"charrua.cma"}
   "_build/lib/charrua.cmxa"        {"charrua.cmxa"}

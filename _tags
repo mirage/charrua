@@ -1,8 +1,7 @@
 true: debug, bin_annot, syntax(camlp4o), syntax(pa_cstruct), strict_sequence
-true: use_menhir, use_charrua_stubs
+true: use_menhir
 true: package(lwt.unix), package(lwt.syntax), ppopt(-lwt-debug)
 true: package(cstruct), package(cstruct.lwt), package(cstruct.syntax)
 true: package(cstruct.unix), package(ipaddr)
 true: package(sexplib), package(sexplib.syntax)
-<**/*.byte>: linkdep(lib/charrua_stubs.o), custom
-<**/*.native>: linkdep(lib/charrua_stubs.o)
+true: package(tcpip)

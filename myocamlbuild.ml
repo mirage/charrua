@@ -20,15 +20,5 @@ dispatch begin function
     pflag ["ocaml";"compile";] "ppopt" (fun s -> S [A"-ppopt"; A s]);
     pflag ["ocaml";"ocamldep";] "ppopt" (fun s -> S [A"-ppopt"; A s]);
     pdep ["link"] "linkdep" (fun param -> [param]);
-    (* Linking generated stubs *)
-    dep ["ocaml"; "link"; "byte"; "library"; "use_charrua_stubs"]
-      ["lib/dllcharrua_stubs"-.-(!Options.ext_dll)];
-    flag ["ocaml"; "link"; "byte"; "library"; "use_charrua_stubs"] &
-    S[A"-dllib"; A"-lcharrua_stubs"];
-
-    dep ["ocaml"; "link"; "native"; "library"; "use_charrua_stubs"]
-      ["lib/libcharrua_stubs"-.-(!Options.ext_lib)];
-    flag ["ocaml"; "link"; "native"; "library"; "use_charrua_stubs"] &
-      S[A"-cclib"; A"-lcharrua_stubs"];
   | _ -> ()
 end;;

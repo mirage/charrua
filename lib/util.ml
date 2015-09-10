@@ -74,8 +74,3 @@ let addr_in_range addr range =
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
-
-(* C stubs from stubs.c *)
-external ones_complement: Cstruct.t -> int = "caml_tcpip_ones_complement_checksum"
-external ones_complement_list: Cstruct.t list -> int =
-  "caml_tcpip_ones_complement_checksum_list"

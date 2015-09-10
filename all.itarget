@@ -1,4 +1,3 @@
 lib/charrua.cma
 lib/charrua.cmxa
-lib/libcharrua_stubs.a
 test/pcap.native

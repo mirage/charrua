@@ -5,6 +5,6 @@ PKG cmdliner
 PKG lwt
 PKG cstruct
 PKG ipaddr
-PKG tuntap
+PKG tcpip
 EXT lwt
 EXT nonrec

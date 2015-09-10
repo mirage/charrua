@@ -892,7 +892,7 @@ let buf_of_pkt pkt =
   set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
   set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
   set_ipv4_csum ip 0;
-  let csum = Util.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
+  let csum = Tcpip_checksum.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
   set_ipv4_csum ip csum;
   (* UDP *)
   let udp = Cstruct.create 8 in
@@ -906,7 +906,7 @@ let buf_of_pkt pkt =
   Cstruct.BE.set_uint16 pbuf 2 ((Cstruct.len udp) + (Cstruct.len dhcp));
   let src_dst = Cstruct.sub ip 12 (2 * 4) in
   set_udp_csum udp 0;
-  let udp_csum = Util.ones_complement_list (src_dst :: pbuf :: udp :: dhcp :: []) in
+  let udp_csum = Tcpip_checksum.ones_complement_list (src_dst :: pbuf :: udp :: dhcp :: []) in
   set_udp_csum udp udp_csum;
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
