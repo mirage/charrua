@@ -675,10 +675,16 @@ let buf_of_options sbuf options =
   let put_16 v buf = BE.set_uint16 buf 0 v; shift buf 2 in
   let put_32 v buf = BE.set_uint32 buf 0 v; shift buf 4 in
   let put_ip ip buf = put_32 (Ipaddr.V4.to_int32 ip) buf in
+  let put_prefix prefix buf =
+    put_ip (Ipaddr.V4.Prefix.network prefix) buf |>
+    put_ip (Ipaddr.V4.Prefix.netmask prefix)
+  in
   let put_coded_8 code v buf = put_code code buf |> put_len 1 |> put_8 v in
   let put_coded_16 code v buf = put_code code buf |> put_len 2 |> put_16 v in
   let put_coded_32 code v buf = put_code code buf |> put_len 4 |> put_32 v in
   let put_coded_ip code ip buf = put_code code buf |> put_len 4 |> put_ip ip in
+  (* let put_coded_prefix code prefix buf = *)
+  (*   put_code code buf |> put_len 8 |> put_prefix prefix in *)
   let put_coded_bool code v buf =
     put_coded_8 code (match v with true -> 1 | false -> 0) buf in
   let put_coded_bytes code v buf =
@@ -705,6 +711,7 @@ let buf_of_options sbuf options =
   let put_coded_16_list = make_listf (fun buf x -> put_16 x buf) 2 in
   (* let put_coded_32_list = make_listf (fun buf x -> put_32 x buf) 4 in *)
   let put_coded_ip_list = make_listf (fun buf x -> put_ip x buf) 4 in
+  let put_coded_prefix_list = make_listf (fun buf x -> put_prefix x buf) 8 in
   let buf_of_option buf option =
     match option with
     | Subnet_mask mask -> put_coded_ip 1 mask buf             (* code 1 *)
@@ -727,7 +734,7 @@ let buf_of_options sbuf options =
     | Extension_path ep -> put_coded_bytes 18 ep buf          (* code 18 *)
     | Ipforwarding b -> put_coded_bool 19 b buf               (* code 19 *)
     | Nlsr b -> put_coded_bool 20 b buf                       (* code 20 *)
-    (* | Policy_filters pf -> put_coded_bytes 21 pf buf          (\* code 21 *\) *)
+    | Policy_filters pf -> put_coded_prefix_list 21 pf buf    (* code 21 *)
     | Max_datagram md -> put_coded_16 22 md buf               (* code 22 *)
     | Default_ip_ttl dit -> put_coded_8 23 dit buf            (* code 23 *)
     | Pmtu_ageing_timo pat -> put_coded_32 24 pat buf         (* code 24 *)
@@ -739,7 +746,7 @@ let buf_of_options sbuf options =
     | Mask_supplier b -> put_coded_bool 30 b buf              (* code 30 *)
     | Perform_router_disc b -> put_coded_bool 31 b buf        (* code 31 *)
     | Router_sol_addr rsa -> put_coded_ip 32 rsa buf          (* code 32 *)
-    (* | Static_routes of Ipaddr.V4.Prefix.t list(\* code 33 *\) *)
+    | Static_routes srs -> put_coded_prefix_list 33 srs buf   (* code 33 *)
     | Trailer_encapsulation b -> put_coded_bool 34 b buf      (* code 34 *)
     | Arp_cache_timo act -> put_coded_32 35 act buf           (* code 35 *)
     | Ethernet_encapsulation b -> put_coded_bool 36 b buf     (* code 36 *)
@@ -782,9 +789,7 @@ let buf_of_options sbuf options =
     | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
     | Streettalk_servers ips -> put_coded_ip_list 75 ips buf  (* code 75 *)
     | Streettalk_da ips -> put_coded_ip_list 76 ips buf       (* code 76 *)
-    | Unknown | _ ->
-      Log.warn "buf_of_pkt option unimplemented: %s" (string_of_option option);
-      buf
+    | Unknown -> buf
   in
   match options with
   | [] -> sbuf
