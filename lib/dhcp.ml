@@ -145,6 +145,8 @@ type parameter_request =
   | Irc_servers                      (* code 74 *)
   | Streettalk_servers               (* code 75 *)
   | Streettalk_da                    (* code 76 *)
+  | Domain_search_format             (* code 119 *)
+  | Web_proxy_auto_disc              (* code 252 *)
   | Unknown of int
   with sexp
 
@@ -223,6 +225,8 @@ let int_of_parameter_request = function
   | Irc_servers                       -> 74 (* code 74 *)
   | Streettalk_servers                -> 75 (* code 75 *)
   | Streettalk_da                     -> 76 (* code 76 *)
+  | Domain_search_format              -> 119(* code 119 *)
+  | Web_proxy_auto_disc               -> 252(* code 252 *)
   | Unknown x                         -> x
 
 let parameter_request_of_int = function
@@ -300,6 +304,8 @@ let parameter_request_of_int = function
   | 74 -> Irc_servers                        (* code 74 *)
   | 75 -> Streettalk_servers                 (* code 75 *)
   | 76 -> Streettalk_da                      (* code 76 *)
+  | 119-> Domain_search_format               (* code 119 *)
+  | 252-> Web_proxy_auto_disc                (* code 252 *)
   | x  -> Unknown x
 
 type dhcp_option =
@@ -377,6 +383,8 @@ type dhcp_option =
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
+  | Domain_search_format of string          (* code 119 *)
+  | Web_proxy_auto_disc of string           (* code 252 *)
   | Unknown
   with sexp
 
@@ -629,6 +637,8 @@ let options_of_buf buf buf_len =
       | 74 ->  take (Irc_servers (get_ip_list ()))
       | 75 ->  take (Streettalk_servers (get_ip_list ()))
       | 76 ->  take (Streettalk_da (get_ip_list ()))
+      | 119->  take (Domain_search_format (get_string ()))
+      | 252->  take (Web_proxy_auto_disc (get_string ()))
       | code ->
         Log.warn "Unknown option code %d" code;
         discard ()
@@ -789,6 +799,8 @@ let buf_of_options sbuf options =
     | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
     | Streettalk_servers ips -> put_coded_ip_list 75 ips buf  (* code 75 *)
     | Streettalk_da ips -> put_coded_ip_list 76 ips buf       (* code 76 *)
+    | Domain_search_format dsf -> put_coded_bytes 119 dsf buf (* code 119 *)
+    | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf(* code 252 *)
     | Unknown -> buf
   in
   match options with
