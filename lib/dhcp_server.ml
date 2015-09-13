@@ -124,7 +124,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform config subnet pkt =
+  let input_inform (config : C.t) subnet pkt =
     lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
@@ -137,8 +137,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs ->
-          options_from_parameter_requests preqs subnet.options
+        | Some preqs -> options_from_parameter_requests preqs subnet.options @
+                        options_from_parameter_requests preqs config.options
         | None -> []
       in
       let pkt = make_reply config subnet pkt
@@ -191,7 +191,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.options
+        | Some preqs -> options_from_parameter_requests preqs subnet.options @
+                        options_from_parameter_requests preqs config.options
         | None -> []
       in
       let reply = make_reply config subnet pkt
@@ -319,7 +320,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.options
+        | Some preqs -> options_from_parameter_requests preqs subnet.options @
+                        options_from_parameter_requests preqs config.options
         | None -> []
       in
       let pkt = make_reply config subnet pkt

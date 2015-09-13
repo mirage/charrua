@@ -941,6 +941,9 @@ let vendor_class_id_of_options =
   Util.find_map (function Vendor_class_id vid -> Some vid | _ -> None)
 let message_of_options =
   Util.find_map (function Message m -> Some m | _ -> None)
+let domain_name_of_options =
+  Util.find_map (function Domain_name dn -> Some dn | _ -> None)
+
 
 let generic_list_of_options f options = match (Util.filter_map f options) with
   | [] -> None
@@ -963,6 +966,7 @@ let options_from_parameter_requests preqs options =
       | (Routers : parameter_request) -> maybe routers_of_options (fun x -> Routers x)
       | Dns_servers -> maybe dns_servers_of_options (fun x -> Dns_servers x)
       | Ntp_servers -> maybe ntp_servers_of_options (fun x -> Ntp_servers x)
+      | Domain_name -> maybe domain_name_of_options (fun x -> Domain_name x)
       | _ -> None)
     preqs
 
