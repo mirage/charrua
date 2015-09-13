@@ -354,9 +354,8 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       (I.name subnet.interface);
     (* Input the packet *)
     lwt () = match (pkt_of_buf buffer n) with
-      | exception Dhcp.Not_dhcp s -> Log.debug_lwt "Packet isn't dhcp: %s" s
-      | exception Invalid_argument e -> Log.warn_lwt "Bad packet: %s" e
-      | pkt ->
+      | `Error e -> Log.warn_lwt "Bad packet: %s" e
+      | `Ok pkt ->
         try_lwt
           input_pkt config subnet pkt
         with

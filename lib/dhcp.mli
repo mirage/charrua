@@ -233,9 +233,7 @@ val dhcp_min_len : int
 val client_port : int
 val server_port : int
 
-exception Not_dhcp of string
-
-val pkt_of_buf : Cstruct.t -> int -> pkt
+val pkt_of_buf : Cstruct.t -> int -> [> `Error of string | `Ok of pkt ]
 val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> client_id
 val string_of_pkt : pkt -> string

@@ -39,18 +39,22 @@ cstruct pcap_packet {
 let num_packets = ref 0
 
 let print_packet p len =
-  let pkt = Dhcp.pkt_of_buf p len in
-  printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
-  let buf = Dhcp.buf_of_pkt pkt in
-  let pkt2 = Dhcp.pkt_of_buf buf len in
-  if pkt2 <> pkt then begin
-    printf "buffers differ !\n";
-    printf "pcap buf:";
-    Cstruct.hexdump p;
-    printf "our buf:";
-    Cstruct.hexdump buf;
-    printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
-    failwith "Serialization bug found !"
+  match (Dhcp.pkt_of_buf p len) with
+  | `Error e -> failwith e
+  | `Ok pkt ->
+    printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
+    let buf = Dhcp.buf_of_pkt pkt in
+    match (Dhcp.pkt_of_buf buf len) with
+    | `Error e -> failwith e
+    | `Ok pkt2 ->
+      if pkt2 <> pkt then begin
+        printf "buffers differ !\n";
+        printf "pcap buf:";
+        Cstruct.hexdump p;
+        printf "our buf:";
+        Cstruct.hexdump buf;
+        printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
+        failwith "Serialization bug found !"
   end
 
 let rec print_pcap_packet (hdr, pkt) =

@@ -811,54 +811,54 @@ let buf_of_options sbuf options =
     let ebuf = List.fold_left buf_of_option sbuf options in
     set_uint8 ebuf 0 255; shift ebuf 1
 
-exception Not_dhcp of string
-
-let not_dhcp fmt = Printf.ksprintf (fun s -> raise (Not_dhcp s)) fmt
-
-(* Raises Not_dhcp if packet is not DHCP
-   May raise Invalid_argument if packet is DHCP but malformed *)
 let pkt_of_buf buf len =
-  let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
-  if len < min_len then
-    not_dhcp "too small %d < %d" len min_len;
-  (* Handle ethernet *)
-  let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
-  let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
-  let () = if (get_ethernet_ethertype buf) <> 0x0800 then
-      not_dhcp "not ipv4: %d" (get_ethernet_ethertype buf);
+  let wrap () =
+    let open Printf in
+    let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
+    if len < min_len then
+      invalid_arg (sprintf "too small %d < %d" len min_len);
+    (* Handle ethernet *)
+    let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
+    let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
+    let () = if (get_ethernet_ethertype buf) <> 0x0800 then
+        invalid_arg (sprintf "not ipv4: %d" (get_ethernet_ethertype buf));
+    in
+    let buf = Cstruct.shift buf sizeof_ethernet in
+    (* Handle IPv4 *)
+    let () = if (get_ipv4_proto buf) <> 17 then
+        invalid_arg (sprintf "not udp: %d" (get_ipv4_proto buf));
+    in
+    let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
+    let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
+    (* XXX get hlen from hlen_version, assumes no ip-options ! *)
+    let buf = Cstruct.shift buf sizeof_ipv4 in
+    (* Handle UDP *)
+    let srcport = get_udp_src buf in
+    let dstport = get_udp_dst buf in
+    let buf = Cstruct.shift buf sizeof_udp in
+    (* Get the DHCP stuff *)
+    let op = op_of_buf buf in
+    let htype = htype_of_buf buf in
+    let hlen = hlen_of_buf buf in
+    let hops = hops_of_buf buf in
+    let xid = xid_of_buf buf in
+    let secs = secs_of_buf buf in
+    let flags = flags_of_buf buf in
+    let ciaddr = ciaddr_of_buf buf in
+    let yiaddr = yiaddr_of_buf buf in
+    let siaddr = siaddr_of_buf buf in
+    let giaddr = giaddr_of_buf buf in
+    let chaddr = chaddr_of_buf buf htype hlen in
+    let sname = sname_of_buf buf in
+    let file = file_of_buf buf in
+    let options = options_of_buf buf len in
+    { srcmac; dstmac; srcip; dstip; srcport; dstport;
+      op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
+      siaddr; giaddr; chaddr; sname; file; options }
   in
-  let buf = Cstruct.shift buf sizeof_ethernet in
-  (* Handle IPv4 *)
-  let () = if (get_ipv4_proto buf) <> 17 then
-      not_dhcp "not udp: %d" (get_ipv4_proto buf);
-  in
-  let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
-  let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
-  (* XXX get hlen from hlen_version, assumes no ip-options ! *)
-  let buf = Cstruct.shift buf sizeof_ipv4 in
-  (* Handle UDP *)
-  let srcport = get_udp_src buf in
-  let dstport = get_udp_dst buf in
-  let buf = Cstruct.shift buf sizeof_udp in
-  (* Get the DHCP stuff *)
-  let op = op_of_buf buf in
-  let htype = htype_of_buf buf in
-  let hlen = hlen_of_buf buf in
-  let hops = hops_of_buf buf in
-  let xid = xid_of_buf buf in
-  let secs = secs_of_buf buf in
-  let flags = flags_of_buf buf in
-  let ciaddr = ciaddr_of_buf buf in
-  let yiaddr = yiaddr_of_buf buf in
-  let siaddr = siaddr_of_buf buf in
-  let giaddr = giaddr_of_buf buf in
-  let chaddr = chaddr_of_buf buf htype hlen in
-  let sname = sname_of_buf buf in
-  let file = file_of_buf buf in
-  let options = options_of_buf buf len in
-  { srcmac; dstmac; srcip; dstip; srcport; dstport;
-    op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
-    siaddr; giaddr; chaddr; sname; file; options }
+  match (wrap ()) with
+  | exception Invalid_argument e -> `Error e
+  | pkt -> `Ok pkt
 
 let buf_of_pkt pkt =
   let dhcp = Cstruct.create 2048 in
