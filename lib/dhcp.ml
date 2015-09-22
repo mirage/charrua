@@ -409,7 +409,7 @@ type pkt = {
   yiaddr  : Ipaddr.V4.t;
   siaddr  : Ipaddr.V4.t;
   giaddr  : Ipaddr.V4.t;
-  chaddr  : client_id;
+  chaddr  : Macaddr.t;
   sname   : string;
   file    : string;
   options : dhcp_option list;
@@ -459,15 +459,10 @@ let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf)
 let chaddr_of_buf buf htype hlen =
   let s = copy_dhcp_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
-    Hwaddr (Macaddr.of_bytes_exn (Bytes.sub s 0 6))
+    Macaddr.of_bytes_exn (Bytes.sub s 0 6)
   else
-    Id (copy_dhcp_chaddr buf)
-let bytes_of_chaddr chaddr =
-  let s = match chaddr with
-    | Hwaddr hw -> Macaddr.to_bytes hw
-    | Id id -> Bytes.of_string id
-  in
-  Util.bytes_extend_if_le s 16
+    invalid_arg "Not a mac address."
+let bytes_of_chaddr chaddr = Util.bytes_extend_if_le (Macaddr.to_bytes chaddr) 16
 let bytes_of_sname s = Util.bytes_extend_if_le s 64
 let bytes_of_file s = Util.bytes_extend_if_le s 128
 let sname_of_buf buf = Util.cstruct_copy_normalized copy_dhcp_sname buf
@@ -973,7 +968,7 @@ let options_from_parameter_requests preqs options =
 let client_id_of_pkt pkt =
   match client_id_of_options pkt.options with
   | Some id -> id
-  | None -> pkt.chaddr
+  | None -> Hwaddr pkt.chaddr
 
 (* string_of_* functions *)
 let string_of_op = to_hum sexp_of_op

@@ -223,7 +223,7 @@ type pkt = {
   yiaddr  : Ipaddr.V4.t;
   siaddr  : Ipaddr.V4.t;
   giaddr  : Ipaddr.V4.t;
-  chaddr  : client_id;
+  chaddr  : Macaddr.t;
   sname   : string;
   file    : string;
   options : dhcp_option list;
