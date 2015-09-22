@@ -112,9 +112,9 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         match reqip with
         | None -> Log.warn_lwt "%s without request ip, ignoring" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          match Lease.lookup client_id pkt.srcmac subnet.lease_db with
+          match Lease.lookup client_id pkt.chaddr subnet.lease_db with
           | None -> Log.warn_lwt "%s for unowned lease, ignoring" msgtype
-          | Some _ -> Lease.remove client_id pkt.srcmac subnet.lease_db;
+          | Some _ -> Lease.remove client_id pkt.chaddr subnet.lease_db;
             let s = some_or_default m "unspecified" in
             Log.warn_lwt "%s, client %s declined lease for %s, reason %s"
               msgtype
@@ -153,7 +153,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     let drop = return_unit in
     let lease_db = subnet.lease_db in
     let client_id = client_id_of_pkt pkt in
-    let lease = Lease.lookup client_id pkt.srcmac lease_db in
+    let lease = Lease.lookup client_id pkt.chaddr lease_db in
     let ourip = I.addr subnet.interface in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
@@ -200,7 +200,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       assert (lease.Lease.client_id = client_id);
-      Lease.replace client_id pkt.srcmac lease lease_db;
+      Lease.replace client_id pkt.chaddr lease lease_db;
       Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt reply) >>= fun () ->
       send_pkt reply subnet.interface
     in
@@ -211,7 +211,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
         drop
-      else if not (Lease.addr_in_range pkt.srcmac reqip lease_db) then
+      else if not (Lease.addr_in_range pkt.chaddr reqip lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else
         (match lease with
@@ -236,7 +236,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         nak ~msg:"Lease has expired and address is taken" ()
       (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
-              not (Lease.addr_in_range pkt.srcmac reqip lease_db) then
+              not (Lease.addr_in_range pkt.chaddr reqip lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
@@ -261,7 +261,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     (* Figure out the ip address *)
     let lease_db = subnet.lease_db in
     let id = client_id_of_pkt pkt in
-    let lease = Lease.lookup id pkt.srcmac lease_db in
+    let lease = Lease.lookup id pkt.chaddr lease_db in
     let ourip = I.addr subnet.interface in
     let expired = match lease with
       | Some lease -> Lease.expired lease
@@ -280,7 +280,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       (* Handle the case where we have no lease *)
       | None -> match (request_ip_of_options pkt.options) with
         | Some req_addr ->
-          if (Lease.addr_in_range pkt.srcmac req_addr lease_db) &&
+          if (Lease.addr_in_range pkt.chaddr req_addr lease_db) &&
              (Lease.addr_available req_addr lease_db) then
             Some req_addr
           else
