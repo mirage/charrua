@@ -811,7 +811,7 @@ let pkt_of_buf buf len =
     let open Printf in
     let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
     if len < min_len then
-      invalid_arg (sprintf "packet is too small %d < %d" len min_len);
+      invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
     (* Handle ethernet *)
     let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
     let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
@@ -820,12 +820,18 @@ let pkt_of_buf buf len =
     in
     let buf = Cstruct.shift buf sizeof_ethernet in
     (* Handle IPv4 *)
+    let ihl = (get_ipv4_hlen_version buf land 0xf) * 4 in
+    let ipcsum = get_ipv4_csum buf in
+    let csum = Tcpip_checksum.ones_complement (Cstruct.sub buf 0 ihl) in
+    (* Some broken clients don't do ip checksum, accept if they send as zero *)
+    let () = if ipcsum <> 0 && csum <> 0 then
+        invalid_arg (sprintf "bad ip checksum: 0x%x" ipcsum)
+    in
     let () = if (get_ipv4_proto buf) <> 17 then
         invalid_arg (sprintf "packet is not udp: %d" (get_ipv4_proto buf));
     in
     let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
     let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
-    let ihl = (get_ipv4_hlen_version buf land 0xf) * 4 in
     let buf = Cstruct.shift buf ihl in
     (* Handle UDP *)
     let srcport = get_udp_src buf in
