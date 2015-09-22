@@ -825,8 +825,8 @@ let pkt_of_buf buf len =
     in
     let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
     let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
-    (* XXX get hlen from hlen_version, assumes no ip-options ! *)
-    let buf = Cstruct.shift buf sizeof_ipv4 in
+    let ihl = (get_ipv4_hlen_version buf land 0xf) * 4 in
+    let buf = Cstruct.shift buf ihl in
     (* Handle UDP *)
     let srcport = get_udp_src buf in
     let dstport = get_udp_dst buf in
