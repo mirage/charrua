@@ -99,6 +99,17 @@ let logger_std cur_level level s =
     | Dhcp_logger.Notice -> print_endline s
     | _ -> prerr_endline s
 
+let logger_color cur_level level s =
+  let green s  = Printf.sprintf "\027[32m%s\027[m" s in
+  let yellow s = Printf.sprintf "\027[33m%s\027[m" s in
+  let blue s   = Printf.sprintf "\027[36m%s\027[m" s in
+  let open Dhcp_logger in
+  if cur_level >= level then
+    match level with
+    | Notice -> print_endline (green s)
+    | Warn ->   prerr_endline (yellow s)
+    | Debug ->  prerr_endline (blue s)
+
 let go_daemon () =
   let syslogger = Lwt_log.syslog
       ~facility:`Daemon
@@ -113,9 +124,16 @@ let go_daemon () =
   Lwt_log.ign_warning "Garra Charrua !";
   Lwt_daemon.daemonize ~syslog:false ()
 
-let charruad configfile verbosity daemonize =
+let charruad configfile verbosity daemonize color =
   let level = Dhcp_logger.level_of_str verbosity in
-  let logger = logger_std level in
+  let logger =
+    if daemonize then
+      logger_std level
+    else
+      match color with
+      | `Auto | `Always -> logger_color level
+      | `Never -> logger_std level
+  in
   Dhcp_logger.init logger;
   let conf = read_file configfile in
   let networks = D.parse_networks conf in
@@ -136,7 +154,13 @@ let cmd =
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
                          ~doc:"Log verbosity, warn|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
-                          ~doc:"Daemonize") in
-  Term.(pure charruad $ configfile $ verbosity $ daemonize),
+                         ~doc:"Daemonize") in
+  let color =
+    let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in
+    let doc = Arg.info ~docv:"WHEN"
+        ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s."
+                (Arg.doc_alts_enum when_enum)) ["color"] in
+    Arg.(value & opt (enum when_enum) `Auto & doc) in
+  Term.(pure charruad $ configfile $ verbosity $ daemonize $ color),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
