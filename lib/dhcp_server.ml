@@ -343,7 +343,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       | Some DHCPRELEASE  -> input_release config subnet pkt
       | Some DHCPINFORM   -> input_inform config subnet pkt
       | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
-      | Some m -> Log.debug_lwt "Unhandled msgtype %s" (string_of_msgtype m)
+      | Some m -> Log.warn_lwt "Unhandled msgtype %s" (string_of_msgtype m)
     else
       Log.warn_lwt "Invalid packet %s" (string_of_pkt pkt)
 
