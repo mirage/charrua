@@ -811,17 +811,17 @@ let pkt_of_buf buf len =
     let open Printf in
     let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
     if len < min_len then
-      invalid_arg (sprintf "too small %d < %d" len min_len);
+      invalid_arg (sprintf "packet is too small %d < %d" len min_len);
     (* Handle ethernet *)
     let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
     let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
     let () = if (get_ethernet_ethertype buf) <> 0x0800 then
-        invalid_arg (sprintf "not ipv4: %d" (get_ethernet_ethertype buf));
+        invalid_arg (sprintf "packet is not ipv4: %d" (get_ethernet_ethertype buf));
     in
     let buf = Cstruct.shift buf sizeof_ethernet in
     (* Handle IPv4 *)
     let () = if (get_ipv4_proto buf) <> 17 then
-        invalid_arg (sprintf "not udp: %d" (get_ipv4_proto buf));
+        invalid_arg (sprintf "packet is not udp: %d" (get_ipv4_proto buf));
     in
     let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
     let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
