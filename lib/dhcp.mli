@@ -157,7 +157,7 @@ type dhcp_option =
   | Mask_supplier of bool                   (* code 30 *)
   | Perform_router_disc of bool             (* code 31 *)
   | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
-  | Static_routes of Ipaddr.V4.Prefix.t list(* code 33 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of Int32.t               (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)

@@ -341,7 +341,7 @@ type dhcp_option =
   | Mask_supplier of bool                   (* code 30 *)
   | Perform_router_disc of bool             (* code 31 *)
   | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
-  | Static_routes of Ipaddr.V4.Prefix.t list(* code 33 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of int32                 (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
@@ -502,10 +502,6 @@ let options_of_buf buf buf_len =
       in
       let get_16 () = if len <> 2 then invalid_arg bad_len else
           Cstruct.BE.get_uint16 body 0 in
-      let get_32 () = if len <> 4 then invalid_arg bad_len else
-          Cstruct.BE.get_uint32 body 0 in
-      let get_ip () = if len <> 4 then invalid_arg bad_len else
-          Ipaddr.V4.of_int32 (get_32 ()) in
       let get_16_list () =
         let rec loop offset shorts =
           if offset = len then shorts else
@@ -515,35 +511,42 @@ let options_of_buf buf buf_len =
         if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
-      (* Fetch ipv4s from options *)
-      let get_ip_list ?(min_len=4) () =
-        let rec loop offset ips =
-          if offset = len then ips else
-            let word = Cstruct.BE.get_uint32 body offset in
-            let ip = Ipaddr.V4.of_int32 word in
-            loop ((succ offset) * 4) (ip :: ips)
+      let get_32 () = if len <> 4 then invalid_arg bad_len else
+          Cstruct.BE.get_uint32 body 0 in
+      let get_32_list ?(min_len=4) () =
+        let rec loop offset longs =
+          if offset = len then longs else
+            let long = Cstruct.BE.get_uint32 body offset in
+            loop ((succ offset) * 4) (long :: longs)
         in
         if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
+      (* Fetch ipv4s from options *)
+      let get_ip () = if len <> 4 then invalid_arg bad_len else
+          Ipaddr.V4.of_int32 (get_32 ()) in
+      let get_ip_list ?(min_len=4) () =
+        List.map Ipaddr.V4.of_int32 (get_32_list ~min_len:min_len ())
+      in
+      let get_ip_tuple_list () =
+        let loop ips tuples = match ips with
+          | ip1 :: ip2 :: tl -> (ip1, ip2) :: tuples
+          | ip :: [] -> invalid_arg bad_len
+          | [] -> List.rev tuples
+        in
+        loop (get_ip_list ~min_len:8 ()) []
+      in
       (* Get a list of ip pairs *)
       let get_prefix_list () =
-        let rec loop offset prefixes =
-          if offset = len then
-            prefixes
-          else
-            let addr = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 body offset) in
-            let mask = Ipaddr.V4.of_int32
-                (Cstruct.BE.get_uint32 body (offset + 4)) in
-            try
-              let prefix = Ipaddr.V4.Prefix.of_netmask mask addr in
-              loop ((succ offset) * 8) (prefix :: prefixes)
-            with Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b)
-        in
         if ((len mod 8) <> 0) || len <= 0 then
           invalid_arg bad_len
         else
-          List.rev (loop 0 [])
+          List.map (function
+              | addr, mask -> try
+                  Ipaddr.V4.Prefix.of_netmask mask addr
+                with
+                  Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b))
+            (get_ip_tuple_list ())
       in
       let get_string () =  if len < 1 then invalid_arg bad_len else
           Cstruct.copy body 0 len
@@ -589,7 +592,7 @@ let options_of_buf buf buf_len =
       | 30 ->  take (Mask_supplier (get_bool ()))
       | 31 ->  take (Perform_router_disc (get_bool ()))
       | 32 ->  take (Router_sol_addr (get_ip ()))
-      | 33 ->  take (Static_routes (get_prefix_list ()))
+      | 33 ->  take (Static_routes (get_ip_tuple_list ()))
       | 34 ->  take (Trailer_encapsulation (get_bool ()))
       | 35 ->  take (Arp_cache_timo (get_32 ()))
       | 36 ->  take (Ethernet_encapsulation (get_bool ()))
