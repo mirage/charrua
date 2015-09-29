@@ -687,6 +687,9 @@ let buf_of_options sbuf options =
     put_ip (Ipaddr.V4.Prefix.network prefix) buf |>
     put_ip (Ipaddr.V4.Prefix.netmask prefix)
   in
+  let put_ip_tuple tuple buf = match tuple with
+    a, b -> put_ip a buf |> put_ip b
+  in
   let put_coded_8 code v buf = put_code code buf |> put_len 1 |> put_8 v in
   let put_coded_16 code v buf = put_code code buf |> put_len 2 |> put_16 v in
   let put_coded_32 code v buf = put_code code buf |> put_len 4 |> put_32 v in
@@ -720,6 +723,7 @@ let buf_of_options sbuf options =
   (* let put_coded_32_list = make_listf (fun buf x -> put_32 x buf) 4 in *)
   let put_coded_ip_list = make_listf (fun buf x -> put_ip x buf) 4 in
   let put_coded_prefix_list = make_listf (fun buf x -> put_prefix x buf) 8 in
+  let put_coded_ip_tuple_list = make_listf (fun buf x -> put_ip_tuple x buf) 8 in
   let buf_of_option buf option =
     match option with
     | Subnet_mask mask -> put_coded_ip 1 mask buf             (* code 1 *)
@@ -754,7 +758,7 @@ let buf_of_options sbuf options =
     | Mask_supplier b -> put_coded_bool 30 b buf              (* code 30 *)
     | Perform_router_disc b -> put_coded_bool 31 b buf        (* code 31 *)
     | Router_sol_addr rsa -> put_coded_ip 32 rsa buf          (* code 32 *)
-    | Static_routes srs -> put_coded_prefix_list 33 srs buf   (* code 33 *)
+    | Static_routes srs -> put_coded_ip_tuple_list 33 srs buf (* code 33 *)
     | Trailer_encapsulation b -> put_coded_bool 34 b buf      (* code 34 *)
     | Arp_cache_timo act -> put_coded_32 35 act buf           (* code 35 *)
     | Ethernet_encapsulation b -> put_coded_bool 36 b buf     (* code 36 *)
