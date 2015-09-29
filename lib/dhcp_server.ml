@@ -89,6 +89,34 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     else
       true
 
+  (* might be slow O(preqs * options) *)
+  let collect_replies (config : C.t) (subnet : C.subnet) preqs =
+    let maybe_both fn fnr =
+      let scan options = match fn options with Some x -> x | None -> [] in
+      match (scan subnet.options @ scan config.options) with
+      | [] -> None
+      | l -> Some (fnr l)
+    in
+    let maybe_replace fn fnr =
+      match fn subnet.options with
+      | Some x -> Some (fnr x)
+      | None -> match fn config.options with
+        | Some x -> Some (fnr x)
+        | None -> None
+    in
+    Util.filter_map
+      (function
+        | (Routers : parameter_request) ->
+          maybe_both routers_of_options (fun x -> Routers x)
+        | Dns_servers ->
+          maybe_both dns_servers_of_options (fun x -> Dns_servers x)
+        | Ntp_servers ->
+          maybe_both ntp_servers_of_options (fun x -> Ntp_servers x)
+        | Domain_name ->
+          maybe_replace domain_name_of_options (fun x -> Domain_name x)
+        | _ -> None)
+      preqs
+
   let input_decline_release config subnet pkt =
     let open Util in
     lwt msgtype = match msgtype_of_options pkt.options with
@@ -137,8 +165,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.options @
-                        options_from_parameter_requests preqs config.options
+        | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
       let pkt = make_reply config subnet pkt
@@ -191,8 +218,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.options @
-                        options_from_parameter_requests preqs config.options
+        | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
       let reply = make_reply config subnet pkt
@@ -320,8 +346,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (parameter_requests_of_options pkt.options) with
-        | Some preqs -> options_from_parameter_requests preqs subnet.options @
-                        options_from_parameter_requests preqs config.options
+        | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
       let pkt = make_reply config subnet pkt

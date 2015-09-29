@@ -952,7 +952,6 @@ let message_of_options =
 let domain_name_of_options =
   Util.find_map (function Domain_name dn -> Some dn | _ -> None)
 
-
 let generic_list_of_options f options = match (Util.filter_map f options) with
   | [] -> None
   | l -> Some (List.flatten l)
@@ -964,19 +963,6 @@ let dns_servers_of_options =
   generic_list_of_options (function Dns_servers x -> Some x | _ -> None)
 let ntp_servers_of_options =
   generic_list_of_options (function Ntp_servers x -> Some x | _ -> None)
-
-(* might be slow O(preqs * options) *)
-let options_from_parameter_requests preqs options =
-  let maybe fn fnr = match fn options with
-      Some x -> Some (fnr x) | None -> None in
-  Util.filter_map
-    (function
-      | (Routers : parameter_request) -> maybe routers_of_options (fun x -> Routers x)
-      | Dns_servers -> maybe dns_servers_of_options (fun x -> Dns_servers x)
-      | Ntp_servers -> maybe ntp_servers_of_options (fun x -> Ntp_servers x)
-      | Domain_name -> maybe domain_name_of_options (fun x -> Domain_name x)
-      | _ -> None)
-    preqs
 
 let client_id_of_pkt pkt =
   match client_id_of_options pkt.options with

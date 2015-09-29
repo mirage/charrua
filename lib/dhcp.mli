@@ -247,8 +247,7 @@ val ip_lease_time_of_options : dhcp_option list -> int32 option
 val server_identifier_of_options : dhcp_option list -> Ipaddr.V4.t option
 val vendor_class_id_of_options : dhcp_option list -> string option
 val message_of_options : dhcp_option list -> string option
+val domain_name_of_options : dhcp_option list -> string option
 val routers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val dns_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option
 val ntp_servers_of_options : dhcp_option list -> Ipaddr.V4.t list option
-val options_from_parameter_requests :
-  parameter_request list -> dhcp_option list -> dhcp_option list
