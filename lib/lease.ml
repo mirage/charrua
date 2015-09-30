@@ -38,15 +38,16 @@ let make_db name network range fixed_addrs =
   let fixed_table = Hashtbl.create 10 in
   List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
   { name; network; range; table = Hashtbl.create 10; fixed_table }
-let make client_id addr time =
-  let tm_start = Int32.of_float (Clock.time ()) in
-  let tm_end = Int32.add tm_start time in
+let make client_id addr ~duration ~now =
+  let tm_start = Int32.of_float now in
+  let tm_end = Int32.add tm_start duration in
   { tm_start; tm_end; addr; client_id }
 (* XXX defaults fixed leases to one hour, policy does not belong here. *)
-let make_fixed mac addr = make (Dhcp.Hwaddr mac) addr (Int32.of_int (60 * 60))
-let lookup client_id mac lease_db =
+let make_fixed mac addr ~now =
+  make (Dhcp.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
+let lookup client_id mac lease_db ~now =
   match (Hashtbl.find lease_db.fixed_table mac) with
-  | addr -> Some (make_fixed mac addr)
+  | addr -> Some (make_fixed mac addr ~now)
   | exception Not_found -> match Hashtbl.find lease_db.table client_id with
     | lease -> Some lease
     | exception Not_found -> None
@@ -59,21 +60,21 @@ let remove client_id mac lease_db =
   | addr -> ()
   | exception Not_found -> Hashtbl.remove lease_db.table client_id
 (* Beware! This is an online state *)
-let timeleft lease =
-  let left = (Int32.to_float lease.tm_end) -. Clock.time () in
+let timeleft lease ~now =
+  let left = (Int32.to_float lease.tm_end) -. now in
   if left < 0. then Int32.zero else (Int32.of_float left)
-let timeleft_exn lease =
-  let left = timeleft lease in
+let timeleft_exn lease ~now =
+  let left = timeleft lease ~now in
   if left = Int32.zero then invalid_arg "No time left for lease" else left
-let timeleft3 lease t1_ratio t2_ratio =
-  let left = Int32.to_float (timeleft lease) in
+let timeleft3 lease t1_ratio t2_ratio ~now =
+  let left = Int32.to_float (timeleft lease ~now) in
   (Int32.of_float left,
    Int32.of_float (left *. t1_ratio),
    Int32.of_float (left *. t2_ratio))
-let extend lease =
+let extend lease ~now =
   let original = Int32.sub lease.tm_end lease.tm_start in
-  make lease.client_id lease.addr original
-let expired lease = timeleft lease = Int32.zero
+  make lease.client_id lease.addr ~duration:original ~now
+let expired lease ~now = timeleft lease ~now = Int32.zero
 
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
@@ -98,16 +99,16 @@ let addr_allocated addr lease_db =
   | [] -> false
   | _ -> true
 
-let addr_available addr lease_db =
+let addr_available addr lease_db ~now =
   match (leases_of_addr addr lease_db) with
   | [] -> true
-  | leases -> not (List.exists (fun l -> not (expired l)) leases)
+  | leases -> not (List.exists (fun l -> not (expired l ~now)) leases)
 
 (*
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-let get_usable_addr id lease_db =
+let get_usable_addr id lease_db ~now =
   let open Dhcp in
   let (low_ip, high_ip) = lease_db.range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
@@ -144,5 +145,5 @@ let get_usable_addr id lease_db =
     Some hint_ip
   else match linear_loop Int32.zero (fun a -> not (addr_allocated a lease_db)) with
     | Some ip -> Some ip
-    | None -> linear_loop Int32.zero (fun a -> addr_available a lease_db)
+    | None -> linear_loop Int32.zero (fun a -> addr_available a lease_db ~now)
 
