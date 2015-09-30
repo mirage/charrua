@@ -14,12 +14,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
+module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
   with type interface = I.t = struct
 
-  module CF = Config.Make (I)
+  module Cfg = Config.Make (I)
   module Log = Dhcp_logger
-  open CF
+
+  open Cfg
   open Lwt
   open Dhcp
 
@@ -92,7 +93,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies (config : CF.t) (subnet : CF.subnet) preqs =
+  let collect_replies (config : Cfg.t) (subnet : Cfg.subnet) preqs =
     let maybe_both fn fnr =
       let scan options = match fn options with Some x -> x | None -> [] in
       match (scan subnet.options @ scan config.options) with
@@ -121,7 +122,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
 
   let input_decline_release config subnet pkt =
     let open Util in
-    let now = C.time () in
+    let now = Clock.time () in
     lwt msgtype = match msgtype_of_options pkt.options with
       | Some msgtype -> return (string_of_msgtype msgtype)
       | None -> Lwt.fail_with "Unexpected message type"
@@ -155,7 +156,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform (config : CF.t) subnet pkt =
+  let input_inform (config : Cfg.t) subnet pkt =
     lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
@@ -180,7 +181,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
 
   let input_request config subnet pkt =
     lwt () = Log.debug_lwt "REQUEST packet received %s" (string_of_pkt pkt) in
-    let now = C.time () in
+    let now = Clock.time () in
     let drop = return_unit in
     let lease_db = subnet.lease_db in
     let client_id = client_id_of_pkt pkt in
@@ -210,7 +211,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
       let open Util in
       let lease = if renew then Lease.extend lease ~now else lease in
       let lease_time, t1, t2 =
-        Lease.timeleft3 lease CF.t1_time_ratio CF.t2_time_ratio ~now
+        Lease.timeleft3 lease Cfg.t1_time_ratio Cfg.t2_time_ratio ~now
       in
       let options =
         cons (Message_type DHCPACK) @@
@@ -257,7 +258,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
              nak ~msg:"Requested address is not available" ()
            else
              ack (Lease.make client_id reqip
-                    ~duration:(CF.default_lease_time config subnet) ~now))
+                    ~duration:(Cfg.default_lease_time config subnet) ~now))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         lwt () = Log.warn_lwt "Bad DHCPREQUEST, ciaddr is not 0" in
@@ -292,7 +293,7 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
     (* Figure out the ip address *)
     let lease_db = subnet.lease_db in
     let id = client_id_of_pkt pkt in
-    let now = C.time () in
+    let now = Clock.time () in
     let lease = Lease.lookup id pkt.chaddr lease_db ~now in
     let ourip = I.addr subnet.interface in
     let addr = match lease with
@@ -318,14 +319,14 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
     (* Figure out the lease lease_time *)
     let lease_time = match (ip_lease_time_of_options pkt.options) with
       | Some ip_lease_time ->
-        if CF.lease_time_good config subnet ip_lease_time then
+        if Cfg.lease_time_good config subnet ip_lease_time then
           ip_lease_time
         else
-          CF.default_lease_time config subnet
+          Cfg.default_lease_time config subnet
       | None -> match lease with
-        | None -> CF.default_lease_time config subnet
+        | None -> Cfg.default_lease_time config subnet
         | Some lease -> if Lease.expired lease ~now then
-            CF.default_lease_time config subnet
+            Cfg.default_lease_time config subnet
           else
             Lease.timeleft lease ~now
     in
@@ -335,9 +336,9 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
       let open Util in
       (* Start building the options *)
       let t1 = Int32.of_float
-          (CF.t1_time_ratio *. (Int32.to_float lease_time)) in
+          (Cfg.t1_time_ratio *. (Int32.to_float lease_time)) in
       let t2 = Int32.of_float
-          (CF.t2_time_ratio *. (Int32.to_float lease_time)) in
+          (Cfg.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
         cons (Message_type DHCPOFFER) @@
         cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
@@ -413,11 +414,11 @@ module Make (I : Dhcp_S.INTERFACE) (C : V1.CLOCK) : Dhcp_S.SERVER
   let parse_config configtxt interfaces =
     let lex = Lexing.from_string configtxt in
     try
-      CF.config_of_ast (Parser.main Lexer.lex lex) interfaces
+      Cfg.config_of_ast (Parser.main Lexer.lex lex) interfaces
     with
     | Parser.Error -> parse_choke lex "Parser error"
     | Lexer.Error e -> raise (Syntax_error e)
-    | CF.Error e -> parse_choke lex e
+    | Cfg.Error e -> parse_choke lex e
     | Config.Ast_error e -> parse_choke lex e
 
   let create configtxt interfaces =
