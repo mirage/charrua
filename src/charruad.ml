@@ -91,7 +91,7 @@ module I = struct
 
 end
 
-module D = Dhcp_server.Make (I)
+module D = Dhcp_server.Make (I) (Unix)
 
 let logger_std cur_level level s =
   if cur_level >= level then

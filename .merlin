@@ -8,6 +8,7 @@ PKG ipaddr
 PKG tuntap
 PKG rawlink
 PKG charrua-core
-PKG mirage-clock-unix
+PKG mirage-types
+PKG tcpip
 EXT lwt
 EXT nonrec
