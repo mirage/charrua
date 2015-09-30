@@ -15,9 +15,9 @@
  *)
 
 module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = struct
-  module C = Config.Make (I)
+  module CF = Config.Make (I)
   module Log = Dhcp_logger
-  open C
+  open CF
   open Lwt
   open Dhcp
 
@@ -90,7 +90,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies (config : C.t) (subnet : C.subnet) preqs =
+  let collect_replies (config : CF.t) (subnet : CF.subnet) preqs =
     let maybe_both fn fnr =
       let scan options = match fn options with Some x -> x | None -> [] in
       match (scan subnet.options @ scan config.options) with
@@ -152,7 +152,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform (config : C.t) subnet pkt =
+  let input_inform (config : CF.t) subnet pkt =
     lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
@@ -206,7 +206,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       let open Util in
       let lease = if renew then Lease.extend lease else lease in
       let lease_time, t1, t2 =
-        Lease.timeleft3 lease C.t1_time_ratio C.t2_time_ratio
+        Lease.timeleft3 lease CF.t1_time_ratio CF.t2_time_ratio
       in
       let options =
         cons (Message_type DHCPACK) @@
@@ -252,7 +252,7 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
            if not (Lease.addr_available reqip lease_db) then
              nak ~msg:"Requested address is not available" ()
            else
-             ack (Lease.make client_id reqip (C.default_lease_time config subnet)))
+             ack (Lease.make client_id reqip (CF.default_lease_time config subnet)))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       let expired = Lease.expired lease in
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
@@ -316,14 +316,14 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
     (* Figure out the lease lease_time *)
     let lease_time = match (ip_lease_time_of_options pkt.options) with
       | Some ip_lease_time ->
-        if C.lease_time_good config subnet ip_lease_time then
+        if CF.lease_time_good config subnet ip_lease_time then
           ip_lease_time
         else
-          C.default_lease_time config subnet
+          CF.default_lease_time config subnet
       | None -> match lease with
-        | None -> C.default_lease_time config subnet
+        | None -> CF.default_lease_time config subnet
         | Some lease -> if expired then
-            C.default_lease_time config subnet
+            CF.default_lease_time config subnet
           else
             Lease.timeleft lease
     in
@@ -333,9 +333,9 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
       let open Util in
       (* Start building the options *)
       let t1 = Int32.of_float
-          (C.t1_time_ratio *. (Int32.to_float lease_time)) in
+          (CF.t1_time_ratio *. (Int32.to_float lease_time)) in
       let t2 = Int32.of_float
-          (C.t2_time_ratio *. (Int32.to_float lease_time)) in
+          (CF.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
         cons (Message_type DHCPOFFER) @@
         cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
@@ -411,11 +411,11 @@ module Make (I : Dhcp_S.INTERFACE) : Dhcp_S.SERVER with type interface = I.t = s
   let parse_config configtxt interfaces =
     let lex = Lexing.from_string configtxt in
     try
-      C.config_of_ast (Parser.main Lexer.lex lex) interfaces
+      CF.config_of_ast (Parser.main Lexer.lex lex) interfaces
     with
     | Parser.Error -> parse_choke lex "Parser error"
     | Lexer.Error e -> raise (Syntax_error e)
-    | C.Error e -> parse_choke lex e
+    | CF.Error e -> parse_choke lex e
     | Config.Ast_error e -> parse_choke lex e
 
   let create configtxt interfaces =
