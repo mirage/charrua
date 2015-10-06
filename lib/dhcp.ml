@@ -815,6 +815,8 @@ let buf_of_options sbuf options =
 
 let pkt_of_buf buf len =
   let wrap () =
+    let open Wire_structs in
+    let open Ipv4_wire in
     let open Printf in
     let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
     if len < min_len then
@@ -841,8 +843,8 @@ let pkt_of_buf buf len =
     let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
     let buf = Cstruct.shift buf ihl in
     (* Handle UDP *)
-    let srcport = get_udp_src buf in
-    let dstport = get_udp_dst buf in
+    let srcport = get_udp_source_port buf in
+    let dstport = get_udp_dest_port buf in
     let buf = Cstruct.shift buf sizeof_udp in
     (* Get the DHCP stuff *)
     let op = op_of_buf buf in
@@ -869,6 +871,8 @@ let pkt_of_buf buf len =
   | pkt -> `Ok pkt
 
 let buf_of_pkt pkt =
+  let open Wire_structs in
+  let open Ipv4_wire in
   let dhcp = Cstruct.create 2048 in
   set_dhcp_op dhcp (int_of_op pkt.op);
   set_dhcp_htype dhcp (int_of_htype pkt.htype);
@@ -921,18 +925,18 @@ let buf_of_pkt pkt =
   set_ipv4_csum ip csum;
   (* UDP *)
   let udp = Cstruct.create 8 in
-  set_udp_src udp pkt.srcport;
-  set_udp_dst udp pkt.dstport;
-  set_udp_len udp ((Cstruct.len dhcp) + 8);
+  set_udp_source_port udp pkt.srcport;
+  set_udp_dest_port udp pkt.dstport;
+  set_udp_length udp ((Cstruct.len dhcp) + 8);
   (* UDP checksum pseudo header *)
   let pbuf = Cstruct.create 4 in
   Cstruct.set_uint8 pbuf 0 0;
   Cstruct.set_uint8 pbuf 1 17;
   Cstruct.BE.set_uint16 pbuf 2 ((Cstruct.len udp) + (Cstruct.len dhcp));
   let src_dst = Cstruct.sub ip 12 (2 * 4) in
-  set_udp_csum udp 0;
+  set_udp_checksum udp 0;
   let udp_csum = Tcpip_checksum.ones_complement_list (src_dst :: pbuf :: udp :: dhcp :: []) in
-  set_udp_csum udp udp_csum;
+  set_udp_checksum udp udp_csum;
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
 let msgtype_of_options =
