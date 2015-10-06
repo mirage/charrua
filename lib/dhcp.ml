@@ -56,6 +56,13 @@ cenum msgtype {
   DHCPNAK;
   DHCPRELEASE;
   DHCPINFORM;
+  DHCPFORCERENEW;
+  DHCPLEASEQUERY;
+  DHCPLEASEUNASSIGNED;
+  DHCPLEASEUNKNOWN;
+  DHCPLEASEACTIVE;
+  DHCPBULKLEASEQUERY;
+  DHCPLEASEQUERYDONE;
 } as uint8_t(sexp)
 
 let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v
