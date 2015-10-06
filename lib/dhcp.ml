@@ -157,11 +157,6 @@ let int_of_htype = function
   | Ethernet_10mb -> 1
   | Other -> invalid_arg "Can't make int of Other htype"
 
-let hlen_of_buf = get_dhcp_hlen
-let hops_of_buf = get_dhcp_hops
-let xid_of_buf = get_dhcp_xid
-let secs_of_buf = get_dhcp_secs
-
 let flags_of_buf buf =
   if ((get_dhcp_flags buf) land 0x8000) <> 0 then
     Broadcast
@@ -172,10 +167,6 @@ let int_of_flags = function
   | Broadcast -> 0x8000
   | Unicast -> 0
 
-let ciaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_ciaddr buf)
-let yiaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf)
-let siaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf)
-let giaddr_of_buf buf = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf)
 let chaddr_of_buf buf htype hlen =
   let s = copy_dhcp_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
@@ -571,15 +562,15 @@ let pkt_of_buf buf len =
     (* Get the DHCP stuff *)
     let op = op_of_buf buf in
     let htype = htype_of_buf buf in
-    let hlen = hlen_of_buf buf in
-    let hops = hops_of_buf buf in
-    let xid = xid_of_buf buf in
-    let secs = secs_of_buf buf in
+    let hlen = get_dhcp_hlen buf in
+    let hops = get_dhcp_hops buf in
+    let xid = get_dhcp_xid buf in
+    let secs = get_dhcp_secs buf in
     let flags = flags_of_buf buf in
-    let ciaddr = ciaddr_of_buf buf in
-    let yiaddr = yiaddr_of_buf buf in
-    let siaddr = siaddr_of_buf buf in
-    let giaddr = giaddr_of_buf buf in
+    let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr buf) in
+    let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf) in
+    let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf) in
+    let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf) in
     let chaddr = chaddr_of_buf buf htype hlen in
     let sname = sname_of_buf buf in
     let file = file_of_buf buf in
