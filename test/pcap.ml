@@ -115,6 +115,6 @@ let _ =
   (* XXX move this to a test file. *)
   (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
-      ignore (Dhcp.int_to_parameter_request_exn i)
+      ignore (Dhcp.int_to_option_code_exn i)
   done;
   List.iter parse testfiles

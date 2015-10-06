@@ -94,7 +94,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   (* might be slow O(preqs * options) *)
   let collect_replies (config : Cfg.t) (subnet : Cfg.subnet)
-      (preqs : parameter_request list) =
+      (preqs : option_code list) =
     let maybe_both fn fnr =
       let scan options = match fn options with Some x -> x | None -> [] in
       match (scan subnet.options @ scan config.options) with
@@ -110,7 +110,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     in
     Util.filter_map
       (function
-        | (Routers : parameter_request) ->
+        | (Routers : option_code) ->
           maybe_both routers_of_options (fun x -> Routers x)
         | Dns_servers ->
           maybe_both dns_servers_of_options (fun x -> Dns_servers x)

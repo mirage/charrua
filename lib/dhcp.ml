@@ -60,7 +60,7 @@ cenum msgtype {
 
 let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v
 
-cenum parameter_request {
+cenum option_code {
   Pad = 0;
   Subnet_mask = 1;
   Time_offset = 2;
@@ -319,7 +319,7 @@ cenum parameter_request {
   End = 255;
 } as uint8_t(sexp)
 
-let int_to_parameter_request_exn v = some_or_invalid int_to_parameter_request v
+let int_to_option_code_exn v = some_or_invalid int_to_option_code v
 
 type htype =
   | Ethernet_10mb
@@ -388,7 +388,7 @@ type dhcp_option =
   | Option_overload of int                  (* code 52 *)
   | Message_type of msgtype                 (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
-  | Parameter_requests of parameter_request list (* code 55 *)
+  | Parameter_requests of option_code list  (* code 55 *)
   | Message of string                       (* code 56 *)
   | Max_message of int                      (* code 57 *)
   | Renewal_t1 of int32                     (* code 58 *)
@@ -590,7 +590,7 @@ let options_of_buf buf buf_len =
       | 54 ->  take (Server_identifier (get_ip ()))
       | 55 ->  take (Parameter_requests
                        (get_8_list () |>
-                        List.map int_to_parameter_request_exn))
+                        List.map int_to_option_code_exn))
       | 56 ->  take (Message (get_string ()))
       | 57 ->  take (Max_message (get_16 ()))
       | 58 ->  take (Renewal_t1 (get_32 ()))
@@ -757,7 +757,7 @@ let buf_of_options sbuf options =
     | Server_identifier si -> put_coded_ip 54 si buf          (* code 54 *)
     | Parameter_requests pr ->
       put_coded_8_list 55
-        (List.map parameter_request_to_int pr) buf  (* code 55 *)
+        (List.map option_code_to_int pr) buf  (* code 55 *)
     | Message m -> put_coded_bytes 56 m buf                   (* code 56 *)
     | Max_message mm -> put_coded_16 57 mm buf                (* code 57 *)
     | Renewal_t1 rt -> put_coded_32 58 rt buf                 (* code 58 *)
