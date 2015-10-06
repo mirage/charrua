@@ -123,6 +123,8 @@ cenum parameter_request {
   Rebinding_t2 = 59;
   Vendor_class_id = 60;
   Client_id = 61;
+  Netware_ip_domain = 62;
+  Netware_ip_option = 63;
   Nis_plus_domain = 64;
   Nis_plus_servers = 65;
   Tftp_server_name = 66;
@@ -299,7 +301,8 @@ cenum parameter_request {
   Reserved_237 = 237;
   Reserved_238 = 238;
   Reserved_239 = 239;
-  Reserved_240 = 241;
+  Reserved_240 = 240;
+  Reserved_241 = 241;
   Reserved_242 = 242;
   Reserved_243 = 243;
   Reserved_244 = 244;
