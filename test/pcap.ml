@@ -111,4 +111,10 @@ let parse file =
 
 let testfiles = ["test/dhcp.pcap"; "test/dhcp2.pcap" ]
 
-let _ = List.iter parse testfiles
+let _ =
+  (* XXX move this to a test file. *)
+  (* Make sure parameters 0-255 are there. *)
+  for i = 0 to 255 do
+      ignore (Dhcp.int_to_parameter_request_exn i)
+  done;
+  List.iter parse testfiles
