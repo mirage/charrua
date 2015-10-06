@@ -34,6 +34,7 @@ type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
+(* XXX compat, temporary *)
 let int_of_parameter_request = Dhcp_wire.parameter_request_to_int
 let parameter_request_of_int = Dhcp_wire.int_to_parameter_request_exn
 
