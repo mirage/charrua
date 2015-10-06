@@ -26,88 +26,8 @@ type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
-type parameter_request =
-  | Subnet_mask                      (* code 1 *)
-  | Time_offset                      (* code 2 *)
-  | Routers                          (* code 3 *)
-  | Time_servers                     (* code 4 *)
-  | Name_servers                     (* code 5 *)
-  | Dns_servers                      (* code 6 *)
-  | Log_servers                      (* code 7 *)
-  | Cookie_servers                   (* code 8 *)
-  | Lpr_servers                      (* code 9 *)
-  | Impress_servers                  (* code 10 *)
-  | Rsclocation_servers              (* code 11 *)
-  | Hostname                         (* code 12 *)
-  | Bootfile_size                    (* code 13 *)
-  | Merit_dumpfile                   (* code 14 *)
-  | Domain_name                      (* code 15 *)
-  | Swap_server                      (* code 16 *)
-  | Root_path                        (* code 17 *)
-  | Extension_path                   (* code 18 *)
-  | Ipforwarding                     (* code 19 *)
-  | Nlsr                             (* code 20 *)
-  | Policy_filters                   (* code 21 *)
-  | Max_datagram                     (* code 22 *)
-  | Default_ip_ttl                   (* code 23 *)
-  | Pmtu_ageing_timo                 (* code 24 *)
-  | Pmtu_plateau_table               (* code 25 *)
-  | Interface_mtu                    (* code 26 *)
-  | All_subnets_local                (* code 27 *)
-  | Broadcast_addr                   (* code 28 *)
-  | Perform_mask_discovery           (* code 29 *)
-  | Mask_supplier                    (* code 30 *)
-  | Perform_router_disc              (* code 31 *)
-  | Router_sol_addr                  (* code 32 *)
-  | Static_routes                    (* code 33 *)
-  | Trailer_encapsulation            (* code 34 *)
-  | Arp_cache_timo                   (* code 35 *)
-  | Ethernet_encapsulation           (* code 36 *)
-  | Tcp_default_ttl                  (* code 37 *)
-  | Tcp_keepalive_interval           (* code 38 *)
-  | Tcp_keepalive_garbage            (* code 39 *)
-  | Nis_domain                       (* code 40 *)
-  | Nis_servers                      (* code 41 *)
-  | Ntp_servers                      (* code 42 *)
-  | Vendor_specific                  (* code 43 *)
-  | Netbios_name_servers             (* code 44 *)
-  | Netbios_datagram_distrib_servers (* code 45 *)
-  | Netbios_node                     (* code 46 *)
-  | Netbios_scope                    (* code 47 *)
-  | Xwindow_font_servers             (* code 48 *)
-  | Xwindow_display_managers         (* code 49 *)
-  | Request_ip                       (* code 50 *)
-  | Ip_lease_time                    (* code 51 *)
-  | Option_overload                  (* code 52 *)
-  | Message_type                     (* code 53 *)
-  | Server_identifier                (* code 54 *)
-  | Parameter_requests               (* code 55 *)
-  | Message                          (* code 56 *)
-  | Max_message                      (* code 57 *)
-  | Renewal_t1                       (* code 58 *)
-  | Rebinding_t2                     (* code 59 *)
-  | Vendor_class_id                  (* code 60 *)
-  | Client_id                        (* code 61 *)
-  | Nis_plus_domain                  (* code 64 *)
-  | Nis_plus_servers                 (* code 65 *)
-  | Tftp_server_name                 (* code 66 *)
-  | Bootfile_name                    (* code 67 *)
-  | Mobile_ip_home_agent             (* code 68 *)
-  | Smtp_servers                     (* code 69 *)
-  | Pop3_servers                     (* code 70 *)
-  | Nntp_servers                     (* code 71 *)
-  | Www_servers                      (* code 72 *)
-  | Finger_servers                   (* code 73 *)
-  | Irc_servers                      (* code 74 *)
-  | Streettalk_servers               (* code 75 *)
-  | Streettalk_da                    (* code 76 *)
-  | Domain_search_format             (* code 119 *)
-  | Web_proxy_auto_disc              (* code 252 *)
-  | Unknown of int
-  with sexp
-
-val parameter_request_of_int : int -> parameter_request
-val int_of_parameter_request : parameter_request -> int
+val parameter_request_of_int : int -> Dhcp_wire.parameter_request
+val int_of_parameter_request : Dhcp_wire.parameter_request -> int
 
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
@@ -164,7 +84,7 @@ type dhcp_option =
   | Option_overload of int                  (* code 52 *)
   | Message_type of Dhcp_wire.msgtype       (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
-  | Parameter_requests of parameter_request list (* code 55 *)
+  | Parameter_requests of Dhcp_wire.parameter_request list (* code 55 *)
   | Message of string                       (* code 56 *)
   | Max_message of int                      (* code 57 *)
   | Renewal_t1 of Int32.t                   (* code 58 *)
@@ -226,7 +146,8 @@ val string_of_msgtype : Dhcp_wire.msgtype -> string
 val string_of_client_id : client_id -> string
 val msgtype_of_options : dhcp_option list -> Dhcp_wire.msgtype option
 val client_id_of_options : dhcp_option list -> client_id option
-val parameter_requests_of_options : dhcp_option list -> parameter_request list option
+val parameter_requests_of_options : dhcp_option list ->
+  Dhcp_wire.parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option
 val ip_lease_time_of_options : dhcp_option list -> int32 option
 val server_identifier_of_options : dhcp_option list -> Ipaddr.V4.t option
