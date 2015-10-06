@@ -104,7 +104,7 @@ type dhcp_option =
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
-  | Domain_search_format of string          (* code 119 *)
+  | Domain_search of string                 (* code 119 *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | Unknown
   with sexp
