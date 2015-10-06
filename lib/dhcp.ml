@@ -333,10 +333,6 @@ type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
-(* XXX compat, temporary *)
-let int_of_parameter_request = parameter_request_to_int
-let parameter_request_of_int = int_to_parameter_request_exn
-
 type dhcp_option =
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of int32                    (* code 2 *)
