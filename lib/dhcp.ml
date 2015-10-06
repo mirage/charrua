@@ -147,16 +147,6 @@ let dhcp_min_len = sizeof_dhcp
 let client_port = 68
 let server_port = 67
 
-let op_of_buf buf = Dhcp_wire.int_to_op_exn (get_dhcp_op buf)
-
-let htype_of_buf buf = match get_dhcp_htype buf with
-  | 1 -> Ethernet_10mb
-  | _ -> Other
-
-let int_of_htype = function
-  | Ethernet_10mb -> 1
-  | Other -> invalid_arg "Can't make int of Other htype"
-
 let chaddr_of_buf buf htype hlen =
   let s = copy_dhcp_chaddr buf in
   if htype = Ethernet_10mb && hlen = 6 then
@@ -550,8 +540,8 @@ let pkt_of_buf buf len =
     let dstport = get_udp_dest_port buf in
     let buf = Cstruct.shift buf sizeof_udp in
     (* Get the DHCP stuff *)
-    let op = op_of_buf buf in
-    let htype = htype_of_buf buf in
+    let op = Dhcp_wire.int_to_op_exn (get_dhcp_op buf) in
+    let htype = if (get_dhcp_htype buf) = 1 then Ethernet_10mb else Other in
     let hlen = get_dhcp_hlen buf in
     let hops = get_dhcp_hops buf in
     let xid = get_dhcp_xid buf in
@@ -580,7 +570,11 @@ let buf_of_pkt pkt =
   let open Ipv4_wire in
   let dhcp = Cstruct.create 2048 in
   set_dhcp_op dhcp (Dhcp_wire.op_to_int pkt.op);
-  set_dhcp_htype dhcp (int_of_htype pkt.htype);
+  set_dhcp_htype dhcp
+    (if pkt.htype = Ethernet_10mb then
+       1
+     else
+       invalid_arg "Can only build Ethernet_10mb");
   set_dhcp_hlen dhcp pkt.hlen;
   set_dhcp_hops dhcp pkt.hops;
   set_dhcp_xid dhcp pkt.xid;
