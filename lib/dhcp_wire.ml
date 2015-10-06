@@ -30,3 +30,8 @@ cstruct dhcp {
   uint8_t      sname[64];
   uint8_t      file[128];
 } as big_endian
+
+cenum op {
+  Bootrequest = 1;
+  Bootreply   = 2;
+} as uint8_t(sexp)

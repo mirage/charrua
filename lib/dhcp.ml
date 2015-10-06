@@ -22,10 +22,6 @@ module Log = Dhcp_logger
 
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 
-type op =
-  | Bootrequest
-  | Bootreply with sexp
-
 type htype =
   | Ethernet_10mb
   | Other with sexp
@@ -398,7 +394,7 @@ type pkt = {
   dstip   : Ipaddr.V4.t;
   srcport : int;
   dstport : int;
-  op      : op;
+  op      : Dhcp_wire.op;
   htype   : htype;
   hlen    : int;
   hops    : int;
@@ -420,14 +416,11 @@ let dhcp_min_len = sizeof_dhcp
 let client_port = 68
 let server_port = 67
 
-let op_of_buf buf = match get_dhcp_op buf with
-  | 1 -> Bootrequest
-  | 2 -> Bootreply
-  | _ as op -> invalid_arg ("Unknown op value: " ^ string_of_int(op))
-
-let int_of_op = function
-  | Bootrequest -> 1
-  | Bootreply -> 2
+let op_of_buf buf =
+  let op = get_dhcp_op buf in
+  match Dhcp_wire.int_to_op op with
+  | Some op -> op
+  | None -> invalid_arg ("Unknown op value: " ^ string_of_int(op))
 
 let htype_of_buf buf = match get_dhcp_htype buf with
   | 1 -> Ethernet_10mb
@@ -874,7 +867,7 @@ let buf_of_pkt pkt =
   let open Wire_structs in
   let open Ipv4_wire in
   let dhcp = Cstruct.create 2048 in
-  set_dhcp_op dhcp (int_of_op pkt.op);
+  set_dhcp_op dhcp (Dhcp_wire.op_to_int pkt.op);
   set_dhcp_htype dhcp (int_of_htype pkt.htype);
   set_dhcp_hlen dhcp pkt.hlen;
   set_dhcp_hops dhcp pkt.hops;
@@ -974,7 +967,6 @@ let client_id_of_pkt pkt =
   | None -> Hwaddr pkt.chaddr
 
 (* string_of_* functions *)
-let string_of_op = to_hum sexp_of_op
 let string_of_htype = to_hum sexp_of_htype
 let string_of_hlen = string_of_int
 let string_of_hops = string_of_int

@@ -14,10 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-type op =
-  | Bootrequest
-  | Bootreply with sexp
-
 type htype =
   | Ethernet_10mb
   | Other with sexp
@@ -212,7 +208,7 @@ type pkt = {
   dstip   : Ipaddr.V4.t;
   srcport : int;
   dstport : int;
-  op      : op;
+  op      : Dhcp_wire.op;
   htype   : htype;
   hlen    : int;
   hops    : int;

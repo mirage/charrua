@@ -28,7 +28,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
-    let op = Bootreply in
+    let op = Dhcp_wire.Bootreply in
     let htype = Ethernet_10mb in
     let hlen = 6 in
     let hops = 0 in
@@ -81,7 +81,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
      pkt.dstip = Ipaddr.V4.broadcast)
 
   let valid_pkt pkt =
-    if pkt.op <> Bootrequest then
+    if pkt.op <> Dhcp_wire.Bootrequest then
       false
     else if pkt.htype <> Ethernet_10mb then
       false
