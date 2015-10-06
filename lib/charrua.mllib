@@ -1,6 +1,5 @@
 Dhcp
 Dhcp_server
-Dhcp_wire
 Dhcp_logger
 Parser
 Util

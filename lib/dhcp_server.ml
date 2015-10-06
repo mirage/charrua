@@ -28,7 +28,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
-    let op = Dhcp_wire.Bootreply in
+    let op = Bootreply in
     let htype = Ethernet_10mb in
     let hlen = 6 in
     let hops = 0 in
@@ -46,7 +46,6 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     in
     let srcport = server_port in
     let srcmac = I.mac subnet.interface in
-    let open Dhcp_wire in
     let dstmac, dstip = match (msgtype_of_options options) with
       | None -> failwith "make_reply: No msgtype in options"
       | Some m -> match m with
@@ -82,7 +81,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
      pkt.dstip = Ipaddr.V4.broadcast)
 
   let valid_pkt pkt =
-    if pkt.op <> Dhcp_wire.Bootrequest then
+    if pkt.op <> Bootrequest then
       false
     else if pkt.htype <> Ethernet_10mb then
       false
@@ -95,7 +94,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   (* might be slow O(preqs * options) *)
   let collect_replies (config : Cfg.t) (subnet : Cfg.subnet)
-      (preqs : Dhcp_wire.parameter_request list) =
+      (preqs : parameter_request list) =
     let maybe_both fn fnr =
       let scan options = match fn options with Some x -> x | None -> [] in
       match (scan subnet.options @ scan config.options) with
@@ -111,13 +110,13 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     in
     Util.filter_map
       (function
-        | (Dhcp_wire.Routers : Dhcp_wire.parameter_request) ->
+        | (Routers : parameter_request) ->
           maybe_both routers_of_options (fun x -> Routers x)
-        | Dhcp_wire.Dns_servers ->
+        | Dns_servers ->
           maybe_both dns_servers_of_options (fun x -> Dns_servers x)
-        | Dhcp_wire.Ntp_servers ->
+        | Ntp_servers ->
           maybe_both ntp_servers_of_options (fun x -> Ntp_servers x)
-        | Dhcp_wire.Domain_name ->
+        | Domain_name ->
           maybe_replace domain_name_of_options (fun x -> Domain_name x)
         | _ -> None)
       preqs
@@ -166,7 +165,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
       let ourip = I.addr subnet.interface in
       let options =
         let open Util in
-        cons (Message_type Dhcp_wire.DHCPACK) @@
+        cons (Message_type DHCPACK) @@
         cons (Server_identifier ourip) @@
         cons_if_some_f (vendor_class_id_of_options pkt.options)
           (fun vid -> Vendor_class_id vid) @@
@@ -194,7 +193,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     let nak ?msg () =
       let open Util in
       let options =
-        cons (Message_type Dhcp_wire.DHCPNAK) @@
+        cons (Message_type DHCPNAK) @@
         cons (Server_identifier ourip) @@
         cons_if_some_f msg (fun msg -> Message msg) @@
         cons_if_some_f (client_id_of_options pkt.options)
@@ -216,7 +215,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
         Lease.timeleft3 lease Cfg.t1_time_ratio Cfg.t2_time_ratio ~now
       in
       let options =
-        cons (Message_type Dhcp_wire.DHCPACK) @@
+        cons (Message_type DHCPACK) @@
         cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
@@ -342,7 +341,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
       let t2 = Int32.of_float
           (Cfg.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
-        cons (Message_type Dhcp_wire.DHCPOFFER) @@
+        cons (Message_type DHCPOFFER) @@
         cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
@@ -367,11 +366,11 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     else if valid_pkt pkt then
       (* Check if we have a subnet configured on the receiving interface *)
       match msgtype_of_options pkt.options with
-      | Some Dhcp_wire.DHCPDISCOVER -> input_discover config subnet pkt
-      | Some Dhcp_wire.DHCPREQUEST  -> input_request config subnet pkt
-      | Some Dhcp_wire.DHCPDECLINE  -> input_decline config subnet pkt
-      | Some Dhcp_wire.DHCPRELEASE  -> input_release config subnet pkt
-      | Some Dhcp_wire.DHCPINFORM   -> input_inform config subnet pkt
+      | Some DHCPDISCOVER -> input_discover config subnet pkt
+      | Some DHCPREQUEST  -> input_request config subnet pkt
+      | Some DHCPDECLINE  -> input_decline config subnet pkt
+      | Some DHCPRELEASE  -> input_release config subnet pkt
+      | Some DHCPINFORM   -> input_inform config subnet pkt
       | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
       | Some m -> Log.warn_lwt "Unhandled msgtype %s" (string_of_msgtype m)
     else
