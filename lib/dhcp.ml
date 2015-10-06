@@ -118,9 +118,6 @@ type dhcp_option =
   | Unknown
   with sexp
 
-let string_of_option = to_hum sexp_of_dhcp_option
-let string_of_options = to_hum (sexp_of_list sexp_of_dhcp_option)
-
 type pkt = {
   srcmac  : Macaddr.t;
   dstmac  : Macaddr.t;
@@ -699,20 +696,6 @@ let client_id_of_pkt pkt =
   | None -> Hwaddr pkt.chaddr
 
 (* string_of_* functions *)
-let string_of_htype = to_hum sexp_of_htype
-let string_of_hlen = string_of_int
-let string_of_hops = string_of_int
-let string_of_xid xid = Printf.sprintf "0x%lx" xid
-let string_of_secs = string_of_int
-let string_of_flags = to_hum sexp_of_flags
 let string_of_client_id = to_hum sexp_of_client_id
-let string_of_ciaddr = Ipaddr.V4.to_string
-let string_of_ciaddr = Ipaddr.V4.to_string
-let string_of_yiaddr = Ipaddr.V4.to_string
-let string_of_siaddr = Ipaddr.V4.to_string
-let string_of_giaddr = Ipaddr.V4.to_string
-let string_of_chaddr = to_hum sexp_of_client_id
-let string_of_sname sname = sname
-let string_of_file file = file
 let string_of_msgtype = to_hum sexp_of_msgtype
 let string_of_pkt = to_hum sexp_of_pkt
