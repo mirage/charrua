@@ -180,7 +180,7 @@ cenum parameter_request {
   Subnet_selection = 118;
   Domain_search = 119;
   Sip_servers = 120;
-  Classes_static_route = 121;
+  Classless_static_route = 121;
   Ccc = 122;
   Geoconf = 123;
   Vi_vendor_class = 124;
