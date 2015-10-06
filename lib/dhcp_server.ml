@@ -28,7 +28,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
-    let op = Bootreply in
+    let op = BOOTREPLY in
     let htype = Ethernet_10mb in
     let hlen = 6 in
     let hops = 0 in
@@ -81,7 +81,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
      pkt.dstip = Ipaddr.V4.broadcast)
 
   let valid_pkt pkt =
-    if pkt.op <> Bootrequest then
+    if pkt.op <> BOOTREQUEST then
       false
     else if pkt.htype <> Ethernet_10mb then
       false
@@ -110,13 +110,13 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     in
     Util.filter_map
       (function
-        | (Routers : option_code) ->
+        | ROUTERS ->
           maybe_both routers_of_options (fun x -> Routers x)
-        | Dns_servers ->
+        | DNS_SERVERS ->
           maybe_both dns_servers_of_options (fun x -> Dns_servers x)
-        | Ntp_servers ->
+        | NTP_SERVERS ->
           maybe_both ntp_servers_of_options (fun x -> Ntp_servers x)
-        | Domain_name ->
+        | DOMAIN_NAME ->
           maybe_replace domain_name_of_options (fun x -> Domain_name x)
         | _ -> None)
       preqs
