@@ -14,6 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+let some_or_invalid f v = match f v with
+  | Some x -> x
+  | None -> invalid_arg ("Invalid value " ^ (string_of_int v))
+
 cstruct dhcp {
   uint8_t      op;
   uint8_t      htype;
@@ -35,3 +39,18 @@ cenum op {
   Bootrequest = 1;
   Bootreply   = 2;
 } as uint8_t(sexp)
+
+let int_to_op_exn v = some_or_invalid int_to_op v
+
+cenum msgtype {
+  DHCPDISCOVER = 1;
+  DHCPOFFER;
+  DHCPREQUEST;
+  DHCPDECLINE;
+  DHCPACK;
+  DHCPNAK;
+  DHCPRELEASE;
+  DHCPINFORM;
+} as uint8_t(sexp)
+
+let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v

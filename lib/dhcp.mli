@@ -26,17 +26,6 @@ type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
-type msgtype =
-  | DHCPDISCOVER (* value 1 *)
-  | DHCPOFFER    (* value 2 *)
-  | DHCPREQUEST  (* value 3 *)
-  | DHCPDECLINE  (* value 4 *)
-  | DHCPACK      (* value 5 *)
-  | DHCPNAK      (* value 6 *)
-  | DHCPRELEASE  (* value 7 *)
-  | DHCPINFORM   (* value 8 *)
-  with sexp
-
 type parameter_request =
   | Subnet_mask                      (* code 1 *)
   | Time_offset                      (* code 2 *)
@@ -173,7 +162,7 @@ type dhcp_option =
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of Int32.t                (* code 51 *)
   | Option_overload of int                  (* code 52 *)
-  | Message_type of msgtype                 (* code 53 *)
+  | Message_type of Dhcp_wire.msgtype       (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of parameter_request list (* code 55 *)
   | Message of string                       (* code 56 *)
@@ -233,9 +222,9 @@ val pkt_of_buf : Cstruct.t -> int -> [> `Error of string | `Ok of pkt ]
 val buf_of_pkt : pkt -> Cstruct.t
 val client_id_of_pkt : pkt -> client_id
 val string_of_pkt : pkt -> string
-val string_of_msgtype : msgtype -> string
+val string_of_msgtype : Dhcp_wire.msgtype -> string
 val string_of_client_id : client_id -> string
-val msgtype_of_options : dhcp_option list -> msgtype option
+val msgtype_of_options : dhcp_option list -> Dhcp_wire.msgtype option
 val client_id_of_options : dhcp_option list -> client_id option
 val parameter_requests_of_options : dhcp_option list -> parameter_request list option
 val request_ip_of_options : dhcp_option list -> Ipaddr.V4.t option

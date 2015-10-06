@@ -34,38 +34,6 @@ type client_id =
   | Hwaddr of Macaddr.t
   | Id of string with sexp
 
-type msgtype =
-  | DHCPDISCOVER (* value 1 *)
-  | DHCPOFFER    (* value 2 *)
-  | DHCPREQUEST  (* value 3 *)
-  | DHCPDECLINE  (* value 4 *)
-  | DHCPACK      (* value 5 *)
-  | DHCPNAK      (* value 6 *)
-  | DHCPRELEASE  (* value 7 *)
-  | DHCPINFORM   (* value 8 *)
-  with sexp
-
-let msgtype_of_int = function
-  | 1 -> DHCPDISCOVER (* value 1 *)
-  | 2 -> DHCPOFFER    (* value 2 *)
-  | 3 -> DHCPREQUEST  (* value 3 *)
-  | 4 -> DHCPDECLINE  (* value 4 *)
-  | 5 -> DHCPACK      (* value 5 *)
-  | 6 -> DHCPNAK      (* value 6 *)
-  | 7 -> DHCPRELEASE  (* value 7 *)
-  | 8 -> DHCPINFORM   (* value 8 *)
-  | v -> invalid_arg ("No message type for int " ^ (string_of_int v))
-
-let int_of_msgtype = function
-  | DHCPDISCOVER -> 1 (* value 1 *)
-  | DHCPOFFER    -> 2 (* value 2 *)
-  | DHCPREQUEST  -> 3 (* value 3 *)
-  | DHCPDECLINE  -> 4 (* value 4 *)
-  | DHCPACK      -> 5 (* value 5 *)
-  | DHCPNAK      -> 6 (* value 6 *)
-  | DHCPRELEASE  -> 7 (* value 7 *)
-  | DHCPINFORM   -> 8(* value 8 *)
-
 type parameter_request =
   | Subnet_mask                      (* code 1 *)
   | Time_offset                      (* code 2 *)
@@ -357,7 +325,7 @@ type dhcp_option =
   | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of int32                  (* code 51 *)
   | Option_overload of int                  (* code 52 *)
-  | Message_type of msgtype                 (* code 53 *)
+  | Message_type of Dhcp_wire.msgtype       (* code 53 *)
   | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of parameter_request list (* code 55 *)
   | Message of string                       (* code 56 *)
@@ -416,11 +384,7 @@ let dhcp_min_len = sizeof_dhcp
 let client_port = 68
 let server_port = 67
 
-let op_of_buf buf =
-  let op = get_dhcp_op buf in
-  match Dhcp_wire.int_to_op op with
-  | Some op -> op
-  | None -> invalid_arg ("Unknown op value: " ^ string_of_int(op))
+let op_of_buf buf = Dhcp_wire.int_to_op_exn (get_dhcp_op buf)
 
 let htype_of_buf buf = match get_dhcp_htype buf with
   | 1 -> Ethernet_10mb
@@ -605,7 +569,7 @@ let options_of_buf buf buf_len =
       | 50 ->  take (Request_ip (get_ip ()))
       | 51 ->  take (Ip_lease_time (get_32 ()))
       | 52 ->  take (Option_overload (get_8 ()))
-      | 53 ->  take (Message_type (msgtype_of_int (get_8 ())))
+      | 53 ->  take (Message_type (Dhcp_wire.int_to_msgtype_exn (get_8 ())))
       | 54 ->  take (Server_identifier (get_ip ()))
       | 55 ->  take (Parameter_requests (get_8_list () |>
                                          List.map parameter_request_of_int))
@@ -771,7 +735,7 @@ let buf_of_options sbuf options =
     | Request_ip rip -> put_coded_ip 50 rip buf               (* code 50 *)
     | Ip_lease_time ilt -> put_coded_32 51 ilt buf            (* code 51 *)
     | Option_overload oo -> put_coded_8 52 oo buf             (* code 52 *)
-    | Message_type mt -> put_coded_8 53 (int_of_msgtype mt) buf(* code 53 *)
+    | Message_type mt -> put_coded_8 53 (Dhcp_wire.msgtype_to_int mt) buf (* code 53 *)
     | Server_identifier si -> put_coded_ip 54 si buf          (* code 54 *)
     | Parameter_requests pr ->
       put_coded_8_list 55 (List.map int_of_parameter_request pr) buf(* code 55 *)
