@@ -26,6 +26,32 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   type interface = I.t
 
+  (* Find Option helpers *)
+  let msgtype_of_options options =
+    find_option (function Message_type m -> Some m | _ -> None) options
+  let client_id_of_options options =
+    find_option (function Client_id id -> Some id | _ -> None) options
+  let request_ip_of_options options =
+    find_option (function Request_ip ip -> Some ip | _ -> None) options
+  let ip_lease_time_of_options options =
+    find_option (function Ip_lease_time ip -> Some ip | _ -> None) options
+  let server_identifier_of_options options =
+    find_option (function Server_identifier sid -> Some sid | _ -> None) options
+  let vendor_class_id_of_options options =
+    find_option (function Vendor_class_id vid -> Some vid | _ -> None) options
+  let message_of_options options =
+    find_option (function Message m -> Some m | _ -> None) options
+  let domain_name_of_options options =
+    find_option (function Domain_name dn -> Some dn | _ -> None) options
+  let parameter_requests_of_options options =
+    collect_options (function Parameter_requests x -> Some x | _ -> None) options
+  let routers_of_options options =
+    collect_options (function Routers x -> Some x | _ -> None) options
+  let dns_servers_of_options options =
+    collect_options (function Dns_servers x -> Some x | _ -> None) options
+  let ntp_servers_of_options options =
+    collect_options (function Ntp_servers x -> Some x | _ -> None) options
+
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
     let op = BOOTREPLY in

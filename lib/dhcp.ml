@@ -934,37 +934,15 @@ let buf_of_pkt pkt =
   set_udp_checksum udp udp_csum;
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
-let msgtype_of_options =
-  Util.find_map (function Message_type m -> Some m | _ -> None)
-let client_id_of_options =
-  Util.find_map (function Client_id id -> Some id | _ -> None)
-let request_ip_of_options =
-  Util.find_map (function Request_ip ip -> Some ip | _ -> None)
-let ip_lease_time_of_options =
-  Util.find_map (function Ip_lease_time ip -> Some ip | _ -> None)
-let server_identifier_of_options =
-  Util.find_map (function Server_identifier sid -> Some sid | _ -> None)
-let vendor_class_id_of_options =
-  Util.find_map (function Vendor_class_id vid -> Some vid | _ -> None)
-let message_of_options =
-  Util.find_map (function Message m -> Some m | _ -> None)
-let domain_name_of_options =
-  Util.find_map (function Domain_name dn -> Some dn | _ -> None)
+let find_option f options = Util.find_map f options
 
-let generic_list_of_options f options = match (Util.filter_map f options) with
+let collect_options f options = match (Util.filter_map f options) with
   | [] -> None
   | l -> Some (List.flatten l)
-let parameter_requests_of_options =
-  generic_list_of_options (function Parameter_requests x -> Some x | _ -> None)
-let routers_of_options =
-  generic_list_of_options (function Routers x -> Some x | _ -> None)
-let dns_servers_of_options =
-  generic_list_of_options (function Dns_servers x -> Some x | _ -> None)
-let ntp_servers_of_options =
-  generic_list_of_options (function Ntp_servers x -> Some x | _ -> None)
 
-let client_id_of_pkt pkt =
-  match client_id_of_options pkt.options with
+let client_id_of_pkt pkt = match
+    find_option (function Client_id id -> Some id | _ -> None) pkt.options
+  with
   | Some id -> id
   | None -> Hwaddr pkt.chaddr
 
