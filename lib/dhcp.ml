@@ -147,18 +147,6 @@ let dhcp_min_len = sizeof_dhcp
 let client_port = 68
 let server_port = 67
 
-let chaddr_of_buf buf htype hlen =
-  let s = copy_dhcp_chaddr buf in
-  if htype = Ethernet_10mb && hlen = 6 then
-    Macaddr.of_bytes_exn (Bytes.sub s 0 6)
-  else
-    invalid_arg "Not a mac address."
-let bytes_of_chaddr chaddr = Util.bytes_extend_if_le (Macaddr.to_bytes chaddr) 16
-let bytes_of_sname s = Util.bytes_extend_if_le s 64
-let bytes_of_file s = Util.bytes_extend_if_le s 128
-let sname_of_buf buf = Util.cstruct_copy_normalized copy_dhcp_sname buf
-let file_of_buf buf = Util.cstruct_copy_normalized copy_dhcp_file buf
-
 let options_of_buf buf buf_len =
   let rec collect_options buf options =
     let code = Cstruct.get_uint8 buf 0 in
@@ -553,9 +541,14 @@ let pkt_of_buf buf len =
     let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf) in
     let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf) in
     let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf) in
-    let chaddr = chaddr_of_buf buf htype hlen in
-    let sname = sname_of_buf buf in
-    let file = file_of_buf buf in
+    let chaddr =
+        if htype = Ethernet_10mb && hlen = 6 then
+          Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr buf) 0 6)
+        else
+          invalid_arg "Not a mac address."
+    in
+    let sname = Util.cstruct_copy_normalized copy_dhcp_sname buf in
+    let file = Util.cstruct_copy_normalized copy_dhcp_file buf in
     let options = options_of_buf buf len in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
       op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
@@ -584,9 +577,10 @@ let buf_of_pkt pkt =
   set_dhcp_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
   set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
   set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_dhcp_chaddr (bytes_of_chaddr pkt.chaddr) 0 dhcp;
-  set_dhcp_sname (bytes_of_sname pkt.sname) 0 dhcp;
-  set_dhcp_file (bytes_of_file pkt.file) 0 dhcp;
+  set_dhcp_chaddr
+    (Util.bytes_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
+  set_dhcp_sname (Util.bytes_extend_if_le pkt.sname 64) 0 dhcp;
+  set_dhcp_file (Util.bytes_extend_if_le pkt.file 128) 0 dhcp;
   let options_start = Cstruct.shift dhcp sizeof_dhcp in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = (Cstruct.len dhcp) - (Cstruct.len options_end) in
