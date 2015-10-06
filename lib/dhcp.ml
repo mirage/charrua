@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-open Dhcp_structs
+open Dhcp_wire
 open Sexplib.Conv
 open Sexplib.Std
 
