@@ -17,8 +17,6 @@
 open Sexplib.Conv
 open Sexplib.Std
 
-module Log = Dhcp_logger
-
 let some_or_invalid f v = match f v with
   | Some x -> x
   | None -> invalid_arg ("Invalid value " ^ (string_of_int v))
@@ -620,7 +618,7 @@ let options_of_buf buf buf_len =
       | 119->  take (Domain_search (get_string ()))
       | 252->  take (Web_proxy_auto_disc (get_string ()))
       | code ->
-        Log.warn "Unknown option code %d" code;
+        Dhcp_logger.warn "Unknown option code %d" code;
         discard ()
   in
   (* Extends options if it finds an Option_overload *)
