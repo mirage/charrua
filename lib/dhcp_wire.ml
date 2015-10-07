@@ -442,8 +442,6 @@ type pkt = {
   options : dhcp_option list;
 } with sexp
 
-let dhcp_min_len = sizeof_dhcp
-
 let client_port = 68
 let server_port = 67
 
@@ -639,14 +637,14 @@ let options_of_buf buf buf_len =
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
-  if buf_len = dhcp_min_len then
+  if buf_len = sizeof_dhcp then
     []
   else
     (* Look for magic cookie *)
-    let cookie = Cstruct.BE.get_uint32 buf dhcp_min_len in
+    let cookie = Cstruct.BE.get_uint32 buf sizeof_dhcp in
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
-    let options_start = Cstruct.shift buf (dhcp_min_len + 4) in
+    let options_start = Cstruct.shift buf (sizeof_dhcp + 4) in
     (* Jump over cookie and start options, also extend them if necessary *)
     collect_options options_start [] |>
     extend_options buf |>
@@ -799,7 +797,7 @@ let pkt_of_buf buf len =
     let open Wire_structs in
     let open Ipv4_wire in
     let open Printf in
-    let min_len = dhcp_min_len + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
+    let min_len = sizeof_dhcp + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
     if len < min_len then
       invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
     (* Handle ethernet *)
