@@ -1,9 +1,22 @@
-version = "0.1"
-description = "Charrua core TODO"
-requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
-archive(byte) = "charrua.cma"
-archive(byte, plugin) = "charrua.cma"
-archive(native) = "charrua.cmxa"
-archive(native, plugin) = "charrua.cmxs"
-exists_if = "charrua.cma"
+package "server" (
+  version = "0.1"
+  description = "Charrua core TODO"
+  requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
+  archive(byte) = "dhcp_server.cma"
+  archive(byte, plugin) = "dhcp_server.cma"
+  archive(native) = "dhcp_server.cmxa"
+  archive(native, plugin) = "dhcp_server.cmxs"
+  exists_if = "dhcp_server.cma"
+)
+
+package "wire" (
+  version = "0.1"
+  description = "Charrua core TODO"
+  requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
+  archive(byte) = "dhcp_wire.cma"
+  archive(byte, plugin) = "dhcp_wire.cma"
+  archive(native) = "dhcp_wire.cmxa"
+  archive(native, plugin) = "dhcp_wire.cmxs"
+  exists_if = "dhcp_wire.cma"
+)
 

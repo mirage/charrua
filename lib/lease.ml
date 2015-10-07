@@ -22,7 +22,7 @@ type t = {
   tm_start   : int32;
   tm_end     : int32;
   addr       : Ipaddr.V4.t;
-  client_id  : Dhcp.client_id;
+  client_id  : Dhcp_wire.client_id;
 } with sexp
 
 (* Database, collection of leases *)
@@ -30,7 +30,7 @@ type database = {
   name : string;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
-  table : (Dhcp.client_id, t) Hashtbl.t;
+  table : (Dhcp_wire.client_id, t) Hashtbl.t;
   fixed_table : (Macaddr.t, Ipaddr.V4.t) Hashtbl.t;
 } with sexp
 
@@ -44,7 +44,7 @@ let make client_id addr ~duration ~now =
   { tm_start; tm_end; addr; client_id }
 (* XXX defaults fixed leases to one hour, policy does not belong here. *)
 let make_fixed mac addr ~now =
-  make (Dhcp.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
+  make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 let lookup client_id mac lease_db ~now =
   match (Hashtbl.find lease_db.fixed_table mac) with
   | addr -> Some (make_fixed mac addr ~now)
@@ -109,7 +109,6 @@ let addr_available addr lease_db ~now =
  * address, if that fails, we try a linear search.
  *)
 let get_usable_addr id lease_db ~now =
-  let open Dhcp in
   let (low_ip, high_ip) = lease_db.range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
@@ -117,8 +116,8 @@ let get_usable_addr id lease_db ~now =
     invalid_arg "invalid range, must be (low * high)";
   let hint_ip =
     let v = match id with
-      | Id s -> Int32.of_int 1805 (* XXX who cares *)
-      | Hwaddr hw ->
+      | Dhcp_wire.Id s -> Int32.of_int 1805 (* XXX who cares *)
+      | Dhcp_wire.Hwaddr hw ->
         let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
         let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
         let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in

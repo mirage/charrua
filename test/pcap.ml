@@ -16,7 +16,7 @@
  *)
 
 open Printf
-module Log = Dhcp_logger
+
 let () = Printexc.record_backtrace true
 
 cstruct pcap_header {
@@ -39,12 +39,12 @@ cstruct pcap_packet {
 let num_packets = ref 0
 
 let print_packet p len =
-  match (Dhcp.pkt_of_buf p len) with
+  match (Dhcp_wire.pkt_of_buf p len) with
   | `Error e -> failwith e
   | `Ok pkt ->
-    printf "DHCP: %s\n%!" (Dhcp.string_of_pkt pkt);
-    let buf = Dhcp.buf_of_pkt pkt in
-    match (Dhcp.pkt_of_buf buf len) with
+    printf "DHCP: %s\n%!" (Dhcp_wire.string_of_pkt pkt);
+    let buf = Dhcp_wire.buf_of_pkt pkt in
+    match (Dhcp_wire.pkt_of_buf buf len) with
     | `Error e -> failwith e
     | `Ok pkt2 ->
       if pkt2 <> pkt then begin
@@ -53,7 +53,7 @@ let print_packet p len =
         Cstruct.hexdump p;
         printf "our buf:";
         Cstruct.hexdump buf;
-        printf "generated pkt:\n%s\n" (Dhcp.string_of_pkt pkt2);
+        printf "generated pkt:\n%s\n" (Dhcp_wire.string_of_pkt pkt2);
         failwith "Serialization bug found !"
   end
 
@@ -115,6 +115,6 @@ let _ =
   (* XXX move this to a test file. *)
   (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
-      ignore (Dhcp.int_to_option_code_exn i)
+      ignore (Dhcp_wire.int_to_option_code_exn i)
   done;
   List.iter parse testfiles

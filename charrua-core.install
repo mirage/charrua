@@ -1,17 +1,19 @@
 lib: [
   "lib/META"                       {"META"}
 
-  "_build/lib/charrua.a"           {"charrua.a"}
-  "_build/lib/charrua.cma"         {"charrua.cma"}
-  "_build/lib/charrua.cmxa"        {"charrua.cmxa"}
-
-  "_build/lib/dhcp.cmi"            {"dhcp.cmi"}
-  "_build/lib/dhcp.cmt"            {"dhcp.cmt"}
-  "_build/lib/dhcp.cmx"            {"dhcp.cmx"}
-
+  "_build/lib/dhcp_server.a"       {"dhcp_server.a"}
+  "_build/lib/dhcp_server.cma"     {"dhcp_server.cma"}
+  "_build/lib/dhcp_server.cmxa"    {"dhcp_server.cmxa"}
   "_build/lib/dhcp_server.cmi"     {"dhcp_server.cmi"}
   "_build/lib/dhcp_server.cmt"     {"dhcp_server.cmt"}
   "_build/lib/dhcp_server.cmx"     {"dhcp_server.cmx"}
+
+  "_build/lib/dhcp_wire.a"         {"dhcp_wire.a"}
+  "_build/lib/dhcp_wire.cma"       {"dhcp_wire.cma"}
+  "_build/lib/dhcp_wire.cmxa"      {"dhcp_wire.cmxa"}
+  "_build/lib/dhcp_wire.cmi"       {"dhcp_wire.cmi"}
+  "_build/lib/dhcp_wire.cmt"       {"dhcp_wire.cmt"}
+  "_build/lib/dhcp_wire.cmx"       {"dhcp_wire.cmx"}
 
   "_build/lib/dhcp_logger.cmi"     {"dhcp_logger.cmi"}
   "_build/lib/dhcp_logger.cmt"     {"dhcp_logger.cmt"}

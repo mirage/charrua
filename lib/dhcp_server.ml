@@ -22,7 +22,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
 
   open Cfg
   open Lwt
-  open Dhcp
+  open Dhcp_wire
 
   type interface = I.t
 

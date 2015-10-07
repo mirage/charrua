@@ -17,7 +17,7 @@
 %{
   type statement =
     | Range of Ipaddr.V4.t * Ipaddr.V4.t
-    | Dhcp_option of Dhcp.dhcp_option
+    | Dhcp_option of Dhcp_wire.dhcp_option
     | Hw_eth of Macaddr.t
     | Fixed_addr of Ipaddr.V4.t
     | Default_lease_time of int32
@@ -100,9 +100,9 @@ statements:
   | s = statement; ss = statements { s :: (List.rev ss) }
 
 statement:
-  | OPTION; DOMAINNAME; v = STRING; SCOLON { Dhcp_option (Dhcp.Domain_name v)}
-  | OPTION; DOMAINNAMESERVERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Dns_servers ips) }
-  | OPTION; ROUTERS; ips = ips; SCOLON { Dhcp_option (Dhcp.Routers ips) }
+  | OPTION; DOMAINNAME; v = STRING; SCOLON { Dhcp_option (Dhcp_wire.Domain_name v)}
+  | OPTION; DOMAINNAMESERVERS; ips = ips; SCOLON { Dhcp_option (Dhcp_wire.Dns_servers ips) }
+  | OPTION; ROUTERS; ips = ips; SCOLON { Dhcp_option (Dhcp_wire.Routers ips) }
   | RANGE; v1 = IP; v2 = IP; SCOLON {
   if Int32.compare (Ipaddr.V4.to_int32 v1) (Ipaddr.V4.to_int32 v2) >= 0 then
     choke "Invalid `range` statement, must be `low high`";

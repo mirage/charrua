@@ -21,7 +21,7 @@ exception Ast_error of string
 
 type host = {
     hostname : string;
-    options : Dhcp.dhcp_option list;
+    options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t option;
 } with sexp
@@ -29,7 +29,7 @@ type host = {
 type subnet_ast = {
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
-  options : Dhcp.dhcp_option list;
+  options : Dhcp_wire.dhcp_option list;
   hosts : host list;
   default_lease_time : int32 option;
   max_lease_time : int32 option;
@@ -37,7 +37,7 @@ type subnet_ast = {
 
 type ast = {
   subnets : subnet_ast list;
-  options : Dhcp.dhcp_option list;
+  options : Dhcp_wire.dhcp_option list;
   default_lease_time : int32;
   max_lease_time : int32;
 } with sexp
@@ -53,7 +53,7 @@ module Make (I : Dhcp_S.INTERFACE) = struct
     interface : interface;
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
-    options : Dhcp.dhcp_option list;
+    options : Dhcp_wire.dhcp_option list;
     lease_db : Lease.database;
     hosts : host list;
     default_lease_time : int32 option;
@@ -63,7 +63,7 @@ module Make (I : Dhcp_S.INTERFACE) = struct
   type t = {
     interfaces : interface list;
     subnets : subnet list;
-    options : Dhcp.dhcp_option list;
+    options : Dhcp_wire.dhcp_option list;
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
