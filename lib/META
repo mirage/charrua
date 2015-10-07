@@ -1,6 +1,6 @@
 package "server" (
   version = "0.1"
-  description = "Charrua core TODO"
+  description = "Charrua DHCP Server."
   requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
   archive(byte) = "dhcp_server.cma"
   archive(byte, plugin) = "dhcp_server.cma"
@@ -11,7 +11,7 @@ package "server" (
 
 package "wire" (
   version = "0.1"
-  description = "Charrua core TODO"
+  description = "Charrua DHCP utilities."
   requires = "unix lwt.unix lwt lwt.syntax cstruct cstruct.syntax sexplib sexplib.syntax cstruct.unix"
   archive(byte) = "dhcp_wire.cma"
   archive(byte, plugin) = "dhcp_wire.cma"
