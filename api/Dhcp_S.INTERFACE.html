@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Dhcp_S.SERVER.html">
+<link rel="Up" href="Dhcp_S.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
+<link title="Dhcp_S" rel="Chapter" href="Dhcp_S.html"><title>Dhcp_S.INTERFACE</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Dhcp_S.html" title="Dhcp_S">Up</a>
+&nbsp;<a class="post" href="Dhcp_S.SERVER.html" title="Dhcp_S.SERVER">Next</a>
+</div>
+<h1>Module type <a href="type_Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a></h1>
+
+<pre><span class="keyword">module type</span> INTERFACE = <code class="code">sig</code> <a href="Dhcp_S.INTERFACE.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
+INTERFACE abstracts the idea of IO in a network interface.<br>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+
+<pre><span id="VALsend"><span class="keyword">val</span> send</span> : <code class="type"><a href="Dhcp_S.INTERFACE.html#TYPEt">t</a> -> Cstruct.t -> unit Lwt.t</code></pre><div class="info ">
+<code class="code">send</code> a packet from a <code class="code">Cstruct.t</code><br>
+</div>
+
+<pre><span id="VALrecv"><span class="keyword">val</span> recv</span> : <code class="type"><a href="Dhcp_S.INTERFACE.html#TYPEt">t</a> -> Cstruct.t Lwt.t</code></pre><div class="info ">
+<code class="code">recv</code> packet a packet in a <code class="code">Cstruct.t</code><br>
+</div>
+
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type"><a href="Dhcp_S.INTERFACE.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+interface name<br>
+</div>
+
+<pre><span id="VALaddr"><span class="keyword">val</span> addr</span> : <code class="type"><a href="Dhcp_S.INTERFACE.html#TYPEt">t</a> -> Ipaddr.V4.t</code></pre><div class="info ">
+interface IP address<br>
+</div>
+
+<pre><span id="VALmac"><span class="keyword">val</span> mac</span> : <code class="type"><a href="Dhcp_S.INTERFACE.html#TYPEt">t</a> -> Macaddr.t</code></pre><div class="info ">
+interface MAC address<br>
+</div>
+</body></html>

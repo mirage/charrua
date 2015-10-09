@@ -1,0 +1,2815 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Dhcp_S.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
+<link title="Dhcp_S" rel="Chapter" href="Dhcp_S.html"><link title="DHCP general data" rel="Section" href="#2_DHCPgeneraldata">
+<link title="DHCP header opcodes" rel="Section" href="#2_DHCPheaderopcodes">
+<link title="DHCP message type option values" rel="Section" href="#2_DHCPmessagetypeoptionvalues">
+<link title="DHCP option codes" rel="Section" href="#2_DHCPoptioncodes">
+<link title="DHCP hardware type" rel="Section" href="#2_DHCPhardwaretype">
+<link title="DHCP header flags" rel="Section" href="#2_DHCPheaderflags">
+<link title="DHCP Client identifier" rel="Section" href="#2_DHCPClientidentifier">
+<link title="DHCP options" rel="Section" href="#2_DHCPoptions">
+<link title="DHCP Packet " rel="Section" href="#2_DHCPPacket">
+<title>Dhcp_wire</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Dhcp_S.html" title="Dhcp_S">Next</a>
+</div>
+<h1>Module <a href="type_Dhcp_wire.html">Dhcp_wire</a></h1>
+
+<pre><span class="keyword">module</span> Dhcp_wire: <code class="code">sig</code> <a href="Dhcp_wire.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<h1 id="1_DHCPwireparsers">DHCP wire parsers</h1><br>
+</div>
+<hr width="100%">
+<br>
+<h2 id="2_DHCPgeneraldata">DHCP general data</h2><br>
+
+<pre><span id="VALclient_port"><span class="keyword">val</span> client_port</span> : <code class="type">int</code></pre><div class="info ">
+DHCP client port <code class="code">68</code><br>
+</div>
+
+<pre><span id="VALserver_port"><span class="keyword">val</span> server_port</span> : <code class="type">int</code></pre><div class="info ">
+DHCP server port <code class="code">67</code><br>
+</div>
+<br>
+<h2 id="2_DHCPheaderopcodes">DHCP header opcodes</h2><br>
+
+<pre><code><span id="TYPEop"><span class="keyword">type</span> <code class="type"></code>op</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTop.BOOTREQUEST"><span class="constructor">BOOTREQUEST</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTop.BOOTREPLY"><span class="constructor">BOOTREPLY</span></span></code></td>
+
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEop"><code class="code">Dhcp_wire.op</code></a>s.<br>
+
+<pre><span id="VALint_to_op"><span class="keyword">val</span> int_to_op</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEop">op</a> option</code></pre>
+<pre><span id="VALint_to_op_exn"><span class="keyword">val</span> int_to_op_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEop">op</a></code></pre><div class="info ">
+<b>Raises</b> <code>Invalid_argument</code> if <code class="code">v &lt; 0 || v &gt; 255</code><br>
+</div>
+
+<pre><span id="VALop_to_int"><span class="keyword">val</span> op_to_int</span> : <code class="type"><a href="Dhcp_wire.html#TYPEop">op</a> -> int</code></pre>
+<pre><span id="VALstring_to_op"><span class="keyword">val</span> string_to_op</span> : <code class="type">string -> <a href="Dhcp_wire.html#TYPEop">op</a> option</code></pre>
+<pre><span id="VALop_to_string"><span class="keyword">val</span> op_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEop">op</a> -> string</code></pre>
+<pre><span id="VALsexp_of_op"><span class="keyword">val</span> sexp_of_op</span> : <code class="type"><a href="Dhcp_wire.html#TYPEop">op</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALop_of_sexp"><span class="keyword">val</span> op_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEop">op</a></code></pre><br>
+<h2 id="2_DHCPmessagetypeoptionvalues">DHCP message type option values</h2><br>
+
+<pre><code><span id="TYPEmsgtype"><span class="keyword">type</span> <code class="type"></code>msgtype</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPDISCOVER"><span class="constructor">DHCPDISCOVER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPOFFER"><span class="constructor">DHCPOFFER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPREQUEST"><span class="constructor">DHCPREQUEST</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPDECLINE"><span class="constructor">DHCPDECLINE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPACK"><span class="constructor">DHCPACK</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPNAK"><span class="constructor">DHCPNAK</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPRELEASE"><span class="constructor">DHCPRELEASE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPINFORM"><span class="constructor">DHCPINFORM</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPFORCERENEW"><span class="constructor">DHCPFORCERENEW</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPLEASEQUERY"><span class="constructor">DHCPLEASEQUERY</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPLEASEUNASSIGNED"><span class="constructor">DHCPLEASEUNASSIGNED</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPLEASEUNKNOWN"><span class="constructor">DHCPLEASEUNKNOWN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPLEASEACTIVE"><span class="constructor">DHCPLEASEACTIVE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPBULKLEASEQUERY"><span class="constructor">DHCPBULKLEASEQUERY</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTmsgtype.DHCPLEASEQUERYDONE"><span class="constructor">DHCPLEASEQUERYDONE</span></span></code></td>
+
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code">Dhcp_wire.msgtype</code></a>s.<br>
+
+<pre><span id="VALmsgtype_to_int"><span class="keyword">val</span> msgtype_to_int</span> : <code class="type"><a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> -> int</code></pre>
+<pre><span id="VALint_to_msgtype"><span class="keyword">val</span> int_to_msgtype</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> option</code></pre>
+<pre><span id="VALint_to_msgtype_exn"><span class="keyword">val</span> int_to_msgtype_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a></code></pre><div class="info ">
+<b>Raises</b> <code>Invalid_argument</code> if not a valid <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code">Dhcp_wire.msgtype</code></a> value<br>
+</div>
+
+<pre><span id="VALstring_to_msgtype"><span class="keyword">val</span> string_to_msgtype</span> : <code class="type">string -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> option</code></pre>
+<pre><span id="VALmsgtype_to_string"><span class="keyword">val</span> msgtype_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> -> string</code></pre>
+<pre><span id="VALsexp_of_msgtype"><span class="keyword">val</span> sexp_of_msgtype</span> : <code class="type"><a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALmsgtype_of_sexp"><span class="keyword">val</span> msgtype_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a></code></pre><br>
+<h2 id="2_DHCPoptioncodes">DHCP option codes</h2><br>
+
+<pre><code><span id="TYPEoption_code"><span class="keyword">type</span> <code class="type"></code>option_code</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PAD"><span class="constructor">PAD</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SUBNET_MASK"><span class="constructor">SUBNET_MASK</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TIME_OFFSET"><span class="constructor">TIME_OFFSET</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ROUTERS"><span class="constructor">ROUTERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TIME_SERVERS"><span class="constructor">TIME_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NAME_SERVERS"><span class="constructor">NAME_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DNS_SERVERS"><span class="constructor">DNS_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.LOG_SERVERS"><span class="constructor">LOG_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.COOKIE_SERVERS"><span class="constructor">COOKIE_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.LPR_SERVERS"><span class="constructor">LPR_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IMPRESS_SERVERS"><span class="constructor">IMPRESS_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RSCLOCATION_SERVERS"><span class="constructor">RSCLOCATION_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.HOSTNAME"><span class="constructor">HOSTNAME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.BOOTFILE_SIZE"><span class="constructor">BOOTFILE_SIZE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MERIT_DUMPFILE"><span class="constructor">MERIT_DUMPFILE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DOMAIN_NAME"><span class="constructor">DOMAIN_NAME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SWAP_SERVER"><span class="constructor">SWAP_SERVER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ROOT_PATH"><span class="constructor">ROOT_PATH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.EXTENSION_PATH"><span class="constructor">EXTENSION_PATH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IPFORWARDING"><span class="constructor">IPFORWARDING</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NLSR"><span class="constructor">NLSR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.POLICY_FILTERS"><span class="constructor">POLICY_FILTERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MAX_DATAGRAM"><span class="constructor">MAX_DATAGRAM</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DEFAULT_IP_TTL"><span class="constructor">DEFAULT_IP_TTL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PMTU_AGEING_TIMO"><span class="constructor">PMTU_AGEING_TIMO</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PMTU_PLATEAU_TABLE"><span class="constructor">PMTU_PLATEAU_TABLE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.INTERFACE_MTU"><span class="constructor">INTERFACE_MTU</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ALL_SUBNETS_LOCAL"><span class="constructor">ALL_SUBNETS_LOCAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.BROADCAST_ADDR"><span class="constructor">BROADCAST_ADDR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PERFORM_MASK_DISCOVERY"><span class="constructor">PERFORM_MASK_DISCOVERY</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MASK_SUPPLIER"><span class="constructor">MASK_SUPPLIER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PERFORM_ROUTER_DISC"><span class="constructor">PERFORM_ROUTER_DISC</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ROUTER_SOL_ADDR"><span class="constructor">ROUTER_SOL_ADDR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.STATIC_ROUTES"><span class="constructor">STATIC_ROUTES</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TRAILER_ENCAPSULATION"><span class="constructor">TRAILER_ENCAPSULATION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ARP_CACHE_TIMO"><span class="constructor">ARP_CACHE_TIMO</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ETHERNET_ENCAPSULATION"><span class="constructor">ETHERNET_ENCAPSULATION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TCP_DEFAULT_TTL"><span class="constructor">TCP_DEFAULT_TTL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TCP_KEEPALIVE_INTERVAL"><span class="constructor">TCP_KEEPALIVE_INTERVAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TCP_KEEPALIVE_GARBAGE"><span class="constructor">TCP_KEEPALIVE_GARBAGE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NIS_DOMAIN"><span class="constructor">NIS_DOMAIN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NIS_SERVERS"><span class="constructor">NIS_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NTP_SERVERS"><span class="constructor">NTP_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.VENDOR_SPECIFIC"><span class="constructor">VENDOR_SPECIFIC</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETBIOS_NAME_SERVERS"><span class="constructor">NETBIOS_NAME_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETBIOS_DATAGRAM_DISTRIB_SERVERS"><span class="constructor">NETBIOS_DATAGRAM_DISTRIB_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETBIOS_NODE"><span class="constructor">NETBIOS_NODE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETBIOS_SCOPE"><span class="constructor">NETBIOS_SCOPE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.XWINDOW_FONT_SERVERS"><span class="constructor">XWINDOW_FONT_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.XWINDOW_DISPLAY_MANAGERS"><span class="constructor">XWINDOW_DISPLAY_MANAGERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.REQUEST_IP"><span class="constructor">REQUEST_IP</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IP_LEASE_TIME"><span class="constructor">IP_LEASE_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.OPTION_OVERLOAD"><span class="constructor">OPTION_OVERLOAD</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MESSAGE_TYPE"><span class="constructor">MESSAGE_TYPE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SERVER_IDENTIFIER"><span class="constructor">SERVER_IDENTIFIER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PARAMETER_REQUESTS"><span class="constructor">PARAMETER_REQUESTS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MESSAGE"><span class="constructor">MESSAGE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MAX_MESSAGE"><span class="constructor">MAX_MESSAGE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RENEWAL_T1"><span class="constructor">RENEWAL_T1</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.REBINDING_T2"><span class="constructor">REBINDING_T2</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.VENDOR_CLASS_ID"><span class="constructor">VENDOR_CLASS_ID</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLIENT_ID"><span class="constructor">CLIENT_ID</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETWARE_IP_DOMAIN"><span class="constructor">NETWARE_IP_DOMAIN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETWARE_IP_OPTION"><span class="constructor">NETWARE_IP_OPTION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NIS_PLUS_DOMAIN"><span class="constructor">NIS_PLUS_DOMAIN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NIS_PLUS_SERVERS"><span class="constructor">NIS_PLUS_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TFTP_SERVER_NAME"><span class="constructor">TFTP_SERVER_NAME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.BOOTFILE_NAME"><span class="constructor">BOOTFILE_NAME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MOBILE_IP_HOME_AGENT"><span class="constructor">MOBILE_IP_HOME_AGENT</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SMTP_SERVERS"><span class="constructor">SMTP_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.POP3_SERVERS"><span class="constructor">POP3_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NNTP_SERVERS"><span class="constructor">NNTP_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.WWW_SERVERS"><span class="constructor">WWW_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.FINGER_SERVERS"><span class="constructor">FINGER_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IRC_SERVERS"><span class="constructor">IRC_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.STREETTALK_SERVERS"><span class="constructor">STREETTALK_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.STREETTALK_DA"><span class="constructor">STREETTALK_DA</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.USER_CLASS"><span class="constructor">USER_CLASS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DIRECTORY_AGENT"><span class="constructor">DIRECTORY_AGENT</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SERVICE_SCOPE"><span class="constructor">SERVICE_SCOPE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RAPID_COMMIT"><span class="constructor">RAPID_COMMIT</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLIENT_FQDN"><span class="constructor">CLIENT_FQDN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RELAY_AGENT_INFORMATION"><span class="constructor">RELAY_AGENT_INFORMATION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ISNS"><span class="constructor">ISNS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_84"><span class="constructor">UNASSIGNED_84</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NDS_SERVERS"><span class="constructor">NDS_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NDS_TREE_NAME"><span class="constructor">NDS_TREE_NAME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NDS_CONTEXT"><span class="constructor">NDS_CONTEXT</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.BCMCS_CONTROLLER_DOMAIN_NAME_LIST"><span class="constructor">BCMCS_CONTROLLER_DOMAIN_NAME_LIST</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.BCMCS_CONTROLLER_IPV4_ADDR"><span class="constructor">BCMCS_CONTROLLER_IPV4_ADDR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.AUTHENTICATION"><span class="constructor">AUTHENTICATION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLIENT_LAST_TRANSACTION_TIME"><span class="constructor">CLIENT_LAST_TRANSACTION_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ASSOCIATED_IP"><span class="constructor">ASSOCIATED_IP</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLIENT_SYSTEM"><span class="constructor">CLIENT_SYSTEM</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLIENT_NDI"><span class="constructor">CLIENT_NDI</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.LDAP"><span class="constructor">LDAP</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_96"><span class="constructor">UNASSIGNED_96</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UUID_GUID"><span class="constructor">UUID_GUID</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.USER_AUTH"><span class="constructor">USER_AUTH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.GEOCONF_CIVIC"><span class="constructor">GEOCONF_CIVIC</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PCODE"><span class="constructor">PCODE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.TCODE"><span class="constructor">TCODE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_102"><span class="constructor">UNASSIGNED_102</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_103"><span class="constructor">UNASSIGNED_103</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_104"><span class="constructor">UNASSIGNED_104</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_105"><span class="constructor">UNASSIGNED_105</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_106"><span class="constructor">UNASSIGNED_106</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_107"><span class="constructor">UNASSIGNED_107</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_108"><span class="constructor">UNASSIGNED_108</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_109"><span class="constructor">UNASSIGNED_109</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_110"><span class="constructor">UNASSIGNED_110</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_111"><span class="constructor">UNASSIGNED_111</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETINFO_ADDRESS"><span class="constructor">NETINFO_ADDRESS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NETINFO_TAG"><span class="constructor">NETINFO_TAG</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.URL"><span class="constructor">URL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_115"><span class="constructor">UNASSIGNED_115</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.AUTO_CONFIG"><span class="constructor">AUTO_CONFIG</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.NAME_SERVICE_SEARCH"><span class="constructor">NAME_SERVICE_SEARCH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SUBNET_SELECTION"><span class="constructor">SUBNET_SELECTION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DOMAIN_SEARCH"><span class="constructor">DOMAIN_SEARCH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SIP_SERVERS"><span class="constructor">SIP_SERVERS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CLASSLESS_STATIC_ROUTE"><span class="constructor">CLASSLESS_STATIC_ROUTE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CCC"><span class="constructor">CCC</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.GEOCONF"><span class="constructor">GEOCONF</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.VI_VENDOR_CLASS"><span class="constructor">VI_VENDOR_CLASS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.VI_VENDOR_INFO"><span class="constructor">VI_VENDOR_INFO</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_126"><span class="constructor">UNASSIGNED_126</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_127"><span class="constructor">UNASSIGNED_127</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_128"><span class="constructor">PXE_128</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_129"><span class="constructor">PXE_129</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_130"><span class="constructor">PXE_130</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_131"><span class="constructor">PXE_131</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_132"><span class="constructor">PXE_132</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_133"><span class="constructor">PXE_133</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_134"><span class="constructor">PXE_134</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_135"><span class="constructor">PXE_135</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PANA_AGENT"><span class="constructor">PANA_AGENT</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.V4_LOST"><span class="constructor">V4_LOST</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CAPWAP_AC_V4"><span class="constructor">CAPWAP_AC_V4</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IPV4_ADDRESS_MOS"><span class="constructor">IPV4_ADDRESS_MOS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IPV4_FQDN_MOS"><span class="constructor">IPV4_FQDN_MOS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SIP_UA_DOMAINS"><span class="constructor">SIP_UA_DOMAINS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IPV4_ADDRESS_ANDSF"><span class="constructor">IPV4_ADDRESS_ANDSF</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_143"><span class="constructor">UNASSIGNED_143</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.GEOLOCK"><span class="constructor">GEOLOCK</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.FORCENEW_NONCE_CAPABLE"><span class="constructor">FORCENEW_NONCE_CAPABLE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RDNSS_SELECTION"><span class="constructor">RDNSS_SELECTION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_147"><span class="constructor">UNASSIGNED_147</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_148"><span class="constructor">UNASSIGNED_148</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_149"><span class="constructor">UNASSIGNED_149</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.MISC_150"><span class="constructor">MISC_150</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.STATUS_CODE"><span class="constructor">STATUS_CODE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ABSOLUTE_TIME"><span class="constructor">ABSOLUTE_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.START_TIME_OF_STATE"><span class="constructor">START_TIME_OF_STATE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.QUERY_START_TIME"><span class="constructor">QUERY_START_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.QUERY_END_TIME"><span class="constructor">QUERY_END_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DHCP_STATE"><span class="constructor">DHCP_STATE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DATA_SOURCE"><span class="constructor">DATA_SOURCE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.V4_PCP_SERVER"><span class="constructor">V4_PCP_SERVER</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.V4_PORTPARAMS"><span class="constructor">V4_PORTPARAMS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.DHCP_CAPTIVE_PORTAL"><span class="constructor">DHCP_CAPTIVE_PORTAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_161"><span class="constructor">UNASSIGNED_161</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_162"><span class="constructor">UNASSIGNED_162</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_163"><span class="constructor">UNASSIGNED_163</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_164"><span class="constructor">UNASSIGNED_164</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_165"><span class="constructor">UNASSIGNED_165</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_166"><span class="constructor">UNASSIGNED_166</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_167"><span class="constructor">UNASSIGNED_167</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_168"><span class="constructor">UNASSIGNED_168</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_169"><span class="constructor">UNASSIGNED_169</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_170"><span class="constructor">UNASSIGNED_170</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_171"><span class="constructor">UNASSIGNED_171</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_172"><span class="constructor">UNASSIGNED_172</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_173"><span class="constructor">UNASSIGNED_173</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_174"><span class="constructor">UNASSIGNED_174</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ETHERBOOT_175"><span class="constructor">ETHERBOOT_175</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.IP_TELEFONE"><span class="constructor">IP_TELEFONE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.ETHERBOOT_177"><span class="constructor">ETHERBOOT_177</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_178"><span class="constructor">UNASSIGNED_178</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_179"><span class="constructor">UNASSIGNED_179</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_180"><span class="constructor">UNASSIGNED_180</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_181"><span class="constructor">UNASSIGNED_181</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_182"><span class="constructor">UNASSIGNED_182</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_183"><span class="constructor">UNASSIGNED_183</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_184"><span class="constructor">UNASSIGNED_184</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_185"><span class="constructor">UNASSIGNED_185</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_186"><span class="constructor">UNASSIGNED_186</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_187"><span class="constructor">UNASSIGNED_187</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_188"><span class="constructor">UNASSIGNED_188</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_189"><span class="constructor">UNASSIGNED_189</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_190"><span class="constructor">UNASSIGNED_190</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_191"><span class="constructor">UNASSIGNED_191</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_192"><span class="constructor">UNASSIGNED_192</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_193"><span class="constructor">UNASSIGNED_193</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_194"><span class="constructor">UNASSIGNED_194</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_195"><span class="constructor">UNASSIGNED_195</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_196"><span class="constructor">UNASSIGNED_196</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_197"><span class="constructor">UNASSIGNED_197</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_198"><span class="constructor">UNASSIGNED_198</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_199"><span class="constructor">UNASSIGNED_199</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_200"><span class="constructor">UNASSIGNED_200</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_201"><span class="constructor">UNASSIGNED_201</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_202"><span class="constructor">UNASSIGNED_202</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_203"><span class="constructor">UNASSIGNED_203</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_204"><span class="constructor">UNASSIGNED_204</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_205"><span class="constructor">UNASSIGNED_205</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_206"><span class="constructor">UNASSIGNED_206</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_207"><span class="constructor">UNASSIGNED_207</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PXE_LINUX"><span class="constructor">PXE_LINUX</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.CONFIGURATION_FILE"><span class="constructor">CONFIGURATION_FILE</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.PATH_PREFIX"><span class="constructor">PATH_PREFIX</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.REBOOT_TIME"><span class="constructor">REBOOT_TIME</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.OPTION_6RD"><span class="constructor">OPTION_6RD</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.V4_ACCESS_DOMAIN"><span class="constructor">V4_ACCESS_DOMAIN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_214"><span class="constructor">UNASSIGNED_214</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_215"><span class="constructor">UNASSIGNED_215</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_216"><span class="constructor">UNASSIGNED_216</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_217"><span class="constructor">UNASSIGNED_217</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_218"><span class="constructor">UNASSIGNED_218</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_219"><span class="constructor">UNASSIGNED_219</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.SUBNET_ALLOCATION"><span class="constructor">SUBNET_ALLOCATION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.VIRTUAL_SUBNET_SELECTION"><span class="constructor">VIRTUAL_SUBNET_SELECTION</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_222"><span class="constructor">UNASSIGNED_222</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.UNASSIGNED_223"><span class="constructor">UNASSIGNED_223</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_224"><span class="constructor">RESERVED_224</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_225"><span class="constructor">RESERVED_225</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_226"><span class="constructor">RESERVED_226</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_227"><span class="constructor">RESERVED_227</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_228"><span class="constructor">RESERVED_228</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_229"><span class="constructor">RESERVED_229</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_230"><span class="constructor">RESERVED_230</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_231"><span class="constructor">RESERVED_231</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_232"><span class="constructor">RESERVED_232</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_233"><span class="constructor">RESERVED_233</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_234"><span class="constructor">RESERVED_234</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_235"><span class="constructor">RESERVED_235</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_236"><span class="constructor">RESERVED_236</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_237"><span class="constructor">RESERVED_237</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_238"><span class="constructor">RESERVED_238</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_239"><span class="constructor">RESERVED_239</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_240"><span class="constructor">RESERVED_240</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_241"><span class="constructor">RESERVED_241</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_242"><span class="constructor">RESERVED_242</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_243"><span class="constructor">RESERVED_243</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_244"><span class="constructor">RESERVED_244</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_245"><span class="constructor">RESERVED_245</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_246"><span class="constructor">RESERVED_246</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_247"><span class="constructor">RESERVED_247</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_248"><span class="constructor">RESERVED_248</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_249"><span class="constructor">RESERVED_249</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_250"><span class="constructor">RESERVED_250</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_251"><span class="constructor">RESERVED_251</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.WEB_PROXY_AUTO_DISC"><span class="constructor">WEB_PROXY_AUTO_DISC</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_253"><span class="constructor">RESERVED_253</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.RESERVED_254"><span class="constructor">RESERVED_254</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELToption_code.END"><span class="constructor">END</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+The type of a dhcp option code, these are all the values according to
+    <a href="https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml">iana</a><br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+
+<br>
+Conversions of DHCP <a href="Dhcp_wire.html#TYPEoption_code"><code class="code">Dhcp_wire.option_code</code></a>s.<br>
+
+<pre><span id="VALint_to_option_code"><span class="keyword">val</span> int_to_option_code</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a> option</code></pre>
+<pre><span id="VALint_to_option_code_exn"><span class="keyword">val</span> int_to_option_code_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a></code></pre>
+<pre><span id="VALoption_code_to_int"><span class="keyword">val</span> option_code_to_int</span> : <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> -> int</code></pre>
+<pre><span id="VALsexp_of_option_code"><span class="keyword">val</span> sexp_of_option_code</span> : <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALoption_code_of_sexp"><span class="keyword">val</span> option_code_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a></code></pre>
+<pre><span id="VALstring_to_option_code"><span class="keyword">val</span> string_to_option_code</span> : <code class="type">string -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a> option</code></pre>
+<pre><span id="VALoption_code_to_string"><span class="keyword">val</span> option_code_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> -> string</code></pre><br>
+<h2 id="2_DHCPhardwaretype">DHCP hardware type</h2><br>
+
+<pre><code><span id="TYPEhtype"><span class="keyword">type</span> <code class="type"></code>htype</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELThtype.Ethernet_10mb"><span class="constructor">Ethernet_10mb</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELThtype.Other"><span class="constructor">Other</span></span></code></td>
+
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEhtype"><code class="code">Dhcp_wire.htype</code></a>.<br>
+
+<pre><span id="VALhtype_of_sexp"><span class="keyword">val</span> htype_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEhtype">htype</a></code></pre>
+<pre><span id="VALsexp_of_htype"><span class="keyword">val</span> sexp_of_htype</span> : <code class="type"><a href="Dhcp_wire.html#TYPEhtype">htype</a> -> Sexplib.Sexp.t</code></pre><br>
+<h2 id="2_DHCPheaderflags">DHCP header flags</h2>.<br>
+
+<pre><code><span id="TYPEflags"><span class="keyword">type</span> <code class="type"></code>flags</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTflags.Broadcast"><span class="constructor">Broadcast</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTflags.Unicast"><span class="constructor">Unicast</span></span></code></td>
+
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEflags"><code class="code">Dhcp_wire.flags</code></a>.<br>
+
+<pre><span id="VALflags_of_sexp"><span class="keyword">val</span> flags_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEflags">flags</a></code></pre>
+<pre><span id="VALsexp_of_flags"><span class="keyword">val</span> sexp_of_flags</span> : <code class="type"><a href="Dhcp_wire.html#TYPEflags">flags</a> -> Sexplib.Sexp.t</code></pre><br>
+<h2 id="2_DHCPClientidentifier">DHCP Client identifier</h2>.<br>
+
+<pre><code><span id="TYPEclient_id"><span class="keyword">type</span> <code class="type"></code>client_id</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTclient_id.Hwaddr"><span class="constructor">Hwaddr</span></span> <span class="keyword">of</span> <code class="type">Macaddr.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTclient_id.Id"><span class="constructor">Id</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+A client_id is usually a mac address from a <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>,
+    but it can also be an opaque string. See <a href="Dhcp_wire.html#VALclient_id_of_pkt"><code class="code">Dhcp_wire.client_id_of_pkt</code></a>.<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wire.client_id</code></a>.<br>
+
+<pre><span id="VALclient_id_of_sexp"><span class="keyword">val</span> client_id_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEclient_id">client_id</a></code></pre>
+<pre><span id="VALsexp_of_client_id"><span class="keyword">val</span> sexp_of_client_id</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">client_id</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALclient_id_to_string"><span class="keyword">val</span> client_id_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">client_id</a> -> string</code></pre><br>
+<h2 id="2_DHCPoptions">DHCP options</h2><br>
+
+<pre><code><span id="TYPEdhcp_option"><span class="keyword">type</span> <code class="type"></code>dhcp_option</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Subnet_mask"><span class="constructor">Subnet_mask</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Time_offset"><span class="constructor">Time_offset</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Routers"><span class="constructor">Routers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Time_servers"><span class="constructor">Time_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Name_servers"><span class="constructor">Name_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Dns_servers"><span class="constructor">Dns_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Log_servers"><span class="constructor">Log_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Cookie_servers"><span class="constructor">Cookie_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Lpr_servers"><span class="constructor">Lpr_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Impress_servers"><span class="constructor">Impress_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Rsclocation_servers"><span class="constructor">Rsclocation_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Hostname"><span class="constructor">Hostname</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Bootfile_size"><span class="constructor">Bootfile_size</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Merit_dumpfile"><span class="constructor">Merit_dumpfile</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Domain_name"><span class="constructor">Domain_name</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Swap_server"><span class="constructor">Swap_server</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Root_path"><span class="constructor">Root_path</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Extension_path"><span class="constructor">Extension_path</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ipforwarding"><span class="constructor">Ipforwarding</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nlsr"><span class="constructor">Nlsr</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Policy_filters"><span class="constructor">Policy_filters</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.Prefix.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Max_datagram"><span class="constructor">Max_datagram</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Default_ip_ttl"><span class="constructor">Default_ip_ttl</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pmtu_ageing_timo"><span class="constructor">Pmtu_ageing_timo</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pmtu_plateau_table"><span class="constructor">Pmtu_plateau_table</span></span> <span class="keyword">of</span> <code class="type">int list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Interface_mtu"><span class="constructor">Interface_mtu</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.All_subnets_local"><span class="constructor">All_subnets_local</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Broadcast_addr"><span class="constructor">Broadcast_addr</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Perform_mask_discovery"><span class="constructor">Perform_mask_discovery</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Mask_supplier"><span class="constructor">Mask_supplier</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Perform_router_disc"><span class="constructor">Perform_router_disc</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Router_sol_addr"><span class="constructor">Router_sol_addr</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Static_routes"><span class="constructor">Static_routes</span></span> <span class="keyword">of</span> <code class="type">(Ipaddr.V4.t * Ipaddr.V4.t) list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Trailer_encapsulation"><span class="constructor">Trailer_encapsulation</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Arp_cache_timo"><span class="constructor">Arp_cache_timo</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ethernet_encapsulation"><span class="constructor">Ethernet_encapsulation</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Tcp_default_ttl"><span class="constructor">Tcp_default_ttl</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Tcp_keepalive_interval"><span class="constructor">Tcp_keepalive_interval</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Tcp_keepalive_garbage"><span class="constructor">Tcp_keepalive_garbage</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nis_domain"><span class="constructor">Nis_domain</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nis_servers"><span class="constructor">Nis_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ntp_servers"><span class="constructor">Ntp_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Vendor_specific"><span class="constructor">Vendor_specific</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netbios_name_servers"><span class="constructor">Netbios_name_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netbios_datagram_distrib_servers"><span class="constructor">Netbios_datagram_distrib_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netbios_node"><span class="constructor">Netbios_node</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netbios_scope"><span class="constructor">Netbios_scope</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Xwindow_font_servers"><span class="constructor">Xwindow_font_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Xwindow_display_managers"><span class="constructor">Xwindow_display_managers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Request_ip"><span class="constructor">Request_ip</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ip_lease_time"><span class="constructor">Ip_lease_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Option_overload"><span class="constructor">Option_overload</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Message_type"><span class="constructor">Message_type</span></span> <span class="keyword">of</span> <code class="type"><a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Server_identifier"><span class="constructor">Server_identifier</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Parameter_requests"><span class="constructor">Parameter_requests</span></span> <span class="keyword">of</span> <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Message"><span class="constructor">Message</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Max_message"><span class="constructor">Max_message</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Renewal_t1"><span class="constructor">Renewal_t1</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Rebinding_t2"><span class="constructor">Rebinding_t2</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Vendor_class_id"><span class="constructor">Vendor_class_id</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Client_id"><span class="constructor">Client_id</span></span> <span class="keyword">of</span> <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">client_id</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nis_plus_domain"><span class="constructor">Nis_plus_domain</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nis_plus_servers"><span class="constructor">Nis_plus_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Tftp_server_name"><span class="constructor">Tftp_server_name</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Bootfile_name"><span class="constructor">Bootfile_name</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Mobile_ip_home_agent"><span class="constructor">Mobile_ip_home_agent</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Smtp_servers"><span class="constructor">Smtp_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pop3_servers"><span class="constructor">Pop3_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nntp_servers"><span class="constructor">Nntp_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Www_servers"><span class="constructor">Www_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Finger_servers"><span class="constructor">Finger_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Irc_servers"><span class="constructor">Irc_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Streettalk_servers"><span class="constructor">Streettalk_servers</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Streettalk_da"><span class="constructor">Streettalk_da</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Domain_search"><span class="constructor">Domain_search</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Web_proxy_auto_disc"><span class="constructor">Web_proxy_auto_disc</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Unknown"><span class="constructor">Unknown</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+Not all options are currently implemented.<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
+
+<pre><span id="VALbuf_of_options"><span class="keyword">val</span> buf_of_options</span> : <code class="type">Cstruct.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Cstruct.t</code></pre>
+<pre><span id="VALoptions_of_buf"><span class="keyword">val</span> options_of_buf</span> : <code class="type">Cstruct.t -> int -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list</code></pre>
+<pre><span id="VALfind_option"><span class="keyword">val</span> find_option</span> : <code class="type">('a -> 'b option) -> 'a list -> 'b option</code></pre><div class="info ">
+<code class="code">find_option f l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code">Some</code> value
+    on list <code class="code">l</code><br>
+</div>
+
+<pre><span id="VALcollect_options"><span class="keyword">val</span> collect_options</span> : <code class="type">('a -> 'b list option) -> 'a list -> 'b list option</code></pre><div class="info ">
+<code class="code">collect_options f l</code> collects all options where <code class="code">f</code> evaluates to <code class="code">Some</code>
+    value on list <code class="code">l</code>, this is useful for list options like <code class="code">Routers</code>, if
+    multiple list options are found, the resulting list is flattened.<br>
+</div>
+
+<pre><span id="VALdhcp_option_of_sexp"><span class="keyword">val</span> dhcp_option_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a></code></pre>
+<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre><br>
+<h2 id="2_DHCPPacket">DHCP Packet </h2><br>
+
+<pre><code><span id="TYPEpkt"><span class="keyword">type</span> <code class="type"></code>pkt</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.srcmac">srcmac</span>&nbsp;: <code class="type">Macaddr.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.dstmac">dstmac</span>&nbsp;: <code class="type">Macaddr.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.srcip">srcip</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.dstip">dstip</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.srcport">srcport</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.dstport">dstport</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.op">op</span>&nbsp;: <code class="type"><a href="Dhcp_wire.html#TYPEop">op</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.htype">htype</span>&nbsp;: <code class="type"><a href="Dhcp_wire.html#TYPEhtype">htype</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.hlen">hlen</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.hops">hops</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.xid">xid</span>&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.secs">secs</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.flags">flags</span>&nbsp;: <code class="type"><a href="Dhcp_wire.html#TYPEflags">flags</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.ciaddr">ciaddr</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.yiaddr">yiaddr</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.siaddr">siaddr</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.giaddr">giaddr</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.chaddr">chaddr</span>&nbsp;: <code class="type">Macaddr.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.sname">sname</span>&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.file">file</span>&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpkt.options">options</span>&nbsp;: <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br>
+Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pkt</code></a>.<br>
+
+<pre><span id="VALpkt_of_buf"><span class="keyword">val</span> pkt_of_buf</span> : <code class="type">Cstruct.t -> int -> [> `Error of string | `Ok of <a href="Dhcp_wire.html#TYPEpkt">pkt</a> ]</code></pre>
+<pre><span id="VALbuf_of_pkt"><span class="keyword">val</span> buf_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Cstruct.t</code></pre>
+<pre><span id="VALpkt_of_sexp"><span class="keyword">val</span> pkt_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEpkt">pkt</a></code></pre>
+<pre><span id="VALsexp_of_pkt"><span class="keyword">val</span> sexp_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALclient_id_of_pkt"><span class="keyword">val</span> client_id_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> <a href="Dhcp_wire.html#TYPEclient_id">client_id</a></code></pre>
+<pre><span id="VALpkt_to_string"><span class="keyword">val</span> pkt_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> string</code></pre></body></html>
