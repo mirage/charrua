@@ -42,7 +42,7 @@ let print_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with
   | `Error e -> failwith e
   | `Ok pkt ->
-    printf "DHCP: %s\n%!" (Dhcp_wire.string_of_pkt pkt);
+    printf "DHCP: %s\n%!" (Dhcp_wire.pkt_to_string pkt);
     let buf = Dhcp_wire.buf_of_pkt pkt in
     match (Dhcp_wire.pkt_of_buf buf len) with
     | `Error e -> failwith e
@@ -53,7 +53,7 @@ let print_packet p len =
         Cstruct.hexdump p;
         printf "our buf:";
         Cstruct.hexdump buf;
-        printf "generated pkt:\n%s\n" (Dhcp_wire.string_of_pkt pkt2);
+        printf "generated pkt:\n%s\n" (Dhcp_wire.pkt_to_string pkt2);
         failwith "Serialization bug found !"
   end
 

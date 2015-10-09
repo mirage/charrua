@@ -71,7 +71,6 @@ val int_to_msgtype_exn : int -> msgtype
 
 val string_to_msgtype : string -> msgtype option
 val msgtype_to_string : msgtype -> string
-val string_of_msgtype : msgtype -> string (* XXX DUP *)
 
 val sexp_of_msgtype : msgtype -> Sexplib.Sexp.t
 val msgtype_of_sexp : Sexplib.Sexp.t -> msgtype
@@ -386,7 +385,7 @@ type client_id =
 val client_id_of_sexp : Sexplib.Sexp.t -> client_id
 val sexp_of_client_id : client_id -> Sexplib.Sexp.t
 
-val string_of_client_id : client_id -> string
+val client_id_to_string : client_id -> string
 
 (** {2 DHCP options} *)
 
@@ -516,4 +515,4 @@ val pkt_of_sexp : Sexplib.Sexp.t -> pkt
 val sexp_of_pkt : pkt -> Sexplib.Sexp.t
 
 val client_id_of_pkt : pkt -> client_id
-val string_of_pkt : pkt -> string
+val pkt_to_string : pkt -> string

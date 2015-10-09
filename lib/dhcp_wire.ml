@@ -944,6 +944,5 @@ let client_id_of_pkt pkt = match
 
 (* string_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
-let string_of_client_id = to_hum sexp_of_client_id
-let string_of_msgtype = to_hum sexp_of_msgtype
-let string_of_pkt = to_hum sexp_of_pkt
+let client_id_to_string = to_hum sexp_of_client_id
+let pkt_to_string = to_hum sexp_of_pkt

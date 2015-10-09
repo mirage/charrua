@@ -88,7 +88,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
             (reqpkt.srcmac, yiaddr)
           else
             (Macaddr.broadcast, Ipaddr.V4.broadcast)
-        | _ -> invalid_arg ("Can't send message type " ^ (string_of_msgtype m))
+        | _ -> invalid_arg ("Can't send message type " ^ (msgtype_to_string m))
     in
     let srcip = I.addr subnet.interface in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
@@ -151,11 +151,11 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     let open Util in
     let now = Clock.time () in
     lwt msgtype = match msgtype_of_options pkt.options with
-      | Some msgtype -> return (string_of_msgtype msgtype)
+      | Some msgtype -> return (msgtype_to_string msgtype)
       | None -> Lwt.fail_with "Unexpected message type"
     in
     lwt () = Log.debug_lwt "%s packet received %s" msgtype
-        (string_of_pkt pkt)
+        (pkt_to_string pkt)
     in
     let ourip = I.addr subnet.interface in
     let reqip = request_ip_of_options pkt.options in
@@ -177,14 +177,14 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
             let s = some_or_default m "unspecified" in
             Log.warn_lwt "%s, client %s declined lease for %s, reason %s"
               msgtype
-              (string_of_client_id client_id)
+              (client_id_to_string client_id)
               (Ipaddr.V4.to_string reqip)
               s
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
   let input_inform (config : Cfg.t) subnet pkt =
-    lwt () = Log.debug_lwt "INFORM packet received %s" (string_of_pkt pkt) in
+    lwt () = Log.debug_lwt "INFORM packet received %s" (pkt_to_string pkt) in
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       Lwt.fail_invalid_arg "DHCPINFORM with no ciaddr"
     else
@@ -203,11 +203,11 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Log.debug_lwt "INFORM->ACK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+      Log.debug_lwt "INFORM->ACK reply:\n%s" (pkt_to_string pkt) >>= fun () ->
       send_pkt pkt subnet.interface
 
   let input_request config subnet pkt =
-    lwt () = Log.debug_lwt "REQUEST packet received %s" (string_of_pkt pkt) in
+    lwt () = Log.debug_lwt "REQUEST packet received %s" (pkt_to_string pkt) in
     let now = Clock.time () in
     let drop = return_unit in
     let lease_db = subnet.lease_db in
@@ -231,7 +231,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
-      Log.debug_lwt "REQUEST->NAK reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+      Log.debug_lwt "REQUEST->NAK reply:\n%s" (pkt_to_string pkt) >>= fun () ->
       send_pkt pkt subnet.interface
     in
     let ack ?(renew=false) lease =
@@ -259,7 +259,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
       in
       assert (lease.Lease.client_id = client_id);
       Lease.replace client_id pkt.chaddr lease lease_db;
-      Log.debug_lwt "REQUEST->ACK reply:\n%s" (string_of_pkt reply) >>= fun () ->
+      Log.debug_lwt "REQUEST->ACK reply:\n%s" (pkt_to_string reply) >>= fun () ->
       send_pkt reply subnet.interface
     in
     match sidip, reqip, lease with
@@ -315,7 +315,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
     | _ -> drop
 
   let input_discover config subnet pkt =
-    Log.debug "DISCOVER packet received %s" (string_of_pkt pkt);
+    Log.debug "DISCOVER packet received %s" (pkt_to_string pkt);
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let lease_db = subnet.lease_db in
@@ -383,7 +383,7 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Log.debug_lwt "DISCOVER reply:\n%s" (string_of_pkt pkt) >>= fun () ->
+      Log.debug_lwt "DISCOVER reply:\n%s" (pkt_to_string pkt) >>= fun () ->
       send_pkt pkt subnet.interface
 
   let input_pkt config subnet pkt =
@@ -398,9 +398,9 @@ module Make (I : Dhcp_S.INTERFACE) (Clock : V1.CLOCK) : Dhcp_S.SERVER
       | Some DHCPRELEASE  -> input_release config subnet pkt
       | Some DHCPINFORM   -> input_inform config subnet pkt
       | None -> Log.warn_lwt "Got malformed packet: no dhcp msgtype"
-      | Some m -> Log.warn_lwt "Unhandled msgtype %s" (string_of_msgtype m)
+      | Some m -> Log.warn_lwt "Unhandled msgtype %s" (msgtype_to_string m)
     else
-      Log.warn_lwt "Invalid packet %s" (string_of_pkt pkt)
+      Log.warn_lwt "Invalid packet %s" (pkt_to_string pkt)
 
   let rec dhcp_recv config subnet =
     lwt buffer = I.recv subnet.interface in
