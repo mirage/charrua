@@ -34,7 +34,7 @@ type op =
 
 val int_to_op : int -> op option
 val int_to_op_exn : int -> op
-(** Raise exception [Invalid_argument] if [v < 0 || v > 255]  *)
+(** @raise Invalid_argument if [v < 0 || v > 255]  *)
 val op_to_int : op -> int
 
 val string_to_op : string -> op option
@@ -67,7 +67,7 @@ type msgtype =
 val msgtype_to_int : msgtype -> int
 val int_to_msgtype : int -> msgtype option
 val int_to_msgtype_exn : int -> msgtype
-(** Raise exception [Invalid_argument] if not a valid {! msgtype} value *)
+(** @raise Invalid_argument if not a valid {! msgtype} value *)
 
 val string_to_msgtype : string -> msgtype option
 val msgtype_to_string : msgtype -> string
@@ -475,7 +475,13 @@ val buf_of_options : Cstruct.t -> dhcp_option list -> Cstruct.t
 val options_of_buf : Cstruct.t -> int -> dhcp_option list
 
 val find_option : ('a -> 'b option) -> 'a list -> 'b option
+(** [find_option f l] finds the first option where [f] evaluates to [Some] value
+    on list [l] *)
+
 val collect_options : ('a -> 'b list option) -> 'a list -> 'b list option
+(** [collect_options f l] collects all options where [f] evaluates to [Some]
+    value on list [l], this is useful for list options like [Routers], if
+    multiple list options are found, the resulting list is flattened. *)
 
 val dhcp_option_of_sexp : Sexplib.Sexp.t -> dhcp_option
 val sexp_of_dhcp_option : dhcp_option -> Sexplib.Sexp.t
