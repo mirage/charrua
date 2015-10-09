@@ -14,7 +14,23 @@ server based on charrua-core.
 DHCP server based on charrua-core.
 
 You can browse the API for [charrua-core] at
-http://haesbaert.github.io/charrua-core/api/
+http://haesbaert.github.io/charrua-core/api
+
+#### Features
+
+* Dhcp_server supports a stripped down ISC dhcpd.conf, so you can probably just
+  use your old dhcpd.conf.
+* Support for multiple interfaces/subnets.
+* Logic/sequencing is agnostic of IO and platform, so it can run on Unix as a
+  process, as a Mirage VM or anything else.
+* Functorizes over Logging functions.
+* Code is purely functional with the exception of Dhcp Leases.
+* With `charrua-mirage` you can run a server directly on top of Xen, without a
+  full operating system.
+* It's in ocaml, so it's pretty cool.
 
 The name `charrua` is a reference to the, now extinct, semi-nomadic people of
 southern South America.
+
+This project became one of the [Mirage Pioneer]
+(https://github.com/mirage/mirage-www/wiki/Pioneer-Projects) projects.
