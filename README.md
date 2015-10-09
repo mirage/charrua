@@ -6,8 +6,9 @@ Unix DHCP daemon based on
 
 #### Features
 
+* Supports a stripped down ISC dhcpd.conf. A configuration sample can be found
+[here](https://github.com/haesbaert/charrua-core/blob/master/sample/dhcpd.conf)
 * Priviledge dropping, the daemon doesn't run as root.
-* Supports a stripped down ISC dhcpd.conf.
 * Almost purely-functional code.
 * Support for multiple interfaces/subnets.
 
