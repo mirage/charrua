@@ -13,5 +13,8 @@ server based on charrua-core.
 [charrua-mirage](http://www.github.com/haesbaert/charrua-mirage) is a Mirage
 DHCP server based on charrua-core.
 
+You can browse the API for [charrua-core] at
+http://haesbaert.github.io/charrua-core/api/
+
 The name `charrua` is a reference to the, now extinct, semi-nomadic people of
 southern South America.
