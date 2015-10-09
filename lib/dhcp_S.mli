@@ -14,17 +14,26 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+(** {1 DHCP server signatures} *)
+
+(** {2 INTERFACE } *)
+
 module type INTERFACE = sig
   type t
-  val send : t -> Cstruct.t -> unit Lwt.t
-  val recv : t -> Cstruct.t Lwt.t
-  val name : t -> string
-  val addr : t -> Ipaddr.V4.t
-  val mac  : t -> Macaddr.t
+  val send : t -> Cstruct.t -> unit Lwt.t (** [send] a packet from a [Cstruct.t] *)
+  val recv : t -> Cstruct.t Lwt.t         (** [recv] packet a packet in a [Cstruct.t] *)
+  val name : t -> string                  (** interface name *)
+  val addr : t -> Ipaddr.V4.t             (** interface IP address *)
+  val mac  : t -> Macaddr.t               (** interface MAC address *)
 end
+(** INTERFACE abstracts the idea of IO in a network interface. *)
+
+(** {2 SERVER} *)
 
 module type SERVER = sig
   type interface
   val create : string -> interface list -> 'a Lwt.t
   val parse_networks : string -> Ipaddr.V4.Prefix.t list
+  (** Parse all the configured networks (the subnet statement),
+      useful to discover which interfaces will be used. *)
 end
