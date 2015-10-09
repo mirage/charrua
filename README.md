@@ -3,6 +3,8 @@
 [charrua-core](http://www.github.com/haesbaert/charrua-core) is an
 _ISC-licensed_ DHCP library implementation in ocaml.
 
+[![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://haesbaert.github.io/charrua-core/api)
+
 It provides basically two modules, a `Dhcp` responsible for parsing and
 constructing DHCP messages and a `Dhcp_server` module used for constructing DHCP
 servers.
