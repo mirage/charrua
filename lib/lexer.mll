@@ -18,15 +18,13 @@
 open Lexing
 open Parser
 
-exception Error of string
-
 let choke lexbuf s =
   let open Lexing in
   let pos = lexbuf.lex_curr_p in
   let str = Printf.sprintf "%s at line %d around `%s`"
       s pos.pos_lnum (Lexing.lexeme lexbuf)
   in
-  raise (Error str)
+  raise (Ast.Syntax_error str)
 
 }
 let white = [' ' '\t']+

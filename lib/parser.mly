@@ -23,8 +23,8 @@
     | Default_lease_time of int32
     | Max_lease_time of int32
 
-  let choke s =
-    raise (Config.Ast_error s)
+  let choke s = raise (Ast.Syntax_error s)
+
 %}
 
 %token <Ipaddr.V4.t> IP
@@ -51,7 +51,7 @@
 %token SUBNET
 %token <string> WORD
 
-%start <Config.ast> main
+%start <Ast.t> main
 %%
 
 main:
@@ -88,7 +88,7 @@ main:
     with | Some time -> time
          | None -> Int32.of_int (60 * 60 * 60 * 24) (* 24h *)
   in
-  { Config.subnets; options; default_lease_time; max_lease_time }
+  { Ast.subnets; options; default_lease_time; max_lease_time }
 }
 
 ips:
@@ -150,7 +150,7 @@ subnet:
     (Util.find_map (function Max_lease_time t -> Some t | _ -> None)
         statements)
   in
-  { Config.network; range; options; hosts; default_lease_time; max_lease_time }
+  { Ast.network; range; options; hosts; default_lease_time; max_lease_time }
 }
 
 hosts:
@@ -179,5 +179,5 @@ host:
       | _ -> None)
       statements
   in
-  { Config.hostname; options; fixed_addr; hw_addr }
+  { Ast.hostname; options; fixed_addr; hw_addr }
 }

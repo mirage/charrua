@@ -2,9 +2,7 @@ S .
 S lib
 B _build/lib
 PKG cmdliner
-PKG lwt
 PKG cstruct
 PKG ipaddr
 PKG tcpip
-EXT lwt
 EXT nonrec

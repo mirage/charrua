@@ -6,20 +6,16 @@ lib: [
   "_build/lib/dhcp_server.cmxa"    {"dhcp_server.cmxa"}
   "_build/lib/dhcp_server.cmi"     {"dhcp_server.cmi"}
   "_build/lib/dhcp_server.cmt"     {"dhcp_server.cmt"}
+  "_build/lib/dhcp_server.cmti"    {"dhcp_server.cmti"}
   "_build/lib/dhcp_server.cmx"     {"dhcp_server.cmx"}
+  "_build/lib/dhcp_server.mli"     {"dhcp_server.mli"}
 
   "_build/lib/dhcp_wire.a"         {"dhcp_wire.a"}
   "_build/lib/dhcp_wire.cma"       {"dhcp_wire.cma"}
   "_build/lib/dhcp_wire.cmxa"      {"dhcp_wire.cmxa"}
   "_build/lib/dhcp_wire.cmi"       {"dhcp_wire.cmi"}
   "_build/lib/dhcp_wire.cmt"       {"dhcp_wire.cmt"}
+  "_build/lib/dhcp_wire.cmti"      {"dhcp_wire.cmti"}
   "_build/lib/dhcp_wire.cmx"       {"dhcp_wire.cmx"}
-
-  "_build/lib/dhcp_logger.cmi"     {"dhcp_logger.cmi"}
-  "_build/lib/dhcp_logger.cmt"     {"dhcp_logger.cmt"}
-  "_build/lib/dhcp_logger.cmx"     {"dhcp_logger.cmx"}
-
-  "_build/lib/dhcp_S.cmi"          {"dhcp_S.cmi"}
-  "_build/lib/dhcp_S.cmti"         {"dhcp_S.cmti"}
-  "_build/lib/dhcp_S.mli"          {"dhcp_S.mli"}
+  "_build/lib/dhcp_wire.mli"       {"dhcp_wire.mli"}
 ]

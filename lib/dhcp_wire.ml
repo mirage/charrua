@@ -615,9 +615,7 @@ let options_of_buf buf buf_len =
       | 76 ->  take (Streettalk_da (get_ip_list ()))
       | 119->  take (Domain_search (get_string ()))
       | 252->  take (Web_proxy_auto_disc (get_string ()))
-      | code ->
-        Dhcp_logger.warn "Unknown option code %d" code;
-        discard ()
+      | code -> discard ()
   in
   (* Extends options if it finds an Option_overload *)
   let extend_options buf options =
@@ -942,6 +940,27 @@ let client_id_of_pkt pkt = match
   with
   | Some id -> id
   | None -> Hwaddr pkt.chaddr
+
+let is_dhcp buf len =
+  let open Wire_structs in
+  match (parse_ethernet_frame buf) with
+  | Some (proto, destination, buf) ->
+    let ihl = (Ipv4_wire.get_ipv4_hlen_version buf land 0xf) * 4 in
+    let payload_len = Ipv4_wire.get_ipv4_len buf - ihl in
+    let hdr, data = Cstruct.split buf ihl in
+    if Cstruct.len data >= payload_len then
+      let data = Cstruct.sub data 0 payload_len in
+      let proto = Ipv4_wire.get_ipv4_proto buf in
+      match Ipv4_wire.int_to_protocol proto with
+      | Some `UDP  ->
+        let srcport = get_udp_source_port data in
+        let dstport = get_udp_dest_port data in
+        (dstport = server_port || dstport = client_port) &&
+        (srcport = server_port || srcport = client_port)
+      | _ -> false
+    else
+      false
+  | _ -> false
 
 (* string_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)

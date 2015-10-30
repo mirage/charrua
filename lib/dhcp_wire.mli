@@ -522,3 +522,7 @@ val sexp_of_pkt : pkt -> Sexplib.Sexp.t
 
 val client_id_of_pkt : pkt -> client_id
 val pkt_to_string : pkt -> string
+
+(** Helpers. *)
+
+val is_dhcp : Cstruct.t -> int -> bool
