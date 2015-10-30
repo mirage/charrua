@@ -852,9 +852,10 @@ let pkt_of_buf buf len =
       op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
       siaddr; giaddr; chaddr; sname; file; options }
   in
-  match (wrap ()) with
-  | exception Invalid_argument e -> `Error e
-  | pkt -> `Ok pkt
+  try
+    `Ok (wrap ())
+  with
+    Invalid_argument e -> `Error e
 
 let buf_of_pkt pkt =
   let open Wire_structs in

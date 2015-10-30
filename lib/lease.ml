@@ -46,19 +46,17 @@ let make client_id addr ~duration ~now =
 let make_fixed mac addr ~now =
   make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 let lookup client_id mac lease_db ~now =
-  match (Hashtbl.find lease_db.fixed_table mac) with
-  | addr -> Some (make_fixed mac addr ~now)
-  | exception Not_found -> match Hashtbl.find lease_db.table client_id with
-    | lease -> Some lease
-    | exception Not_found -> None
+  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
+  | Some addr -> Some (make_fixed mac addr ~now)
+  | None -> Util.find_some (fun () -> Hashtbl.find lease_db.table client_id)
 let replace client_id mac lease lease_db =
-  match (Hashtbl.find lease_db.fixed_table mac) with
-  | addr -> ()
-  | exception Not_found -> Hashtbl.replace lease_db.table client_id lease
+  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
+  | Some addr -> ()
+  | None -> Hashtbl.replace lease_db.table client_id lease
 let remove client_id mac lease_db =
-  match (Hashtbl.find lease_db.fixed_table mac) with
-  | addr -> ()
-  | exception Not_found -> Hashtbl.remove lease_db.table client_id
+  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
+  | Some addr -> ()
+  | None -> Hashtbl.remove lease_db.table client_id
 (* Beware! This is an online state *)
 let timeleft lease ~now =
   let left = (Int32.to_float lease.tm_end) -. now in
@@ -80,10 +78,10 @@ let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
 
 let addr_in_range mac addr lease_db =
-  match (Hashtbl.find lease_db.fixed_table mac) with
+  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
   (* If this is a fixed address, it's always good. *)
-  | fixed_addr -> addr = fixed_addr
-  | exception Not_found ->
+  | Some fixed_addr -> addr = fixed_addr
+  | None ->
   (* When not, address should respect the range. *)
     let (low_ip, high_ip) = lease_db.range in
     let low_32 = (Ipaddr.V4.to_int32 low_ip) in
