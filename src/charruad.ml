@@ -14,9 +14,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-open Lwt
-
 let () = Printexc.record_backtrace true
+
+let level_of_string = function
+  | "warning" -> Lwt_log.Warning
+  | "notice" -> Lwt_log.Notice
+  | "debug" -> Lwt_log.Debug
+  | _ -> invalid_arg "Unknown verbosity level"
 
 (* Drop privileges and chroot to _charruad home *)
 let go_safe () =
@@ -59,92 +63,75 @@ let read_file f =
   close_in ic;
   buf
 
-let filter_map f l =
-  List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
-
-module I = struct
-
-  type t = {
-    name : string;
-    addr : Ipaddr.V4.t;
-    mac  : Macaddr.t;
-    link : Lwt_rawlink.t;
-  }
-
-  let name t = t.name
-  let addr t = t.addr
-  let send t buf = Lwt_rawlink.send_packet t.link buf
-  let recv t = Lwt_rawlink.read_packet t.link
-  let mac t = t.mac
-  let interface_list networks =
-    filter_map (function
-      | name, (addr, _) ->
-        let mac = Tuntap.get_macaddr name in
-        try
-          let _ = List.find
-              (fun network -> Ipaddr.V4.Prefix.mem addr network) networks
-          in
-          Some { name; addr; mac;
-                 link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) name) }
-        with Not_found -> None)
-      (Tuntap.getifaddrs_v4 ())
-
-end
-
-module D = Dhcp_server.Make (I) (Unix)
-
-let logger_std cur_level level s =
-  if cur_level >= level then
-    match level with
-    | Dhcp_logger.Notice -> print_endline s
-    | _ -> prerr_endline s
-
-let logger_color cur_level level s =
-  let green s  = Printf.sprintf "\027[32m%s\027[m" s in
-  let yellow s = Printf.sprintf "\027[33m%s\027[m" s in
-  let blue s   = Printf.sprintf "\027[36m%s\027[m" s in
-  let open Dhcp_logger in
-  if cur_level >= level then
-    match level with
-    | Notice -> print_endline (green s)
-    | Warn ->   prerr_endline (yellow s)
-    | Debug ->  prerr_endline (blue s)
-
 let go_daemon () =
-  let syslogger = Lwt_log.syslog
-      ~facility:`Daemon
-      ~paths:["/dev/log"; "/var/run/log"; "/var/run/syslog"]
-      ~template:"$(date) $(name)[$(pid)]: $(message)"
-      ()
-  in
-  Lwt_log.default := syslogger;
-  (* XXX Magic, don't remove this print...
-     This print does the openlog in syslog, it has to be done now, before we
-     drop priviledges, sadly Lwt doesn't provide a better way to do this.  *)
-  Lwt_log.ign_warning "Garra Charrua !";
   Lwt_daemon.daemonize ~syslog:false ()
 
-let charruad configfile verbosity daemonize color =
-  let level = Dhcp_logger.level_of_str verbosity in
-  let logger =
-    if daemonize then
-      logger_std level
+let init_log vlevel daemon =
+  Lwt_log_core.Section.(set_level main vlevel);
+  Lwt_log.default := if daemon then
+      Lwt_log.syslog
+        ~template:"$(date) $(level) $(name)[$(pid)]: $(message)"
+        ~facility:`Daemon
+        ~paths:["/dev/log"; "/var/run/log"; "/var/run/syslog"]
+        ()
     else
-      match color with
-      | `Auto | `Always -> logger_color level
-      | `Never -> logger_std level
+      Lwt_log.channel
+        ~template:"$(date) $(level): $(message)"
+        ~close_mode:`Keep
+        ~channel:Lwt_io.stdout
+        ()
+
+let rec input config subnet link =
+  let open Dhcp_server.Input in
+  let open Lwt in
+
+  Lwt_rawlink.read_packet link
+  >>= fun buf ->
+  let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
+    | `Error e -> Lwt_log.error e
+    | `Ok pkt ->
+      Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
+      >>= fun () ->
+      match (input_pkt config subnet pkt (Unix.time ())) with
+      | Silence -> return_unit
+      | Reply reply ->
+        Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply)
+        >>= fun () ->
+        Lwt_log.debug_f "Sent reply packet: %s" (Dhcp_wire.pkt_to_string reply)
+      | Warning w -> Lwt_log.warning w
+      | Error e -> Lwt_log.error e
   in
-  Dhcp_logger.init logger;
-  let conf = read_file configfile in
-  let networks = D.parse_networks conf in
-  let interfaces = I.interface_list networks in
-  let server = D.create conf interfaces in
+  t >>= fun () -> input config subnet link
+
+let ifname_of_address ip_addr interfaces =
+  let ifnet =
+    List.find (function name, (ip_addrx, _) -> ip_addr = ip_addrx) interfaces
+  in
+  match ifnet with name, (_, _) -> name
+
+let charruad configfile verbosity daemonize =
+  let open Dhcp_server.Config in
+  let open Lwt in
+
+  init_log (level_of_string verbosity) daemonize;
+  let interfaces = Tuntap.getifaddrs_v4 () in
+  let addresses = List.map
+      (function name, (ip_addr, _) -> (ip_addr, Tuntap.get_macaddr name))
+      interfaces
+  in
+  let config = parse (read_file configfile) addresses in
   if daemonize then
     go_daemon ();
+  Lwt_log.ign_notice "Charrua DHCPD starting";
+  let threads = List.map (fun subnet ->
+      let ifname = ifname_of_address subnet.ip_addr interfaces in
+      let link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) ifname) in
+      input config subnet link)
+      config.subnets
+  in
   go_safe ();
-  logger Dhcp_logger.Notice "Charrua DHCPD started";
-  Lwt_main.run (server >>= fun _ ->
-                return (logger Dhcp_logger.Notice "Charrua DHCPD finished"))
+  Lwt_main.run (Lwt.pick threads >>= fun _ ->
+                Lwt_log.notice "Charrua DHCPD exiting")
 
 (* Parse command line and start the ball *)
 open Cmdliner
@@ -152,15 +139,15 @@ let cmd =
   let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path") in
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
-                         ~doc:"Log verbosity, warn|notice|debug") in
+                         ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
                          ~doc:"Daemonize") in
-  let color =
-    let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in
-    let doc = Arg.info ~docv:"WHEN"
-        ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s."
-                (Arg.doc_alts_enum when_enum)) ["color"] in
-    Arg.(value & opt (enum when_enum) `Auto & doc) in
-  Term.(pure charruad $ configfile $ verbosity $ daemonize $ color),
+  (* let color = *)
+  (*   let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in *)
+  (*   let doc = Arg.info ~docv:"WHEN" *)
+  (*       ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s." *)
+  (*               (Arg.doc_alts_enum when_enum)) ["color"] in *)
+  (*   Arg.(value & opt (enum when_enum) `Auto & doc) in *)
+  Term.(pure charruad $ configfile $ verbosity $ daemonize),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
