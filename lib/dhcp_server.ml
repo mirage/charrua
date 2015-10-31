@@ -500,7 +500,6 @@ module Input = struct
       if not (for_subnet pkt subnet) then
         Silence
       else if valid_pkt pkt then
-        (* Check if we have a subnet configured on the receiving interface *)
         match msgtype_of_options pkt.options with
         | Some DHCPDISCOVER -> input_discover config subnet pkt time
         | Some DHCPREQUEST  -> input_request config subnet pkt time
