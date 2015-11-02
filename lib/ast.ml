@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-exception Syntax_error of string
-
 type host = {
   hostname : string;
   options : Dhcp_wire.dhcp_option list;

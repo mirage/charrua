@@ -23,7 +23,7 @@
     | Default_lease_time of int32
     | Max_lease_time of int32
 
-  let choke s = raise (Ast.Syntax_error s)
+  let choke s = invalid_arg s
 
 %}
 

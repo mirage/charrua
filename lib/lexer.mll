@@ -19,12 +19,7 @@ open Lexing
 open Parser
 
 let choke lexbuf s =
-  let open Lexing in
-  let pos = lexbuf.lex_curr_p in
-  let str = Printf.sprintf "%s at line %d around `%s`"
-      s pos.pos_lnum (Lexing.lexeme lexbuf)
-  in
-  raise (Ast.Syntax_error str)
+  invalid_arg s
 
 }
 let white = [' ' '\t']+

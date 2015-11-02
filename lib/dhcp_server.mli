@@ -64,7 +64,6 @@ module Config : sig
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
 
-  exception Error of string
   val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) list -> t
   (** [parse cf l] Creates a server configuration by parsing [cf] as an ISC
       dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are

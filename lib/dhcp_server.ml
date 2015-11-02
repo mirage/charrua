@@ -18,8 +18,6 @@ module Config = struct
   open Sexplib.Conv
   open Sexplib.Std
 
-  exception Error of string
-
   type host = {
     hostname : string;
     options : Dhcp_wire.dhcp_option list;
@@ -53,7 +51,7 @@ module Config = struct
       let ip_addr, mac_addr = try List.find (function
           | ipaddr, _ -> Ipaddr.V4.Prefix.mem ipaddr s.Ast.network) addresses
         with Not_found ->
-          raise (Error ("No address found for network " ^
+          raise (Invalid_argument ("No address found for network " ^
                         (Ipaddr.V4.Prefix.to_string s.Ast.network)))
       in
       let () = List.iter (fun (host : Ast.host) ->
@@ -61,14 +59,14 @@ module Config = struct
           | None -> ()
           | Some addr ->
             if not (Ipaddr.V4.Prefix.mem addr s.Ast.network) then
-              raise (Error (Printf.sprintf "Fixed address %s does not \
+              raise (Invalid_argument (Printf.sprintf "Fixed address %s does not \
                                             belong to subnet %s"
                               (Ipaddr.V4.to_string addr)
                               (Ipaddr.V4.Prefix.to_string s.Ast.network)))
             else if Util.addr_in_range addr s.Ast.range then
               match s.Ast.range with
               | low, high ->
-                raise (Error (Printf.sprintf "Fixed address %s must be \
+                raise (Invalid_argument (Printf.sprintf "Fixed address %s must be \
                                               outside of range %s:%s"
                                 (Ipaddr.V4.to_string addr)
                                 (Ipaddr.V4.to_string low)
@@ -110,16 +108,18 @@ module Config = struct
     let choke lex s =
       let open Lexing in
       let pos = lex.lex_curr_p in
-      let str = Printf.sprintf "%s at line %d around `%s`"
+      let str = Printf.sprintf "%s at ZZZZ line %d around `%s`"
           s pos.pos_lnum (Lexing.lexeme lex)
       in
-      raise (Ast.Syntax_error str)
+      invalid_arg str
     in
     let lex = Lexing.from_string configtxt in
-    try
-      config_of_ast (Parser.main Lexer.lex lex) addresses
-    with
-    | Parser.Error -> choke lex "Parser error"
+    let ast =
+      try Parser.main Lexer.lex lex with
+      | Parser.Error -> choke lex "Parser Error"
+      | Invalid_argument e -> choke lex e
+    in
+    config_of_ast ast addresses
 
   let t1_time_ratio = 0.5
   let t2_time_ratio = 0.8
@@ -143,8 +143,7 @@ module Input = struct
   open Config
   open Dhcp_wire
 
-  exception Bad_packet of string
-  let bad_packet fmt = Printf.ksprintf (fun s -> raise (Bad_packet s)) fmt
+  let bad_packet fmt = Printf.ksprintf (fun s -> invalid_arg s) fmt
 
   type result =
     | Silence
@@ -511,6 +510,5 @@ module Input = struct
       else
         bad_packet "Invalid packet"
     with
-    | Bad_packet e -> Error e
     | Invalid_argument e -> Error e
 end
