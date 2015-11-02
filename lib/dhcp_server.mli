@@ -14,6 +14,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
+(** {1 DHCP Server } *)
+
+(** A DHCP server is composed of two sub-modules: {! Config} and {! Input}.  The
+    former deals with building a suitable configuration for using with the
+    later. *)
+
+(** {2 DHCP Server Configuration } *)
+
 module Config : sig
 
   type host = {
@@ -22,6 +30,8 @@ module Config : sig
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t option;
   }
+  (** {! host} config section entry. *)
+
   val host_of_sexp : Sexplib.Sexp.t -> host
   val sexp_of_host : host -> Sexplib.Sexp.t
 
@@ -36,6 +46,8 @@ module Config : sig
     default_lease_time : int32 option;
     max_lease_time : int32 option;
   }
+  (** {! subnet} config section entry *)
+
   val subnet_of_sexp : Sexplib.Sexp.t -> subnet
   val sexp_of_subnet : subnet -> Sexplib.Sexp.t
 
@@ -47,21 +59,45 @@ module Config : sig
     default_lease_time : int32;
     max_lease_time : int32;
   }
+  (** Server configuration *)
+
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
 
   exception Error of string
   val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) list -> t
+  (** [parse cf l] Creates a server configuration by parsing [cf] as an ISC
+      dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
+      supported. [l] is a list of network addresses, each pair is the output
+      address to be used for building replies and each must match a [network
+      section] of [cf]. A normal usage would be a list of all interfaces
+      configured in the system *)
 end
+
+(** {2 DHCP Input Packet Logic } *)
 
 module Input : sig
 
+  (** The logic for handling a DHCP input packet is pure, the module does not
+      perform any IO, it only returns a possible reply packet or event to be
+      logged.
+
+      A typical server main loop would do its own IO for receiving a packet,
+      then input with {! Input.input_pkt} and send out the resulting reply. *)
+
   type result =
-    | Silence
-    | Reply of Dhcp_wire.pkt
-    | Warning of string
-    | Error of string
+    | Silence (** Input packet didn't belong to us, normal nop event.*)
+    | Reply of Dhcp_wire.pkt (** A reply packet to be sent on the same subnet. *)
+    | Warning of string (** An odd event, could be logged. *)
+    | Error of string (** Input packet is invalid, or some other error ocurred. *)
+    (** The result of [input_pkt]. *)
 
   val for_subnet : Dhcp_wire.pkt -> Config.subnet -> bool
+  (** True if the packet is destined for this subnet. *)
+
   val input_pkt : Config.t -> Config.subnet -> Dhcp_wire.pkt -> float -> result
+  (** [input_pkt config subnet pkt time] Inputs packet [pkt], the resulting
+      action should be performed by the caller, normally a [Reply] packet is
+      returned and must be sent on the same subnet. [time] is a float
+      representing time as in [Unix.time] or Mirage's [Clock.time]. *)
 end

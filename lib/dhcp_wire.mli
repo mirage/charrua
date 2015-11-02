@@ -526,3 +526,4 @@ val pkt_to_string : pkt -> string
 (** Helpers. *)
 
 val is_dhcp : Cstruct.t -> int -> bool
+(** [is_dhcp buf len] is true if [buf] is a DHCP packet. *)
