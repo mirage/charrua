@@ -5,9 +5,8 @@
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
-<link title="Dhcp_S" rel="Chapter" href="Dhcp_S.html"><title>Dhcp_wire</title>
+<link title="Dhcp_server" rel="Chapter" href="Dhcp_server.html"><title>Dhcp_wire</title>
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
@@ -432,4 +431,5 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sexp_of_pkt&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;client_id_of_pkt&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.client_id<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pkt_to_string&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_dhcp&nbsp;:&nbsp;<span class="constructor">Cstruct</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 <span class="keyword">end</span></code></body></html>

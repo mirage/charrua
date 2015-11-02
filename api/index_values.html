@@ -6,21 +6,14 @@
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
-<link title="Dhcp_S" rel="Chapter" href="Dhcp_S.html"><title>Index of values</title>
+<link title="Dhcp_server" rel="Chapter" href="Dhcp_server.html"><title>Index of values</title>
 </head>
 <body>
 <div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;</div>
 <h1>Index of values</h1>
 <table>
-<tr><td align="left"><br>A</td></tr>
-<tr><td><a href="Dhcp_S.INTERFACE.html#VALaddr">addr</a> [<a href="Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a>]</td>
-<td><div class="info">
-interface IP address
-</div>
-</td></tr>
 <tr><td align="left"><br>B</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALbuf_of_options">buf_of_options</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
@@ -45,8 +38,6 @@ DHCP client port <code class="code">68</code>
     multiple list options are found, the resulting list is flattened.
 </div>
 </td></tr>
-<tr><td><a href="Dhcp_S.SERVER.html#VALcreate">create</a> [<a href="Dhcp_S.SERVER.html">Dhcp_S.SERVER</a>]</td>
-<td></td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALdhcp_option_of_sexp">dhcp_option_of_sexp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
@@ -59,10 +50,24 @@ DHCP client port <code class="code">68</code>
 </td></tr>
 <tr><td><a href="Dhcp_wire.html#VALflags_of_sexp">flags_of_sexp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
+<tr><td><a href="Dhcp_server.Input.html#VALfor_subnet">for_subnet</a> [<a href="Dhcp_server.Input.html">Dhcp_server.Input</a>]</td>
+<td><div class="info">
+True if the packet is destined for this subnet.
+</div>
+</td></tr>
 <tr><td align="left"><br>H</td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALhost_of_sexp">host_of_sexp</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
+<td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALhtype_of_sexp">htype_of_sexp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Dhcp_server.Input.html#VALinput_pkt">input_pkt</a> [<a href="Dhcp_server.Input.html">Dhcp_server.Input</a>]</td>
+<td><div class="info">
+<code class="code">input_pkt config subnet pkt time</code> Inputs packet <code class="code">pkt</code>, the resulting
+      action should be performed by the caller, normally a <code class="code">Reply</code> packet is
+      returned and must be sent on the same subnet.
+</div>
+</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALint_to_msgtype">int_to_msgtype</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALint_to_msgtype_exn">int_to_msgtype_exn</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
@@ -79,24 +84,18 @@ DHCP client port <code class="code">68</code>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALint_to_option_code_exn">int_to_option_code_exn</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
-<tr><td align="left"><br>M</td></tr>
-<tr><td><a href="Dhcp_S.INTERFACE.html#VALmac">mac</a> [<a href="Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a>]</td>
+<tr><td><a href="Dhcp_wire.html#VALis_dhcp">is_dhcp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td><div class="info">
-interface MAC address
+<code class="code">is_dhcp buf len</code> is true if <code class="code">buf</code> is a DHCP packet.
 </div>
 </td></tr>
+<tr><td align="left"><br>M</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALmsgtype_of_sexp">msgtype_of_sexp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALmsgtype_to_int">msgtype_to_int</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALmsgtype_to_string">msgtype_to_string</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
-<tr><td align="left"><br>N</td></tr>
-<tr><td><a href="Dhcp_S.INTERFACE.html#VALname">name</a> [<a href="Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a>]</td>
-<td><div class="info">
-interface name
-</div>
-</td></tr>
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALop_of_sexp">op_of_sexp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
@@ -113,10 +112,11 @@ interface name
 <tr><td><a href="Dhcp_wire.html#VALoptions_of_buf">options_of_buf</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>P</td></tr>
-<tr><td><a href="Dhcp_S.SERVER.html#VALparse_networks">parse_networks</a> [<a href="Dhcp_S.SERVER.html">Dhcp_S.SERVER</a>]</td>
+<tr><td><a href="Dhcp_server.Config.html#VALparse">parse</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
 <td><div class="info">
-Parse all the configured networks (the subnet statement),
-      useful to discover which interfaces will be used.
+<code class="code">parse cf l</code> Creates a server configuration by parsing <code class="code">cf</code> as an ISC
+      dhcpd.conf file, currently only the options at <code class="code">sample/dhcpd.conf</code> are
+      supported.
 </div>
 </td></tr>
 <tr><td><a href="Dhcp_wire.html#VALpkt_of_buf">pkt_of_buf</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
@@ -125,18 +125,7 @@ Parse all the configured networks (the subnet statement),
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALpkt_to_string">pkt_to_string</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
-<tr><td align="left"><br>R</td></tr>
-<tr><td><a href="Dhcp_S.INTERFACE.html#VALrecv">recv</a> [<a href="Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a>]</td>
-<td><div class="info">
-<code class="code">recv</code> packet a packet in a <code class="code">Cstruct.t</code>
-</div>
-</td></tr>
 <tr><td align="left"><br>S</td></tr>
-<tr><td><a href="Dhcp_S.INTERFACE.html#VALsend">send</a> [<a href="Dhcp_S.INTERFACE.html">Dhcp_S.INTERFACE</a>]</td>
-<td><div class="info">
-<code class="code">send</code> a packet from a <code class="code">Cstruct.t</code>
-</div>
-</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALserver_port">server_port</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td><div class="info">
 DHCP server port <code class="code">67</code>
@@ -148,6 +137,8 @@ DHCP server port <code class="code">67</code>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_flags">sexp_of_flags</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALsexp_of_host">sexp_of_host</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
+<td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_htype">sexp_of_htype</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_msgtype">sexp_of_msgtype</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
@@ -158,11 +149,20 @@ DHCP server port <code class="code">67</code>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_pkt">sexp_of_pkt</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALsexp_of_subnet">sexp_of_subnet</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
+<td></td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALsexp_of_t">sexp_of_t</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
+<td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALstring_to_msgtype">string_to_msgtype</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALstring_to_op">string_to_op</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALstring_to_option_code">string_to_option_code</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
+<td></td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALsubnet_of_sexp">subnet_of_sexp</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Dhcp_server.Config.html#VALt_of_sexp">t_of_sexp</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
 <td></td></tr>
 </table>
 </body>
