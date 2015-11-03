@@ -51,26 +51,26 @@ module Config = struct
       let ip_addr, mac_addr = try List.find (function
           | ipaddr, _ -> Ipaddr.V4.Prefix.mem ipaddr s.Ast.network) addresses
         with Not_found ->
-          raise (Invalid_argument ("No address found for network " ^
-                        (Ipaddr.V4.Prefix.to_string s.Ast.network)))
+          invalid_arg ("No address found for network " ^
+                       (Ipaddr.V4.Prefix.to_string s.Ast.network))
       in
       let () = List.iter (fun (host : Ast.host) ->
           match host.Ast.fixed_addr with
           | None -> ()
           | Some addr ->
             if not (Ipaddr.V4.Prefix.mem addr s.Ast.network) then
-              raise (Invalid_argument (Printf.sprintf "Fixed address %s does not \
-                                            belong to subnet %s"
-                              (Ipaddr.V4.to_string addr)
-                              (Ipaddr.V4.Prefix.to_string s.Ast.network)))
+              invalid_arg (Printf.sprintf "Fixed address %s does not \
+                                           belong to subnet %s"
+                             (Ipaddr.V4.to_string addr)
+                             (Ipaddr.V4.Prefix.to_string s.Ast.network))
             else if Util.addr_in_range addr s.Ast.range then
               match s.Ast.range with
               | low, high ->
-                raise (Invalid_argument (Printf.sprintf "Fixed address %s must be \
-                                              outside of range %s:%s"
-                                (Ipaddr.V4.to_string addr)
-                                (Ipaddr.V4.to_string low)
-                                (Ipaddr.V4.to_string high))))
+                invalid_arg (Printf.sprintf "Fixed address %s must be \
+                                             outside of range %s:%s"
+                               (Ipaddr.V4.to_string addr)
+                               (Ipaddr.V4.to_string low)
+                               (Ipaddr.V4.to_string high)))
           s.Ast.hosts
       in
       let fixed_addrs = List.fold_left
