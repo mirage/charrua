@@ -57,7 +57,6 @@ let remove client_id mac lease_db =
   match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
   | Some addr -> ()
   | None -> Hashtbl.remove lease_db.table client_id
-(* Beware! This is an online state *)
 let timeleft lease ~now =
   let left = (Int32.to_float lease.tm_end) -. now in
   if left < 0. then Int32.zero else (Int32.of_float left)
