@@ -38,39 +38,49 @@ let make_db name network range fixed_addrs =
   let fixed_table = Hashtbl.create 10 in
   List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
   { name; network; range; table = Hashtbl.create 10; fixed_table }
+
 let make client_id addr ~duration ~now =
   let tm_start = Int32.of_float now in
   let tm_end = Int32.add tm_start duration in
   { tm_start; tm_end; addr; client_id }
+
 (* XXX defaults fixed leases to one hour, policy does not belong here. *)
 let make_fixed mac addr ~now =
   make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
+
 let lookup client_id mac lease_db ~now =
   match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
   | Some addr -> Some (make_fixed mac addr ~now)
   | None -> Util.find_some (fun () -> Hashtbl.find lease_db.table client_id)
+
 let replace client_id mac lease lease_db =
   match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
   | Some addr -> ()
   | None -> Hashtbl.replace lease_db.table client_id lease
+
 let remove client_id mac lease_db =
   match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
   | Some addr -> ()
   | None -> Hashtbl.remove lease_db.table client_id
+
 let timeleft lease ~now =
   let left = (Int32.to_float lease.tm_end) -. now in
   if left < 0. then Int32.zero else (Int32.of_float left)
+
 let timeleft_exn lease ~now =
   let left = timeleft lease ~now in
   if left = Int32.zero then invalid_arg "No time left for lease" else left
+
 let timeleft3 lease t1_ratio t2_ratio ~now =
   let left = Int32.to_float (timeleft lease ~now) in
   (Int32.of_float left,
    Int32.of_float (left *. t1_ratio),
    Int32.of_float (left *. t2_ratio))
+
 let extend lease ~now =
   let original = Int32.sub lease.tm_end lease.tm_start in
   make lease.client_id lease.addr ~duration:original ~now
+
 let expired lease ~now = timeleft lease ~now = Int32.zero
 
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
