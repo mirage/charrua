@@ -40,7 +40,9 @@ let bytes_extend_if_le s m =
   let n = Bytes.length s in
   if n > m then
     invalid_arg ("string is too damn big: " ^ (string_of_int n));
-  Bytes.extend s 0 (m - n)
+  let e = Bytes.extend s 0 (m - n) in
+  Bytes.fill e n (m - n) (Char.chr 0);
+  e
 
 let bytes_nul b =
   let len = Bytes.length b in
