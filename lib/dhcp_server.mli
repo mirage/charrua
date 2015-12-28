@@ -41,7 +41,6 @@ module Config : sig
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
     options : Dhcp_wire.dhcp_option list;
-    lease_db : Lease.database;
     hosts : host list;
     default_lease_time : int32 option;
     max_lease_time : int32 option;
@@ -63,6 +62,10 @@ module Config : sig
 
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
+
+  val fixed_addrs : host list -> (Macaddr.t * Ipaddr.V4.t) list
+  (** [fixed_addrs hosts] Returns a pair list suitable for creating leases
+      databases with Lease.make_db **)
 
   val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) list -> t
   (** [parse cf l] Creates a server configuration by parsing [cf] as an ISC
@@ -94,9 +97,11 @@ module Input : sig
   val for_subnet : Dhcp_wire.pkt -> Config.subnet -> bool
   (** True if the packet is destined for this subnet. *)
 
-  val input_pkt : Config.t -> Config.subnet -> Dhcp_wire.pkt -> float -> result
-  (** [input_pkt config subnet pkt time] Inputs packet [pkt], the resulting
-      action should be performed by the caller, normally a [Reply] packet is
-      returned and must be sent on the same subnet. [time] is a float
-      representing time as in [Unix.time] or Mirage's [Clock.time]. *)
+  val input_pkt : Config.t -> Lease.database -> Config.subnet ->
+    Dhcp_wire.pkt -> float -> result
+  (** [input_pkt config lease_db subnet pkt time] Inputs packet [pkt], lease_db
+      is the current lease database state, the resulting action should be
+      performed by the caller, normally a [Reply] packet is returned and must be
+      sent on the same subnet. [time] is a float representing time as in
+      [Unix.time] or Mirage's [Clock.time]. *)
 end

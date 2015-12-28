@@ -27,17 +27,16 @@ type t = {
 
 (* Database, collection of leases *)
 type database = {
-  name : string;
   network : Ipaddr.V4.Prefix.t;
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   table : (Dhcp_wire.client_id, t) Hashtbl.t;
   fixed_table : (Macaddr.t, Ipaddr.V4.t) Hashtbl.t;
 } with sexp
 
-let make_db name network range fixed_addrs =
+let make_db network range fixed_addrs =
   let fixed_table = Hashtbl.create 10 in
   List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
-  { name; network; range; table = Hashtbl.create 10; fixed_table }
+  { network; range; table = Hashtbl.create 10; fixed_table }
 
 let make client_id addr ~duration ~now =
   let tm_start = Int32.of_float now in

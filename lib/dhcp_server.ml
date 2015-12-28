@@ -31,7 +31,6 @@ module Config = struct
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
     options : Dhcp_wire.dhcp_option list;
-    lease_db : Lease.database;
     hosts : host list;
     default_lease_time : int32 option;
     max_lease_time : int32 option;
@@ -73,13 +72,6 @@ module Config = struct
                                (Ipaddr.V4.to_string high)))
           s.Ast.hosts
       in
-      let fixed_addrs = List.fold_left
-          (fun alist (host : Ast.host) -> match (host.Ast.fixed_addr, host.Ast.hw_addr) with
-             | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
-             | _ -> alist)
-          [] s.Ast.hosts
-      in
-      let db_name = Ipaddr.V4.Prefix.to_string s.Ast.network in
       let hosts = List.map (fun h ->
           { hostname = h.Ast.hostname;
             options = h.Ast.options;
@@ -92,7 +84,6 @@ module Config = struct
         network = s.Ast.network;
         range = s.Ast.range;
         options = s.Ast.options;
-        lease_db = Lease.make_db db_name s.Ast.network s.Ast.range fixed_addrs;
         hosts;
         default_lease_time = s.Ast.default_lease_time;
         max_lease_time = s.Ast.max_lease_time }
@@ -103,6 +94,13 @@ module Config = struct
       hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
       default_lease_time = ast.Ast.default_lease_time;
       max_lease_time = ast.Ast.max_lease_time }
+
+  let fixed_addrs hosts =
+    List.fold_left
+      (fun alist host -> match (host.fixed_addr, host.hw_addr) with
+         | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
+         | _ -> alist)
+      [] hosts
 
   let parse configtxt addresses =
     let choke lex s =
@@ -273,7 +271,7 @@ module Input = struct
         | _ -> None)
       preqs
 
-  let input_decline_release config subnet pkt now =
+  let input_decline_release config lease_db subnet pkt now =
     let open Util in
     let msgtype = match msgtype_of_options pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
@@ -293,9 +291,9 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          match Lease.lookup client_id pkt.chaddr subnet.lease_db ~now with
+          match Lease.lookup client_id pkt.chaddr lease_db ~now with
           | None -> Silence (* lease is unowned, ignore *)
-          | Some _ -> Lease.remove client_id pkt.chaddr subnet.lease_db;
+          | Some _ -> Lease.remove client_id pkt.chaddr lease_db;
             Warning (Printf.sprintf "%s, client %s declined lease for %s, reason %s"
                        (some_or_default m "unspecified")
                        msgtype
@@ -325,8 +323,7 @@ module Input = struct
       in
       Reply pkt
 
-  let input_request config subnet pkt now =
-    let lease_db = subnet.lease_db in
+  let input_request config lease_db subnet pkt now =
     let client_id = client_id_of_pkt pkt in
     let lease = Lease.lookup client_id pkt.chaddr lease_db ~now in
     let ourip = subnet.ip_addr in
@@ -425,47 +422,51 @@ module Input = struct
         ack ~renew:true lease
     | _ -> Silence
 
-  let input_discover config subnet pkt now =
+  let discover_addr lease lease_db pkt now =
+    let id = client_id_of_pkt pkt in
+    match lease with
+    (* Handle the case where we have a lease *)
+    | Some lease ->
+      if not (Lease.expired lease ~now) then
+        Some lease.Lease.addr
+        (* If the lease expired, the address might not be available *)
+      else if (Lease.addr_available lease.Lease.addr lease_db ~now) then
+        Some lease.Lease.addr
+      else
+        Lease.get_usable_addr id lease_db ~now
+    (* Handle the case where we have no lease *)
+    | None -> match (request_ip_of_options pkt.options) with
+      | Some req_addr ->
+        if (Lease.addr_in_range pkt.chaddr req_addr lease_db) &&
+           (Lease.addr_available req_addr lease_db ~now) then
+          Some req_addr
+        else
+          Lease.get_usable_addr id lease_db ~now
+      | None -> Lease.get_usable_addr id lease_db ~now
+
+  let discover_lease_time config subnet lease lease_db pkt now =
+    match (ip_lease_time_of_options pkt.options) with
+    | Some ip_lease_time ->
+      if Config.lease_time_good config subnet ip_lease_time then
+        ip_lease_time
+      else
+        Config.default_lease_time config subnet
+    | None -> match lease with
+      | None -> Config.default_lease_time config subnet
+      | Some lease -> if Lease.expired lease ~now then
+          Config.default_lease_time config subnet
+        else
+          Lease.timeleft lease ~now
+
+  let input_discover config lease_db subnet pkt now =
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
-    let lease_db = subnet.lease_db in
     let id = client_id_of_pkt pkt in
     let lease = Lease.lookup id pkt.chaddr lease_db ~now in
     let ourip = subnet.ip_addr in
-    let addr = match lease with
-      (* Handle the case where we have a lease *)
-      | Some lease ->
-        if not (Lease.expired lease ~now) then
-          Some lease.Lease.addr
-          (* If the lease expired, the address might not be available *)
-        else if (Lease.addr_available lease.Lease.addr lease_db ~now) then
-          Some lease.Lease.addr
-        else
-          Lease.get_usable_addr id lease_db ~now
-      (* Handle the case where we have no lease *)
-      | None -> match (request_ip_of_options pkt.options) with
-        | Some req_addr ->
-          if (Lease.addr_in_range pkt.chaddr req_addr lease_db) &&
-             (Lease.addr_available req_addr lease_db ~now) then
-            Some req_addr
-          else
-            Lease.get_usable_addr id lease_db ~now
-        | None -> Lease.get_usable_addr id lease_db ~now
-    in
+    let addr = discover_addr lease lease_db pkt now in
     (* Figure out the lease lease_time *)
-    let lease_time = match (ip_lease_time_of_options pkt.options) with
-      | Some ip_lease_time ->
-        if Config.lease_time_good config subnet ip_lease_time then
-          ip_lease_time
-        else
-          Config.default_lease_time config subnet
-      | None -> match lease with
-        | None -> Config.default_lease_time config subnet
-        | Some lease -> if Lease.expired lease ~now then
-            Config.default_lease_time config subnet
-          else
-            Lease.timeleft lease ~now
-    in
+    let lease_time = discover_lease_time config subnet lease lease_db pkt now in
     match addr with
     | None -> Warning "No ips left to offer"
     | Some addr ->
@@ -494,16 +495,16 @@ module Input = struct
       in
       Reply pkt
 
-  let input_pkt config subnet pkt time =
+  let input_pkt config lease_db subnet pkt time =
     try
       if not (for_subnet pkt subnet) then
         Silence
       else if valid_pkt pkt then
         match msgtype_of_options pkt.options with
-        | Some DHCPDISCOVER -> input_discover config subnet pkt time
-        | Some DHCPREQUEST  -> input_request config subnet pkt time
-        | Some DHCPDECLINE  -> input_decline config subnet pkt time
-        | Some DHCPRELEASE  -> input_release config subnet pkt time
+        | Some DHCPDISCOVER -> input_discover config lease_db subnet pkt time
+        | Some DHCPREQUEST  -> input_request config lease_db subnet pkt time
+        | Some DHCPDECLINE  -> input_decline config lease_db subnet pkt time
+        | Some DHCPRELEASE  -> input_release config lease_db subnet pkt time
         | Some DHCPINFORM   -> input_inform config subnet pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
         | Some m -> Warning ("Unhandled msgtype " ^ (msgtype_to_string m))
