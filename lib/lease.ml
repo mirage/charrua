@@ -46,20 +46,14 @@ let make client_id addr ~duration ~now =
 let make_fixed mac addr ~now =
   make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 
-let lookup client_id mac lease_db ~now =
-  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
-  | Some addr -> Some (make_fixed mac addr ~now)
-  | None -> Util.find_some (fun () -> Hashtbl.find lease_db.table client_id)
+let lookup client_id lease_db ~now =
+  Util.find_some (fun () -> Hashtbl.find lease_db.table client_id)
 
-let replace client_id mac lease lease_db =
-  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
-  | Some addr -> ()
-  | None -> Hashtbl.replace lease_db.table client_id lease
+let replace client_id lease lease_db =
+  Hashtbl.replace lease_db.table client_id lease
 
-let remove client_id mac lease_db =
-  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
-  | Some addr -> ()
-  | None -> Hashtbl.remove lease_db.table client_id
+let remove client_id lease_db =
+  Hashtbl.remove lease_db.table client_id
 
 let timeleft lease ~now =
   let left = (Int32.to_float lease.tm_end) -. now in

@@ -175,6 +175,11 @@ module Input = struct
   let ntp_servers_of_options options =
     collect_options (function Ntp_servers x -> Some x | _ -> None) options
 
+  let find_lease client_id mac lease_db ~now =
+    match (Util.find_some (fun () -> Hashtbl.find lease_db.Lease.fixed_table mac)) with
+    | Some addr -> Some (Lease.make_fixed mac addr ~now), true
+    | None -> Lease.lookup client_id lease_db ~now, false
+
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
     let op = BOOTREPLY in
@@ -291,9 +296,12 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          match Lease.lookup client_id pkt.chaddr lease_db ~now with
+          let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db ~now in
+          match lease with
           | None -> Silence (* lease is unowned, ignore *)
-          | Some _ -> Lease.remove client_id pkt.chaddr lease_db;
+          | Some _ ->
+            if not fixed_lease then
+              Lease.remove client_id lease_db;
             Warning (Printf.sprintf "%s, client %s declined lease for %s, reason %s"
                        (some_or_default m "unspecified")
                        msgtype
@@ -325,7 +333,7 @@ module Input = struct
 
   let input_request config lease_db subnet pkt now =
     let client_id = client_id_of_pkt pkt in
-    let lease = Lease.lookup client_id pkt.chaddr lease_db ~now in
+    let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db ~now in
     let ourip = subnet.ip_addr in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
@@ -370,7 +378,8 @@ module Input = struct
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       assert (lease.Lease.client_id = client_id);
-      Lease.replace client_id pkt.chaddr lease lease_db;
+      if not fixed_lease then
+        Lease.replace client_id lease lease_db;
       Reply reply
     in
     match sidip, reqip, lease with
@@ -462,7 +471,7 @@ module Input = struct
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let id = client_id_of_pkt pkt in
-    let lease = Lease.lookup id pkt.chaddr lease_db ~now in
+    let lease, fixed_lease = find_lease id pkt.chaddr lease_db ~now in
     let ourip = subnet.ip_addr in
     let addr = discover_addr lease lease_db pkt now in
     (* Figure out the lease lease_time *)
