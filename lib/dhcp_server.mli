@@ -63,10 +63,6 @@ module Config : sig
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
 
-  val fixed_addrs : host list -> (Macaddr.t * Ipaddr.V4.t) list
-  (** [fixed_addrs hosts] Returns a pair list suitable for creating leases
-      databases with Lease.make_db **)
-
   val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) list -> t
   (** [parse cf l] Creates a server configuration by parsing [cf] as an ISC
       dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are

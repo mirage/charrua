@@ -29,13 +29,10 @@ type t = {
 type database = {
   range : Ipaddr.V4.t * Ipaddr.V4.t;
   table : (Dhcp_wire.client_id, t) Hashtbl.t;
-  fixed_table : (Macaddr.t, Ipaddr.V4.t) Hashtbl.t;
 } with sexp
 
-let make_db range fixed_addrs =
-  let fixed_table = Hashtbl.create 10 in
-  List.iter (function (mac, addr) -> Hashtbl.add fixed_table mac addr) fixed_addrs;
-  { range; table = Hashtbl.create 10; fixed_table }
+let make_db range =
+  { range; table = Hashtbl.create 10 }
 
 let make client_id addr ~duration ~now =
   let tm_start = Int32.of_float now in

@@ -30,7 +30,6 @@ module Config = struct
     mac_addr : Macaddr.t;
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
-    fixed_addrs : (Macaddr.t * Ipaddr.V4.t) list;
     options : Dhcp_wire.dhcp_option list;
     hosts : host list;
     default_lease_time : int32 option;
@@ -80,18 +79,10 @@ module Config = struct
             hw_addr = h.Ast.hw_addr;
           }) s.Ast.hosts
       in
-      let fixed_addrs =
-        List.fold_left
-          (fun alist host -> match (host.fixed_addr, host.hw_addr) with
-             | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
-             | _ -> alist)
-          [] hosts
-      in
       { ip_addr;
         mac_addr;
         network = s.Ast.network;
         range = s.Ast.range;
-        fixed_addrs;
         options = s.Ast.options;
         hosts;
         default_lease_time = s.Ast.default_lease_time;
@@ -177,13 +168,20 @@ module Input = struct
   let ntp_servers_of_options options =
     collect_options (function Ntp_servers x -> Some x | _ -> None) options
 
-  let find_lease client_id mac lease_db ~now =
-    match (Util.find_some (fun () -> Hashtbl.find lease_db.Lease.fixed_table mac)) with
-    | Some addr -> Some (Lease.make_fixed mac addr ~now), true
+  let fixed_addr_of_mac mac subnet =
+    Util.find_map
+      (fun host -> match host.hw_addr with
+         | Some hw_addr -> if hw_addr = mac then host.fixed_addr else None
+         | None         -> None)
+          subnet.hosts
+
+  let find_lease client_id mac lease_db subnet ~now =
+    match (fixed_addr_of_mac mac subnet) with
+    | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~now), true
     | None -> Lease.lookup client_id lease_db ~now, false
 
-  let good_address mac addr lease_db =
-    match (Util.find_some (fun () -> Hashtbl.find lease_db.Lease.fixed_table mac)) with
+  let good_address mac addr subnet lease_db =
+    match (fixed_addr_of_mac mac subnet) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
     | None -> Util.addr_in_range addr lease_db.Lease.range
@@ -304,7 +302,7 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db ~now in
+          let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db subnet ~now in
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
           | Some _ ->
@@ -341,7 +339,7 @@ module Input = struct
 
   let input_request config lease_db subnet pkt now =
     let client_id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db ~now in
+    let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db subnet ~now in
     let ourip = subnet.ip_addr in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
@@ -396,7 +394,7 @@ module Input = struct
         Silence
       else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         Warning "Bad DHCPREQUEST, ciaddr is not 0"
-      else if not (good_address pkt.chaddr reqip lease_db) then
+      else if not (good_address pkt.chaddr reqip subnet lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else
         (match lease with
@@ -421,7 +419,7 @@ module Input = struct
         nak ~msg:"Lease has expired and address is taken" ()
         (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
-              not (good_address pkt.chaddr reqip lease_db) then
+              not (good_address pkt.chaddr reqip subnet lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
@@ -439,7 +437,7 @@ module Input = struct
         ack ~renew:true lease
     | _ -> Silence
 
-  let discover_addr lease lease_db pkt now =
+  let discover_addr lease lease_db subnet pkt now =
     let id = client_id_of_pkt pkt in
     match lease with
     (* Handle the case where we have a lease *)
@@ -454,7 +452,7 @@ module Input = struct
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
-        if (good_address pkt.chaddr req_addr lease_db) &&
+        if (good_address pkt.chaddr req_addr subnet lease_db) &&
            (Lease.addr_available req_addr lease_db ~now) then
           Some req_addr
         else
@@ -479,9 +477,9 @@ module Input = struct
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease id pkt.chaddr lease_db ~now in
+    let lease, fixed_lease = find_lease id pkt.chaddr lease_db subnet ~now in
     let ourip = subnet.ip_addr in
-    let addr = discover_addr lease lease_db pkt now in
+    let addr = discover_addr lease lease_db subnet pkt now in
     (* Figure out the lease lease_time *)
     let lease_time = discover_lease_time config subnet lease lease_db pkt now in
     match addr with
