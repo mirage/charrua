@@ -78,18 +78,6 @@ let expired lease ~now = timeleft lease ~now = Int32.zero
 let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
 let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
 
-let addr_in_range mac addr lease_db =
-  match (Util.find_some (fun () -> Hashtbl.find lease_db.fixed_table mac)) with
-  (* If this is a fixed address, it's always good. *)
-  | Some fixed_addr -> addr = fixed_addr
-  | None ->
-  (* When not, address should respect the range. *)
-    let (low_ip, high_ip) = lease_db.range in
-    let low_32 = (Ipaddr.V4.to_int32 low_ip) in
-    let high_32 = Ipaddr.V4.to_int32 high_ip in
-    let addr_32 = Ipaddr.V4.to_int32 addr in
-    addr_32 >= low_32 && addr_32 <= high_32
-
 let leases_of_addr addr lease_db =
   List.filter (fun l -> l.addr = addr) (to_list lease_db)
 

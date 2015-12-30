@@ -180,6 +180,12 @@ module Input = struct
     | Some addr -> Some (Lease.make_fixed mac addr ~now), true
     | None -> Lease.lookup client_id lease_db ~now, false
 
+  let good_address mac addr lease_db =
+    match (Util.find_some (fun () -> Hashtbl.find lease_db.Lease.fixed_table mac)) with
+      (* If this is a fixed address, it's good if mac matches ip. *)
+    | Some fixed_addr -> addr = fixed_addr
+    | None -> Util.addr_in_range addr lease_db.Lease.range
+
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
     let op = BOOTREPLY in
@@ -388,7 +394,7 @@ module Input = struct
         Silence
       else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         Warning "Bad DHCPREQUEST, ciaddr is not 0"
-      else if not (Lease.addr_in_range pkt.chaddr reqip lease_db) then
+      else if not (good_address pkt.chaddr reqip lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else
         (match lease with
@@ -413,7 +419,7 @@ module Input = struct
         nak ~msg:"Lease has expired and address is taken" ()
         (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
-              not (Lease.addr_in_range pkt.chaddr reqip lease_db) then
+              not (good_address pkt.chaddr reqip lease_db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
@@ -446,7 +452,7 @@ module Input = struct
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
-        if (Lease.addr_in_range pkt.chaddr req_addr lease_db) &&
+        if (good_address pkt.chaddr req_addr lease_db) &&
            (Lease.addr_available req_addr lease_db ~now) then
           Some req_addr
         else
