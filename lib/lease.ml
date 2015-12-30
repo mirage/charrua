@@ -17,6 +17,22 @@
 open Sexplib.Conv
 open Sexplib.Std
 
+module Client_id = struct
+  open Dhcp_wire
+
+  type t = client_id
+
+  let compare a b =
+    match a, b with
+    | Hwaddr maca,  Hwaddr macb -> Macaddr.compare maca macb
+    | Id ida,  Id idb -> String.compare ida idb
+    | Id _, Hwaddr _ -> -1
+    | Hwaddr _, Id _ -> 1
+end
+
+module Addr_map = Map.Make(Ipaddr.V4)
+module Id_map = Map.Make(Client_id)
+
 (* Lease (dhcp bindings) operations *)
 type t = {
   tm_start   : int32;
@@ -27,11 +43,14 @@ type t = {
 
 (* Database, collection of leases *)
 type database = {
-  table : (Dhcp_wire.client_id, t) Hashtbl.t;
-} with sexp
+  id_map : t Id_map.t;
+  addr_map : t Addr_map.t;
+} (* with sexp *)
 
-let make_db () =
-  { table = Hashtbl.create 10 }
+let update_db id_map addr_map =
+  { id_map; addr_map }
+
+let make_db () = update_db Id_map.empty Addr_map.empty
 
 let make client_id addr ~duration ~now =
   let tm_start = Int32.of_float now in
@@ -42,14 +61,17 @@ let make client_id addr ~duration ~now =
 let make_fixed mac addr ~now =
   make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 
-let lookup client_id lease_db ~now =
-  Util.find_some (fun () -> Hashtbl.find lease_db.table client_id)
+let remove lease lease_db =
+  update_db
+    (Id_map.remove lease.client_id lease_db.id_map)
+    (Addr_map.remove lease.addr lease_db.addr_map)
 
-let replace client_id lease lease_db =
-  Hashtbl.replace lease_db.table client_id lease
-
-let remove client_id lease_db =
-  Hashtbl.remove lease_db.table client_id
+let replace lease lease_db =
+  (* First clear both maps *)
+  let clr_map = remove lease lease_db in
+  update_db
+    (Id_map.add lease.client_id lease clr_map.id_map)
+    (Addr_map.add lease.addr lease clr_map.addr_map)
 
 let timeleft lease ~now =
   let left = (Int32.to_float lease.tm_end) -. now in
@@ -71,21 +93,19 @@ let extend lease ~now =
 
 let expired lease ~now = timeleft lease ~now = Int32.zero
 
-let to_list lease_db = Hashtbl.fold (fun _ v acc -> v :: acc ) lease_db.table []
-let to_string x = Sexplib.Sexp.to_string_hum (sexp_of_t x)
+let lease_of_client_id client_id lease_db = Util.find_some @@ fun () ->
+  Id_map.find client_id lease_db.id_map
 
-let leases_of_addr addr lease_db =
-  List.filter (fun l -> l.addr = addr) (to_list lease_db)
+let lease_of_addr addr lease_db = Util.find_some @@ fun () ->
+  Addr_map.find addr lease_db.addr_map
 
 let addr_allocated addr lease_db =
-  match leases_of_addr addr lease_db with
-  | [] -> false
-  | _ -> true
+  Util.true_if_some @@ lease_of_addr addr lease_db
 
 let addr_available addr lease_db ~now =
-  match leases_of_addr addr lease_db with
-  | [] -> true
-  | leases -> not (List.exists (fun l -> not (expired l ~now)) leases)
+  match lease_of_addr addr lease_db with
+  | None -> true
+  | Some lease ->  not (expired lease ~now)
 
 (*
  * We try to use the last 4 bytes of the mac address as a hint for the ip

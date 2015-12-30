@@ -65,6 +65,7 @@ let some_or_f x f = match x with Some x -> x | None -> f ()
 let some_or_invalid x s = some_or_f x (fun () -> invalid_arg s)
 let some_or_fail x s = some_or_f x (fun () -> failwith s)
 let find_some f = try Some (f ()) with Not_found -> None
+let true_if_some x = match x with Some _ -> true | None -> false
 
 let cons v tl = v :: tl
 let cons_if p v tl = if p then v :: tl else tl

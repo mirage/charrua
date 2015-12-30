@@ -85,7 +85,10 @@ module Input : sig
 
   type result =
     | Silence (** Input packet didn't belong to us, normal nop event.*)
-    | Reply of Dhcp_wire.pkt (** A reply packet to be sent on the same subnet. *)
+    | Update of Lease.database (** Lease database update. *)
+    | Reply of Dhcp_wire.pkt * Lease.database
+    (** Reply packet to be sent on the same subnet and the corresponding lease
+        database to be used in case the sent of the reply pkt is successfull *)
     | Warning of string (** An odd event, could be logged. *)
     | Error of string (** Input packet is invalid, or some other error ocurred. *)
     (** The result of [input_pkt]. *)

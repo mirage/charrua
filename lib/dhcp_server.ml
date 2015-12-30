@@ -138,7 +138,8 @@ module Input = struct
 
   type result =
     | Silence
-    | Reply of Dhcp_wire.pkt
+    | Update of Lease.database
+    | Reply of Dhcp_wire.pkt * Lease.database
     | Warning of string
     | Error of string
 
@@ -178,7 +179,7 @@ module Input = struct
   let find_lease client_id mac lease_db subnet ~now =
     match (fixed_addr_of_mac mac subnet) with
     | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~now), true
-    | None -> Lease.lookup client_id lease_db ~now, false
+    | None -> Lease.lease_of_client_id client_id lease_db, false
 
   let good_address mac addr subnet lease_db =
     match (fixed_addr_of_mac mac subnet) with
@@ -291,7 +292,6 @@ module Input = struct
     let ourip = subnet.ip_addr in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
-    let m = message_of_options pkt.options in
     let client_id = client_id_of_pkt pkt in
     match sidip with
     | None -> bad_packet "%s without server identifier" msgtype
@@ -305,18 +305,17 @@ module Input = struct
           let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db subnet ~now in
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
-          | Some _ ->
-            if not fixed_lease then
-              Lease.remove client_id lease_db;
-            Warning (Printf.sprintf "%s, client %s declined lease for %s, reason %s"
-                       (some_or_default m "unspecified")
-                       msgtype
-                       (client_id_to_string client_id)
-                       (Ipaddr.V4.to_string reqip))
+          | Some lease ->
+            Update (
+              if not fixed_lease then
+                Lease.remove lease lease_db
+              else
+                lease_db)
+
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform (config : Config.t) subnet pkt =
+  let input_inform (config : Config.t) lease_db subnet pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       bad_packet "DHCPINFORM without ciaddr"
     else
@@ -335,7 +334,7 @@ module Input = struct
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply pkt
+      Reply (pkt, lease_db)
 
   let input_request config lease_db subnet pkt now =
     let client_id = client_id_of_pkt pkt in
@@ -358,7 +357,7 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
-      Reply pkt
+      Reply (pkt, lease_db)
     in
     let ack ?(renew=false) lease =
       let open Util in
@@ -385,8 +384,9 @@ module Input = struct
       in
       assert (lease.Lease.client_id = client_id);
       if not fixed_lease then
-        Lease.replace client_id lease lease_db;
-      Reply reply
+        Reply (reply, Lease.replace lease lease_db)
+      else
+        Reply (reply, lease_db)
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -508,7 +508,7 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply pkt
+      Reply (pkt, lease_db)
 
   let input_pkt config lease_db subnet pkt time =
     try
@@ -520,7 +520,7 @@ module Input = struct
         | Some DHCPREQUEST  -> input_request config lease_db subnet pkt time
         | Some DHCPDECLINE  -> input_decline config lease_db subnet pkt time
         | Some DHCPRELEASE  -> input_release config lease_db subnet pkt time
-        | Some DHCPINFORM   -> input_inform config subnet pkt
+        | Some DHCPINFORM   -> input_inform config lease_db subnet pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
         | Some m -> Warning ("Unhandled msgtype " ^ (msgtype_to_string m))
       else
