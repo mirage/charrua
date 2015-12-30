@@ -72,6 +72,34 @@ module Config : sig
       configured in the system *)
 end
 
+module Lease : sig
+  type t
+
+  val sexp_of_t : t -> Sexplib.Sexp.t
+  val t_of_sexp : Sexplib.Sexp.t -> t
+
+  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> now:float -> t
+  val timeleft : t -> now:float -> int32
+  val timeleft_exn : t -> now:float -> int32
+  val timeleft3 : t -> float -> float -> now:float -> int32 * int32 * int32
+  val extend : t -> now:float -> t
+  val expired : t -> now:float -> bool
+
+  type database
+
+  val make_db : unit -> database
+  val garbage_collect : database -> now:float -> database
+  val remove : t -> database -> database
+  val replace : t -> database -> database
+  val lease_of_client_id : Dhcp_wire.client_id -> database -> t option
+  val lease_of_addr : Ipaddr.V4.t -> database -> t option
+  val addr_allocated : Ipaddr.V4.t -> database -> bool
+  val addr_available : Ipaddr.V4.t -> database -> now:float -> bool
+  val get_usable_addr :
+    Dhcp_wire.client_id ->
+    database -> Ipaddr.V4.t * Ipaddr.V4.t -> now:float -> Ipaddr.V4.t option
+
+end
 (** {2 DHCP Input Packet Logic } *)
 
 module Input : sig

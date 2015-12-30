@@ -129,6 +129,149 @@ module Config = struct
 
 end
 
+module Lease = struct
+
+  open Sexplib.Conv
+  open Sexplib.Std
+
+  module Client_id = struct
+    open Dhcp_wire
+
+    type t = client_id
+
+    let compare a b =
+      match a, b with
+      | Hwaddr maca,  Hwaddr macb -> Macaddr.compare maca macb
+      | Id ida,  Id idb -> String.compare ida idb
+      | Id _, Hwaddr _ -> -1
+      | Hwaddr _, Id _ -> 1
+  end
+
+module Addr_map = Map.Make(Ipaddr.V4)
+module Id_map = Map.Make(Client_id)
+
+(* Lease (dhcp bindings) operations *)
+type t = {
+  tm_start   : int32;
+  tm_end     : int32;
+  addr       : Ipaddr.V4.t;
+  client_id  : Dhcp_wire.client_id;
+} with sexp
+
+(* Database, collection of leases *)
+type database = {
+  id_map : t Id_map.t;
+  addr_map : t Addr_map.t;
+} (* with sexp *)
+
+let update_db id_map addr_map =
+  { id_map; addr_map }
+
+let make_db () = update_db Id_map.empty Addr_map.empty
+
+let make client_id addr ~duration ~now =
+  let tm_start = Int32.of_float now in
+  let tm_end = Int32.add tm_start duration in
+  { tm_start; tm_end; addr; client_id }
+
+(* XXX defaults fixed leases to one hour, policy does not belong here. *)
+let make_fixed mac addr ~now =
+  make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
+
+let remove lease db =
+  update_db
+    (Id_map.remove lease.client_id db.id_map)
+    (Addr_map.remove lease.addr db.addr_map)
+
+let replace lease db =
+  (* First clear both maps *)
+  let clr_map = remove lease db in
+  update_db
+    (Id_map.add lease.client_id lease clr_map.id_map)
+    (Addr_map.add lease.addr lease clr_map.addr_map)
+
+let timeleft lease ~now =
+  let left = (Int32.to_float lease.tm_end) -. now in
+  if left < 0. then Int32.zero else (Int32.of_float left)
+
+let timeleft_exn lease ~now =
+  let left = timeleft lease ~now in
+  if left = Int32.zero then invalid_arg "No time left for lease" else left
+
+let timeleft3 lease t1_ratio t2_ratio ~now =
+  let left = Int32.to_float (timeleft lease ~now) in
+  (Int32.of_float left,
+   Int32.of_float (left *. t1_ratio),
+   Int32.of_float (left *. t2_ratio))
+
+let extend lease ~now =
+  let original = Int32.sub lease.tm_end lease.tm_start in
+  make lease.client_id lease.addr ~duration:original ~now
+
+let expired lease ~now = timeleft lease ~now = Int32.zero
+
+let garbage_collect db ~now =
+  update_db
+    (Id_map.filter (fun _ lease -> not (expired lease ~now)) db.id_map)
+    (Addr_map.filter (fun _ lease -> not (expired lease ~now)) db.addr_map)
+
+let lease_of_client_id client_id db = Util.find_some @@ fun () ->
+  Id_map.find client_id db.id_map
+
+let lease_of_addr addr db = Util.find_some @@ fun () ->
+  Addr_map.find addr db.addr_map
+
+let addr_allocated addr db =
+  Util.true_if_some @@ lease_of_addr addr db
+
+let addr_available addr db ~now =
+  match lease_of_addr addr db with
+  | None -> true
+  | Some lease ->  not (expired lease ~now)
+
+(*
+ * We try to use the last 4 bytes of the mac address as a hint for the ip
+ * address, if that fails, we try a linear search.
+ *)
+let get_usable_addr id db range ~now =
+  let low_ip, high_ip = range in
+  let low_32 = Ipaddr.V4.to_int32 low_ip in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  if (Int32.compare low_32 high_32) >= 0 then
+    invalid_arg "invalid range, must be (low * high)";
+  let hint_ip =
+    let v = match id with
+      | Dhcp_wire.Id s -> Int32.of_int 1805 (* XXX who cares *)
+      | Dhcp_wire.Hwaddr hw ->
+        let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
+        let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
+        let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in
+        let b2 = Int32.shift_left (Char.code s.[1] |> Int32.of_int) 16 in
+        let b3 = Int32.shift_left (Char.code s.[0] |> Int32.of_int) 24 in
+        Int32.zero |> Int32.logor b0 |> Int32.logor b1 |>
+        Int32.logor b2 |> Int32.logor b3
+    in
+    Int32.rem v (Int32.sub (Int32.succ high_32) low_32) |>
+    Int32.abs |>
+    Int32.add low_32 |>
+    Ipaddr.V4.of_int32
+  in
+  let rec linear_loop off f =
+    let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
+    if f ip then
+      Some ip
+    else if off = high_32 then
+      None
+    else
+      linear_loop (Int32.succ off) f
+  in
+  if not (addr_allocated hint_ip db) then
+    Some hint_ip
+  else match linear_loop Int32.zero (fun a -> not (addr_allocated a db)) with
+    | Some ip -> Some ip
+    | None -> linear_loop Int32.zero (fun a -> addr_available a db ~now)
+
+end
 
 module Input = struct
   open Config
@@ -176,12 +319,12 @@ module Input = struct
          | None         -> None)
           subnet.hosts
 
-  let find_lease client_id mac lease_db subnet ~now =
+  let find_lease client_id mac db subnet ~now =
     match (fixed_addr_of_mac mac subnet) with
     | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~now), true
-    | None -> Lease.lease_of_client_id client_id lease_db, false
+    | None -> Lease.lease_of_client_id client_id db, false
 
-  let good_address mac addr subnet lease_db =
+  let good_address mac addr subnet db =
     match (fixed_addr_of_mac mac subnet) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
@@ -283,7 +426,7 @@ module Input = struct
         | _ -> None)
       preqs
 
-  let input_decline_release config lease_db subnet pkt now =
+  let input_decline_release config db subnet pkt now =
     let open Util in
     let msgtype = match msgtype_of_options pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
@@ -302,20 +445,20 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db subnet ~now in
+          let lease, fixed_lease = find_lease client_id pkt.chaddr db subnet ~now in
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
           | Some lease ->
             Update (
               if not fixed_lease then
-                Lease.remove lease lease_db
+                Lease.remove lease db
               else
-                lease_db)
+                db)
 
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform (config : Config.t) lease_db subnet pkt =
+  let input_inform (config : Config.t) db subnet pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       bad_packet "DHCPINFORM without ciaddr"
     else
@@ -334,11 +477,11 @@ module Input = struct
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, lease_db)
+      Reply (pkt, db)
 
-  let input_request config lease_db subnet pkt now =
+  let input_request config db subnet pkt now =
     let client_id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease client_id pkt.chaddr lease_db subnet ~now in
+    let lease, fixed_lease = find_lease client_id pkt.chaddr db subnet ~now in
     let ourip = subnet.ip_addr in
     let reqip = request_ip_of_options pkt.options in
     let sidip = server_identifier_of_options pkt.options in
@@ -357,7 +500,7 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, lease_db)
+      Reply (pkt, db)
     in
     let ack ?(renew=false) lease =
       let open Util in
@@ -384,9 +527,9 @@ module Input = struct
       in
       assert (lease.Lease.client_id = client_id);
       if not fixed_lease then
-        Reply (reply, Lease.replace lease lease_db)
+        Reply (reply, Lease.replace lease db)
       else
-        Reply (reply, lease_db)
+        Reply (reply, db)
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -394,19 +537,19 @@ module Input = struct
         Silence
       else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         Warning "Bad DHCPREQUEST, ciaddr is not 0"
-      else if not (good_address pkt.chaddr reqip subnet lease_db) then
+      else if not (good_address pkt.chaddr reqip subnet db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else
         (match lease with
          | Some lease ->
-           if Lease.expired lease now && not (Lease.addr_available reqip lease_db ~now) then
+           if Lease.expired lease now && not (Lease.addr_available reqip db ~now) then
              nak ~msg:"Lease has expired and address is taken" ()
            else if lease.Lease.addr <> reqip then
              nak ~msg:"Requested address is incorrect" ()
            else
              ack lease
          | None ->
-           if not (Lease.addr_available reqip lease_db ~now) then
+           if not (Lease.addr_available reqip db ~now) then
              nak ~msg:"Requested address is not available" ()
            else
              ack (Lease.make client_id reqip
@@ -415,11 +558,11 @@ module Input = struct
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         bad_packet "Bad DHCPREQUEST, ciaddr is not 0"
       else if Lease.expired lease ~now &&
-              not (Lease.addr_available reqip lease_db ~now) then
+              not (Lease.addr_available reqip db ~now) then
         nak ~msg:"Lease has expired and address is taken" ()
         (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
-              not (good_address pkt.chaddr reqip subnet lease_db) then
+              not (good_address pkt.chaddr reqip subnet db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
@@ -429,7 +572,7 @@ module Input = struct
       if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
         bad_packet "Bad DHCPREQUEST, ciaddr is not 0"
       else if Lease.expired lease ~now &&
-              not (Lease.addr_available lease.Lease.addr lease_db ~now) then
+              not (Lease.addr_available lease.Lease.addr db ~now) then
         nak ~msg:"Lease has expired and address is taken" ()
       else if lease.Lease.addr <> pkt.ciaddr then
         nak ~msg:"Requested address is incorrect" ()
@@ -437,7 +580,7 @@ module Input = struct
         ack ~renew:true lease
     | _ -> Silence
 
-  let discover_addr lease lease_db subnet pkt now =
+  let discover_addr lease db subnet pkt now =
     let id = client_id_of_pkt pkt in
     match lease with
     (* Handle the case where we have a lease *)
@@ -445,21 +588,21 @@ module Input = struct
       if not (Lease.expired lease ~now) then
         Some lease.Lease.addr
         (* If the lease expired, the address might not be available *)
-      else if (Lease.addr_available lease.Lease.addr lease_db ~now) then
+      else if (Lease.addr_available lease.Lease.addr db ~now) then
         Some lease.Lease.addr
       else
-        Lease.get_usable_addr id lease_db subnet.range ~now
+        Lease.get_usable_addr id db subnet.range ~now
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
-        if (good_address pkt.chaddr req_addr subnet lease_db) &&
-           (Lease.addr_available req_addr lease_db ~now) then
+        if (good_address pkt.chaddr req_addr subnet db) &&
+           (Lease.addr_available req_addr db ~now) then
           Some req_addr
         else
-          Lease.get_usable_addr id lease_db subnet.range ~now
-      | None -> Lease.get_usable_addr id lease_db subnet.range ~now
+          Lease.get_usable_addr id db subnet.range ~now
+      | None -> Lease.get_usable_addr id db subnet.range ~now
 
-  let discover_lease_time config subnet lease lease_db pkt now =
+  let discover_lease_time config subnet lease db pkt now =
     match (ip_lease_time_of_options pkt.options) with
     | Some ip_lease_time ->
       if Config.lease_time_good config subnet ip_lease_time then
@@ -473,15 +616,15 @@ module Input = struct
         else
           Lease.timeleft lease ~now
 
-  let input_discover config lease_db subnet pkt now =
+  let input_discover config db subnet pkt now =
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease id pkt.chaddr lease_db subnet ~now in
+    let lease, fixed_lease = find_lease id pkt.chaddr db subnet ~now in
     let ourip = subnet.ip_addr in
-    let addr = discover_addr lease lease_db subnet pkt now in
+    let addr = discover_addr lease db subnet pkt now in
     (* Figure out the lease lease_time *)
-    let lease_time = discover_lease_time config subnet lease lease_db pkt now in
+    let lease_time = discover_lease_time config subnet lease db pkt now in
     match addr with
     | None -> Warning "No ips left to offer"
     | Some addr ->
@@ -508,19 +651,19 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, lease_db)
+      Reply (pkt, db)
 
-  let input_pkt config lease_db subnet pkt time =
+  let input_pkt config db subnet pkt time =
     try
       if not (for_subnet pkt subnet) then
         Silence
       else if valid_pkt pkt then
         match msgtype_of_options pkt.options with
-        | Some DHCPDISCOVER -> input_discover config lease_db subnet pkt time
-        | Some DHCPREQUEST  -> input_request config lease_db subnet pkt time
-        | Some DHCPDECLINE  -> input_decline config lease_db subnet pkt time
-        | Some DHCPRELEASE  -> input_release config lease_db subnet pkt time
-        | Some DHCPINFORM   -> input_inform config lease_db subnet pkt
+        | Some DHCPDISCOVER -> input_discover config db subnet pkt time
+        | Some DHCPREQUEST  -> input_request config db subnet pkt time
+        | Some DHCPDECLINE  -> input_decline config db subnet pkt time
+        | Some DHCPRELEASE  -> input_release config db subnet pkt time
+        | Some DHCPINFORM   -> input_inform config db subnet pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
         | Some m -> Warning ("Unhandled msgtype " ^ (msgtype_to_string m))
       else
