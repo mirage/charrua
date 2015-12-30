@@ -30,6 +30,7 @@ module Config = struct
     mac_addr : Macaddr.t;
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
+    fixed_addrs : (Macaddr.t * Ipaddr.V4.t) list;
     options : Dhcp_wire.dhcp_option list;
     hosts : host list;
     default_lease_time : int32 option;
@@ -79,10 +80,18 @@ module Config = struct
             hw_addr = h.Ast.hw_addr;
           }) s.Ast.hosts
       in
+      let fixed_addrs =
+        List.fold_left
+          (fun alist host -> match (host.fixed_addr, host.hw_addr) with
+             | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
+             | _ -> alist)
+          [] hosts
+      in
       { ip_addr;
         mac_addr;
         network = s.Ast.network;
         range = s.Ast.range;
+        fixed_addrs;
         options = s.Ast.options;
         hosts;
         default_lease_time = s.Ast.default_lease_time;
@@ -94,13 +103,6 @@ module Config = struct
       hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
       default_lease_time = ast.Ast.default_lease_time;
       max_lease_time = ast.Ast.max_lease_time }
-
-  let fixed_addrs hosts =
-    List.fold_left
-      (fun alist host -> match (host.fixed_addr, host.hw_addr) with
-         | Some fixed_addr, Some hw_addr -> (hw_addr, fixed_addr) :: alist
-         | _ -> alist)
-      [] hosts
 
   let parse configtxt addresses =
     let choke lex s =
