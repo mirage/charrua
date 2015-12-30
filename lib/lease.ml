@@ -78,12 +78,12 @@ let leases_of_addr addr lease_db =
   List.filter (fun l -> l.addr = addr) (to_list lease_db)
 
 let addr_allocated addr lease_db =
-  match (leases_of_addr addr lease_db) with
+  match leases_of_addr addr lease_db with
   | [] -> false
   | _ -> true
 
 let addr_available addr lease_db ~now =
-  match (leases_of_addr addr lease_db) with
+  match leases_of_addr addr lease_db with
   | [] -> true
   | leases -> not (List.exists (fun l -> not (expired l ~now)) leases)
 
@@ -93,7 +93,7 @@ let addr_available addr lease_db ~now =
  *)
 let get_usable_addr id lease_db range ~now =
   let low_ip, high_ip = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let low_32 = Ipaddr.V4.to_int32 low_ip in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   if (Int32.compare low_32 high_32) >= 0 then
     invalid_arg "invalid range, must be (low * high)";
