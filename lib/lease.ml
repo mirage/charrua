@@ -27,12 +27,11 @@ type t = {
 
 (* Database, collection of leases *)
 type database = {
-  range : Ipaddr.V4.t * Ipaddr.V4.t;
   table : (Dhcp_wire.client_id, t) Hashtbl.t;
 } with sexp
 
-let make_db range =
-  { range; table = Hashtbl.create 10 }
+let make_db () =
+  { table = Hashtbl.create 10 }
 
 let make client_id addr ~duration ~now =
   let tm_start = Int32.of_float now in
@@ -92,8 +91,8 @@ let addr_available addr lease_db ~now =
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-let get_usable_addr id lease_db ~now =
-  let (low_ip, high_ip) = lease_db.range in
+let get_usable_addr id lease_db range ~now =
+  let low_ip, high_ip = range in
   let low_32 = (Ipaddr.V4.to_int32 low_ip) in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   if (Int32.compare low_32 high_32) >= 0 then

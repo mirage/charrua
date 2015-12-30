@@ -184,7 +184,7 @@ module Input = struct
     match (fixed_addr_of_mac mac subnet) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
-    | None -> Util.addr_in_range addr lease_db.Lease.range
+    | None -> Util.addr_in_range addr subnet.range
 
   let make_reply config subnet reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
@@ -448,7 +448,7 @@ module Input = struct
       else if (Lease.addr_available lease.Lease.addr lease_db ~now) then
         Some lease.Lease.addr
       else
-        Lease.get_usable_addr id lease_db ~now
+        Lease.get_usable_addr id lease_db subnet.range ~now
     (* Handle the case where we have no lease *)
     | None -> match (request_ip_of_options pkt.options) with
       | Some req_addr ->
@@ -456,8 +456,8 @@ module Input = struct
            (Lease.addr_available req_addr lease_db ~now) then
           Some req_addr
         else
-          Lease.get_usable_addr id lease_db ~now
-      | None -> Lease.get_usable_addr id lease_db ~now
+          Lease.get_usable_addr id lease_db subnet.range ~now
+      | None -> Lease.get_usable_addr id lease_db subnet.range ~now
 
   let discover_lease_time config subnet lease lease_db pkt now =
     match (ip_lease_time_of_options pkt.options) with
