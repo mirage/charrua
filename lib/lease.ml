@@ -93,6 +93,11 @@ let extend lease ~now =
 
 let expired lease ~now = timeleft lease ~now = Int32.zero
 
+let garbage_collect lease_db ~now =
+  update_db
+    (Id_map.filter (fun _ l -> not (expired l ~now)) lease_db.id_map)
+    (Addr_map.filter (fun _ l -> not (expired l ~now)) lease_db.addr_map)
+
 let lease_of_client_id client_id lease_db = Util.find_some @@ fun () ->
   Id_map.find client_id lease_db.id_map
 
