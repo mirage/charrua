@@ -61,14 +61,14 @@ let make client_id addr ~duration ~now =
 let make_fixed mac addr ~now =
   make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 
-let remove lease lease_db =
+let remove lease db =
   update_db
-    (Id_map.remove lease.client_id lease_db.id_map)
-    (Addr_map.remove lease.addr lease_db.addr_map)
+    (Id_map.remove lease.client_id db.id_map)
+    (Addr_map.remove lease.addr db.addr_map)
 
-let replace lease lease_db =
+let replace lease db =
   (* First clear both maps *)
-  let clr_map = remove lease lease_db in
+  let clr_map = remove lease db in
   update_db
     (Id_map.add lease.client_id lease clr_map.id_map)
     (Addr_map.add lease.addr lease clr_map.addr_map)
@@ -93,22 +93,22 @@ let extend lease ~now =
 
 let expired lease ~now = timeleft lease ~now = Int32.zero
 
-let garbage_collect lease_db ~now =
+let garbage_collect db ~now =
   update_db
-    (Id_map.filter (fun _ l -> not (expired l ~now)) lease_db.id_map)
-    (Addr_map.filter (fun _ l -> not (expired l ~now)) lease_db.addr_map)
+    (Id_map.filter (fun _ lease -> not (expired lease ~now)) db.id_map)
+    (Addr_map.filter (fun _ lease -> not (expired lease ~now)) db.addr_map)
 
-let lease_of_client_id client_id lease_db = Util.find_some @@ fun () ->
-  Id_map.find client_id lease_db.id_map
+let lease_of_client_id client_id db = Util.find_some @@ fun () ->
+  Id_map.find client_id db.id_map
 
-let lease_of_addr addr lease_db = Util.find_some @@ fun () ->
-  Addr_map.find addr lease_db.addr_map
+let lease_of_addr addr db = Util.find_some @@ fun () ->
+  Addr_map.find addr db.addr_map
 
-let addr_allocated addr lease_db =
-  Util.true_if_some @@ lease_of_addr addr lease_db
+let addr_allocated addr db =
+  Util.true_if_some @@ lease_of_addr addr db
 
-let addr_available addr lease_db ~now =
-  match lease_of_addr addr lease_db with
+let addr_available addr db ~now =
+  match lease_of_addr addr db with
   | None -> true
   | Some lease ->  not (expired lease ~now)
 
@@ -116,7 +116,7 @@ let addr_available addr lease_db ~now =
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-let get_usable_addr id lease_db range ~now =
+let get_usable_addr id db range ~now =
   let low_ip, high_ip = range in
   let low_32 = Ipaddr.V4.to_int32 low_ip in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
@@ -148,9 +148,9 @@ let get_usable_addr id lease_db range ~now =
     else
       linear_loop (Int32.succ off) f
   in
-  if not (addr_allocated hint_ip lease_db) then
+  if not (addr_allocated hint_ip db) then
     Some hint_ip
-  else match linear_loop Int32.zero (fun a -> not (addr_allocated a lease_db)) with
+  else match linear_loop Int32.zero (fun a -> not (addr_allocated a db)) with
     | Some ip -> Some ip
-    | None -> linear_loop Int32.zero (fun a -> addr_available a lease_db ~now)
+    | None -> linear_loop Int32.zero (fun a -> addr_available a db ~now)
 
