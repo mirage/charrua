@@ -81,7 +81,7 @@ let init_log vlevel daemon =
         ~channel:Lwt_io.stdout
         ()
 
-let rec input config subnet link =
+let rec input config db subnet link =
   let open Dhcp_server.Input in
   let open Lwt in
 
@@ -89,19 +89,28 @@ let rec input config subnet link =
   >>= fun buf ->
   let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
     | `Error e -> Lwt_log.error e
+      >>= fun () ->
+      return db
     | `Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
-      match (input_pkt config subnet pkt (Unix.time ())) with
-      | Silence -> return_unit
-      | Reply reply ->
+      match (input_pkt config db subnet pkt (Unix.time ())) with
+      | Silence -> return db
+      | Update db -> return db
+      | Reply (reply, db) ->
         Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply)
         >>= fun () ->
         Lwt_log.debug_f "Sent reply packet: %s" (Dhcp_wire.pkt_to_string reply)
+        >>= fun () ->
+        return db
       | Warning w -> Lwt_log.warning w
+        >>= fun () ->
+        return db
       | Error e -> Lwt_log.error e
+        >>= fun () ->
+        return db
   in
-  t >>= fun () -> input config subnet link
+  t >>= fun db -> input config db subnet link
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
@@ -111,6 +120,7 @@ let ifname_of_address ip_addr interfaces =
 
 let charruad configfile verbosity daemonize =
   let open Dhcp_server.Config in
+  let open Dhcp_server.Lease in
   let open Lwt in
 
   init_log (level_of_string verbosity) daemonize;
@@ -120,13 +130,14 @@ let charruad configfile verbosity daemonize =
       interfaces
   in
   let config = parse (read_file configfile) addresses in
+  let db = make_db () in
   if daemonize then
     go_daemon ();
   Lwt_log.ign_notice "Charrua DHCPD starting";
   let threads = List.map (fun subnet ->
       let ifname = ifname_of_address subnet.ip_addr interfaces in
       let link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) ifname) in
-      input config subnet link)
+      input config db subnet link)
       config.subnets
   in
   go_safe ();
