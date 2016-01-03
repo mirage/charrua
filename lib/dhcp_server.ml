@@ -227,7 +227,7 @@ let addr_allocated addr db =
 let addr_available addr db ~now =
   match lease_of_addr addr db with
   | None -> true
-  | Some lease ->  not (expired lease ~now)
+  | Some lease -> expired lease ~now
 
 (*
  * We try to use the last 4 bytes of the mac address as a hint for the ip
