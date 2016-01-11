@@ -72,6 +72,8 @@ module Config : sig
       configured in the system *)
 end
 
+(** {2 DHCP Leases (bindings) } *)
+
 module Lease : sig
   type t
 
@@ -100,6 +102,7 @@ module Lease : sig
     database -> Ipaddr.V4.t * Ipaddr.V4.t -> now:float -> Ipaddr.V4.t option
 
 end
+
 (** {2 DHCP Input Packet Logic } *)
 
 module Input : sig
