@@ -286,32 +286,6 @@ module Input = struct
     | Warning of string
     | Error of string
 
-  (* Find Option helpers *)
-  let msgtype_of_options options =
-    find_option_map (function Message_type m -> Some m | _ -> None) options
-  let client_id_of_options options =
-    find_option_map (function Client_id id -> Some id | _ -> None) options
-  let request_ip_of_options options =
-    find_option_map (function Request_ip ip -> Some ip | _ -> None) options
-  let ip_lease_time_of_options options =
-    find_option_map (function Ip_lease_time ip -> Some ip | _ -> None) options
-  let server_identifier_of_options options =
-    find_option_map (function Server_identifier sid -> Some sid | _ -> None) options
-  let vendor_class_id_of_options options =
-    find_option_map (function Vendor_class_id vid -> Some vid | _ -> None) options
-  let message_of_options options =
-    find_option_map (function Message m -> Some m | _ -> None) options
-  let domain_name_of_options options =
-    find_option_map (function Domain_name dn -> Some dn | _ -> None) options
-  let parameter_requests_of_options options =
-    collect_options (function Parameter_requests x -> Some x | _ -> None) options
-  let routers_of_options options =
-    collect_options (function Routers x -> Some x | _ -> None) options
-  let dns_servers_of_options options =
-    collect_options (function Dns_servers x -> Some x | _ -> None) options
-  let ntp_servers_of_options options =
-    collect_options (function Ntp_servers x -> Some x | _ -> None) options
-
   let fixed_addr_of_mac mac subnet =
     Util.find_map
       (fun host -> match host.hw_addr with
@@ -350,7 +324,7 @@ module Input = struct
     in
     let srcport = server_port in
     let srcmac = subnet.mac_addr in
-    let dstmac, dstip = match (msgtype_of_options options) with
+    let dstmac, dstip = match (find_message_type options) with
       | None -> failwith "make_reply: No msgtype in options"
       | Some m -> match m with
         | DHCPNAK -> if giaddr <> Ipaddr.V4.unspecified then
@@ -400,41 +374,39 @@ module Input = struct
   (* might be slow O(preqs * options) *)
   let collect_replies (config : Config.t) (subnet : Config.subnet)
       (preqs : option_code list) =
+    let all_options = subnet.options @ config.options in
     let maybe_both fn fnr =
-      let scan options = match fn options with Some x -> x | None -> [] in
-      match (scan subnet.options @ scan config.options) with
+      match fn all_options with
       | [] -> None
       | l -> Some (fnr l)
     in
     let maybe_replace fn fnr =
-      match fn subnet.options with
+      match fn all_options with
       | Some x -> Some (fnr x)
-      | None -> match fn config.options with
-        | Some x -> Some (fnr x)
-        | None -> None
+      | None -> None
     in
     Util.filter_map
       (function
         | ROUTERS ->
-          maybe_both routers_of_options (fun x -> Routers x)
+          maybe_both collect_routers (fun x -> Routers x)
         | DNS_SERVERS ->
-          maybe_both dns_servers_of_options (fun x -> Dns_servers x)
+          maybe_both collect_dns_servers (fun x -> Dns_servers x)
         | NTP_SERVERS ->
-          maybe_both ntp_servers_of_options (fun x -> Ntp_servers x)
+          maybe_both collect_ntp_servers (fun x -> Ntp_servers x)
         | DOMAIN_NAME ->
-          maybe_replace domain_name_of_options (fun x -> Domain_name x)
+          maybe_replace find_domain_name (fun x -> Domain_name x)
         | _ -> None)
       preqs
 
   let input_decline_release config db subnet pkt now =
     let open Util in
-    let msgtype = match msgtype_of_options pkt.options with
+    let msgtype = match find_message_type pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
     in
     let ourip = subnet.ip_addr in
-    let reqip = request_ip_of_options pkt.options in
-    let sidip = server_identifier_of_options pkt.options in
+    let reqip = find_request_ip pkt.options in
+    let sidip = find_server_identifier pkt.options in
     let client_id = client_id_of_pkt pkt in
     match sidip with
     | None -> bad_packet "%s without server identifier" msgtype
@@ -467,9 +439,9 @@ module Input = struct
         let open Util in
         cons (Message_type DHCPACK) @@
         cons (Server_identifier ourip) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
+        cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
-        match (parameter_requests_of_options pkt.options) with
+        match (find_parameter_requests pkt.options) with
         | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
@@ -483,17 +455,17 @@ module Input = struct
     let client_id = client_id_of_pkt pkt in
     let lease, fixed_lease = find_lease client_id pkt.chaddr db subnet ~now in
     let ourip = subnet.ip_addr in
-    let reqip = request_ip_of_options pkt.options in
-    let sidip = server_identifier_of_options pkt.options in
+    let reqip = find_request_ip pkt.options in
+    let sidip = find_server_identifier pkt.options in
     let nak ?msg () =
       let open Util in
       let options =
         cons (Message_type DHCPNAK) @@
         cons (Server_identifier ourip) @@
         cons_if_some_f msg (fun msg -> Message msg) @@
-        cons_if_some_f (client_id_of_options pkt.options)
+        cons_if_some_f (find_client_id pkt.options)
           (fun id -> Client_id id) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
+        cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) []
       in
       let pkt = make_reply config subnet pkt
@@ -515,9 +487,9 @@ module Input = struct
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
         cons (Server_identifier ourip) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
+        cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
-        match (parameter_requests_of_options pkt.options) with
+        match (find_parameter_requests pkt.options) with
         | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
@@ -593,7 +565,7 @@ module Input = struct
       else
         Lease.get_usable_addr id db subnet.range ~now
     (* Handle the case where we have no lease *)
-    | None -> match (request_ip_of_options pkt.options) with
+    | None -> match (find_request_ip pkt.options) with
       | Some req_addr ->
         if (good_address pkt.chaddr req_addr subnet db) &&
            (Lease.addr_available req_addr db ~now) then
@@ -603,7 +575,7 @@ module Input = struct
       | None -> Lease.get_usable_addr id db subnet.range ~now
 
   let discover_lease_time config subnet lease db pkt now =
-    match (ip_lease_time_of_options pkt.options) with
+    match (find_ip_lease_time pkt.options) with
     | Some ip_lease_time ->
       if Config.lease_time_good config subnet ip_lease_time then
         ip_lease_time
@@ -641,9 +613,9 @@ module Input = struct
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
         cons (Server_identifier ourip) @@
-        cons_if_some_f (vendor_class_id_of_options pkt.options)
+        cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
-        match (parameter_requests_of_options pkt.options) with
+        match (find_parameter_requests pkt.options) with
         | Some preqs -> collect_replies config subnet preqs
         | None -> []
       in
@@ -658,7 +630,7 @@ module Input = struct
       if not (for_subnet pkt subnet) then
         Silence
       else if valid_pkt pkt then
-        match msgtype_of_options pkt.options with
+        match find_message_type pkt.options with
         | Some DHCPDISCOVER -> input_discover config db subnet pkt time
         | Some DHCPREQUEST  -> input_request config db subnet pkt time
         | Some DHCPDECLINE  -> input_decline config db subnet pkt time

@@ -478,10 +478,10 @@ type dhcp_option =
   | Nds_tree_name of string                 (* code 86 *)
   | Nds_context of string                   (* code 87 *)
   | Bcmcs_controller_domain_name_list of string (* code 88 *)
-  | Bcmcs_controller_ipv4_addr of Ipaddr.V4.t list (* code 89 *)
+  | Bcmcs_controller_ipv4_addrs of Ipaddr.V4.t list (* code 89 *)
   | Authentication of string                (* code 90 *)
   | Client_last_transaction_time of int32   (* code 91 *)
-  | Associated_ip of Ipaddr.V4.t list       (* code 92 *)
+  | Associated_ips of Ipaddr.V4.t list       (* code 92 *)
   | Client_system of string                 (* code 93 *)
   | Client_ndi of string                    (* code 94 *)
   | Ldap of string                          (* code 95 *)
@@ -554,19 +554,171 @@ type dhcp_option =
 val buf_of_options : Cstruct.t -> dhcp_option list -> Cstruct.t
 val options_of_buf : Cstruct.t -> int -> dhcp_option list
 
-val find_option : option_code -> dhcp_option list -> dhcp_option option
+val find_option : (dhcp_option -> 'b option) -> dhcp_option list -> 'b option
 (** [find_option f l] finds the first option where [f] evaluates to [Some] value
     on list [l] *)
 
-val find_option_map : (dhcp_option -> 'b option) -> dhcp_option list -> 'b option
-
-val collect_options : ('a -> 'b list option) -> 'a list -> 'b list option
+val collect_options : ('a -> 'b list option) -> 'a list -> 'b list
 (** [collect_options f l] collects all options where [f] evaluates to [Some]
     value on list [l], this is useful for list options like [Routers], if
     multiple list options are found, the resulting list is flattened. *)
 
 val dhcp_option_of_sexp : Sexplib.Sexp.t -> dhcp_option
 val sexp_of_dhcp_option : dhcp_option -> Sexplib.Sexp.t
+
+val collect_associated_ips : dhcp_option list -> Ipaddr.V4.t list
+val collect_bcmcs_controller_ipv4_addrs : dhcp_option list -> Ipaddr.V4.t list
+val collect_cookie_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_dns_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_finger_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_impress_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_irc_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_log_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_lpr_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_name_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_netbios_datagram_distrib_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_netbios_name_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_nis_plus_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_nis_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_ntp_servers : dhcp_option list -> Ipaddr.V4.t list
+val find_parameter_requests : dhcp_option list -> option_code list option
+val collect_policy_filters : dhcp_option list -> Ipaddr.V4.Prefix.t list
+val collect_routers : dhcp_option list -> Ipaddr.V4.t list
+val collect_rsc_location_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_static_routes : dhcp_option list -> (Ipaddr.V4.t * Ipaddr.V4.t) list
+val collect_streettalk_da : dhcp_option list -> Ipaddr.V4.t list
+val collect_streettalk_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_time_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_www_servers : dhcp_option list -> Ipaddr.V4.t list
+val collect_xwindow_display_managers : dhcp_option list -> Ipaddr.V4.t list
+val collect_xwindow_font_servers : dhcp_option list -> Ipaddr.V4.t list
+val find_absolute_time : dhcp_option list -> int32 option
+val find_all_subnets_local : dhcp_option list -> bool option
+val find_arp_cache_timo : dhcp_option list -> int32 option
+val find_authentication : dhcp_option list -> string option
+val find_auto_config : dhcp_option list -> int option
+val find_bcmcs_controller_domain_name : dhcp_option list -> string option
+val find_bootfile_name : dhcp_option list -> string option
+val find_bootfile_size : dhcp_option list -> int option
+val find_broadcast_addr : dhcp_option list -> Ipaddr.V4.t option
+val find_capwap_ac_v4 : dhcp_option list -> string option
+val find_ccc : dhcp_option list -> string option
+val find_classless_static_route : dhcp_option list -> string option
+val find_client_fqdn : dhcp_option list -> string option
+val find_client_id : dhcp_option list -> client_id option
+val find_client_last_transaction_time : dhcp_option list -> int32 option
+val find_client_ndi : dhcp_option list -> string option
+val find_client_system : dhcp_option list -> string option
+val find_configuration_file : dhcp_option list -> string option
+val find_data_source : dhcp_option list -> int option
+val find_default_ip_ttl : dhcp_option list -> int option
+val find_dhcp_captive_portal : dhcp_option list -> string option
+val find_dhcp_state : dhcp_option list -> int option
+val find_directory_agent : dhcp_option list -> string option
+val find_domain_name : dhcp_option list -> string option
+val find_domain_search : dhcp_option list -> string option
+val find_etherboot_175 : dhcp_option list -> string option
+val find_etherboot_177 : dhcp_option list -> string option
+val find_ethernet_encapsulation : dhcp_option list -> bool option
+val find_extension_path : dhcp_option list -> string option
+val find_forcenew_nonce_capable : dhcp_option list -> string option
+val find_geoconf : dhcp_option list -> string option
+val find_geoconf_civic : dhcp_option list -> string option
+val find_geolock : dhcp_option list -> string option
+val find_hostname : dhcp_option list -> string option
+val find_interface_mtu : dhcp_option list -> int option
+val find_ip_lease_time : dhcp_option list -> int32 option
+val find_ip_telefone : dhcp_option list -> string option
+val find_ipforwarding : dhcp_option list -> bool option
+val find_ipv4_address_andsf : dhcp_option list -> string option
+val find_ipv4_address_mos : dhcp_option list -> string option
+val find_ipv4_fqdn_mos : dhcp_option list -> string option
+val find_isns : dhcp_option list -> string option
+val find_ldap : dhcp_option list -> string option
+val find_mask_supplier : dhcp_option list -> bool option
+val find_max_datagram : dhcp_option list -> int option
+val find_max_message : dhcp_option list -> int option
+val find_merit_dumpfile : dhcp_option list -> string option
+val find_message : dhcp_option list -> string option
+val find_message_type : dhcp_option list -> msgtype option
+val find_misc_150 : dhcp_option list -> string option
+val find_mobile_ip_home_agent : dhcp_option list -> Ipaddr.V4.t list option
+val find_name_service_search : dhcp_option list -> string option
+val find_nds_context : dhcp_option list -> string option
+val find_nds_servers : dhcp_option list -> string option
+val find_nds_tree_name : dhcp_option list -> string option
+val find_netbios_node : dhcp_option list -> int option
+val find_netbios_scope : dhcp_option list -> string option
+val find_netinfo_address : dhcp_option list -> string option
+val find_netinfo_tag : dhcp_option list -> string option
+val find_netware_ip_domain : dhcp_option list -> string option
+val find_netware_ip_option : dhcp_option list -> string option
+val find_nis_domain : dhcp_option list -> string option
+val find_nis_plus_domain : dhcp_option list -> string option
+val find_nlsr : dhcp_option list -> bool option
+val find_nntp_servers : dhcp_option list -> Ipaddr.V4.t list option
+val find_option_6rd : dhcp_option list -> string option
+val find_option_overload : dhcp_option list -> int option
+val find_pana_agent : dhcp_option list -> string option
+val find_path_prefix : dhcp_option list -> string option
+val find_pcode : dhcp_option list -> string option
+val find_perform_mask_discovery : dhcp_option list -> bool option
+val find_perform_router_disc : dhcp_option list -> bool option
+val find_pmtu_ageing_timo : dhcp_option list -> int32 option
+val find_pmtu_plateau_table : dhcp_option list -> int list option
+val find_pop3_servers : dhcp_option list -> Ipaddr.V4.t list option
+val find_pxe_128 : dhcp_option list -> string option
+val find_pxe_129 : dhcp_option list -> string option
+val find_pxe_130 : dhcp_option list -> string option
+val find_pxe_131 : dhcp_option list -> string option
+val find_pxe_132 : dhcp_option list -> string option
+val find_pxe_133 : dhcp_option list -> string option
+val find_pxe_134 : dhcp_option list -> string option
+val find_pxe_135 : dhcp_option list -> string option
+val find_pxe_linux : dhcp_option list -> int32 option
+val find_query_end_time : dhcp_option list -> int32 option
+val find_query_start_time : dhcp_option list -> int32 option
+val find_rapid_commit : dhcp_option list -> dhcp_option option
+val find_rdnss_selection : dhcp_option list -> string option
+val find_rebinding_t2 : dhcp_option list -> int32 option
+val find_reboot_time : dhcp_option list -> int32 option
+val find_relay_agent_information : dhcp_option list -> string option
+val find_renewal_t1 : dhcp_option list -> int32 option
+val find_request_ip : dhcp_option list -> Ipaddr.V4.t option
+val find_root_path : dhcp_option list -> string option
+val find_router_sol_addr : dhcp_option list -> Ipaddr.V4.t option
+val find_server_identifier : dhcp_option list -> Ipaddr.V4.t option
+val find_service_scope : dhcp_option list -> string option
+val find_sip_servers : dhcp_option list -> string option
+val find_sip_ua_domains : dhcp_option list -> string option
+val find_smtp_servers : dhcp_option list -> Ipaddr.V4.t list option
+val find_start_time_of_state : dhcp_option list -> int32 option
+val find_status_code : dhcp_option list -> string option
+val find_subnet_allocation : dhcp_option list -> int option
+val find_subnet_mask : dhcp_option list -> Ipaddr.V4.t option
+val find_subnet_selection : dhcp_option list -> Ipaddr.V4.t option
+val find_swap_server : dhcp_option list -> Ipaddr.V4.t option
+val find_tcode : dhcp_option list -> string option
+val find_tcp_default_ttl : dhcp_option list -> int option
+val find_tcp_keepalive_garbage : dhcp_option list -> int option
+val find_tcp_keepalive_interval : dhcp_option list -> int32 option
+val find_tftp_server_name : dhcp_option list -> string option
+val find_time_offset : dhcp_option list -> int32 option
+val find_trailer_encapsulation : dhcp_option list -> bool option
+val find_url : dhcp_option list -> string option
+val find_user_auth : dhcp_option list -> string option
+val find_user_class : dhcp_option list -> string option
+val find_uuid_guid : dhcp_option list -> string option
+val find_v4_access_domain : dhcp_option list -> string option
+val find_v4_lost : dhcp_option list -> string option
+val find_v4_pcp_server : dhcp_option list -> string option
+val find_v4_portparams : dhcp_option list -> string option
+val find_vendor_class_id : dhcp_option list -> string option
+val find_vendor_specific : dhcp_option list -> string option
+val find_vi_vendor_class : dhcp_option list -> string option
+val find_vi_vendor_info : dhcp_option list -> string option
+val find_virtual_subnet_selection : dhcp_option list -> string option
+val find_web_proxy_auto_disc : dhcp_option list -> string option
 
 (** {2 DHCP Packet } *)
 

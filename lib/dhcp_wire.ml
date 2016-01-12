@@ -427,10 +427,10 @@ type dhcp_option =
   | Nds_tree_name of string                 (* code 86 *)
   | Nds_context of string                   (* code 87 *)
   | Bcmcs_controller_domain_name_list of string (* code 88 *)
-  | Bcmcs_controller_ipv4_addr of Ipaddr.V4.t list (* code 89 *)
+  | Bcmcs_controller_ipv4_addrs of Ipaddr.V4.t list (* code 89 *)
   | Authentication of string                (* code 90 *)
   | Client_last_transaction_time of int32   (* code 91 *)
-  | Associated_ip of Ipaddr.V4.t list       (* code 92 *)
+  | Associated_ips of Ipaddr.V4.t list      (* code 92 *)
   | Client_system of string                 (* code 93 *)
   | Client_ndi of string                    (* code 94 *)
   | Ldap of string                          (* code 95 *)
@@ -871,14 +871,14 @@ let buf_of_options sbuf options =
     | Nds_tree_name nn -> put_coded_bytes 86 nn buf           (* code 86 *)
     | Nds_context nc -> put_coded_bytes 87 nc buf             (* code 87 *)
     | Bcmcs_controller_domain_name_list l -> put_coded_bytes 88 l buf (* code 88 *)
-    | Bcmcs_controller_ipv4_addr l -> put_coded_ip_list 98 l buf (* code 89 *)
+    | Bcmcs_controller_ipv4_addrs l -> put_coded_ip_list 98 l buf (* code 89 *)
     | Authentication a -> put_coded_bytes 90 a buf            (* code 90 *)
     | Client_last_transaction_time t -> put_coded_32 91 t buf (* code 91 *)
-    | Associated_ip ip -> put_coded_ip_list 92 ip buf         (* code 92 *)
+    | Associated_ips l -> put_coded_ip_list 92 l buf          (* code 92 *)
     | Client_system cs -> put_coded_bytes 93 cs buf           (* code 93 *)
     | Client_ndi ndi -> put_coded_bytes 94 ndi buf            (* code 94 *)
     | Ldap ldap -> put_coded_bytes 95 ldap buf                (* code 95 *)
-    | Uuid_guid u -> put_coded_bytes 97 u buf                      (* code 97 *)
+    | Uuid_guid u -> put_coded_bytes 97 u buf                 (* code 97 *)
     | User_auth u -> put_coded_bytes 98 u buf                 (* code 98 *)
     | Geoconf_civic gc -> put_coded_bytes 99 gc buf           (* code 99 *)
     | Pcode p -> put_coded_bytes 100 p buf                    (* code 100 *)
@@ -1108,204 +1108,12 @@ let is_dhcp buf len =
       false
   | _ -> false
 
-let find_option code options =
-  let s f = Util.find_some @@
-    fun () -> List.find f options
-  in
-  match code with
-  | SUBNET_MASK -> s (function Subnet_mask _ -> true | _ -> false)
-  | TIME_OFFSET -> s (function Time_offset _ -> true | _ -> false)
-  | ROUTERS -> s (function Routers _ -> true | _ -> false)
-  | TIME_SERVERS -> s (function Time_servers _ -> true | _ -> false)
-  | NAME_SERVERS -> s (function Name_servers _ -> true | _ -> false)
-  | DNS_SERVERS -> s (function Dns_servers _ -> true | _ -> false)
-  | LOG_SERVERS -> s (function Log_servers _ -> true | _ -> false)
-  | COOKIE_SERVERS -> s (function Cookie_servers _ -> true | _ -> false)
-  | LPR_SERVERS -> s (function Lpr_servers _ -> true | _ -> false)
-  | IMPRESS_SERVERS -> s (function Impress_servers _ -> true | _ -> false)
-  | RSCLOCATION_SERVERS -> s (function Rsclocation_servers _ -> true | _ -> false)
-  | HOSTNAME -> s (function Hostname _ -> true | _ -> false)
-  | BOOTFILE_SIZE -> s (function Bootfile_size _ -> true | _ -> false)
-  | MERIT_DUMPFILE -> s (function Merit_dumpfile _ -> true | _ -> false)
-  | DOMAIN_NAME -> s (function Domain_name _ -> true | _ -> false)
-  | SWAP_SERVER -> s (function Swap_server _ -> true | _ -> false)
-  | ROOT_PATH -> s (function Root_path _ -> true | _ -> false)
-  | EXTENSION_PATH -> s (function Extension_path _  -> true | _ -> false)
-  | IPFORWARDING -> s (function Ipforwarding _  -> true | _ -> false)
-  | NLSR -> s (function Nlsr _  -> true | _ -> false)
-  | POLICY_FILTERS -> s (function Policy_filters _  -> true | _ -> false)
-  | MAX_DATAGRAM -> s (function Max_datagram _  -> true | _ -> false)
-  | DEFAULT_IP_TTL -> s (function Default_ip_ttl _ -> true | _ -> false)
-  | PMTU_AGEING_TIMO -> s (function Pmtu_ageing_timo _ -> true | _ -> false)
-  | PMTU_PLATEAU_TABLE -> s (function Pmtu_plateau_table _ -> true | _ -> false)
-  | INTERFACE_MTU -> s (function Interface_mtu _ -> true | _ -> false)
-  | ALL_SUBNETS_LOCAL -> s (function All_subnets_local _ -> true | _ -> false)
-  | BROADCAST_ADDR -> s (function Broadcast_addr _ -> true | _ -> false)
-  | PERFORM_MASK_DISCOVERY -> s (function Perform_mask_discovery _ -> true | _ -> false)
-  | MASK_SUPPLIER -> s (function Mask_supplier _ -> true | _ -> false)
-  | PERFORM_ROUTER_DISC -> s (function Perform_router_disc _ -> true | _ -> false)
-  | ROUTER_SOL_ADDR -> s (function Router_sol_addr _ -> true | _ -> false)
-  | STATIC_ROUTES -> s (function Static_routes _ ->  true | _ -> false)
-  | TRAILER_ENCAPSULATION -> s (function Trailer_encapsulation _ -> true | _ -> false)
-  | ARP_CACHE_TIMO -> s (function Arp_cache_timo _ -> true | _ -> false)
-  | ETHERNET_ENCAPSULATION -> s (function Ethernet_encapsulation _ -> true | _ -> false)
-  | TCP_DEFAULT_TTL -> s (function Tcp_default_ttl _ -> true | _ -> false)
-  | TCP_KEEPALIVE_INTERVAL -> s (function Tcp_keepalive_interval _ -> true | _ -> false)
-  | TCP_KEEPALIVE_GARBAGE -> s (function Tcp_keepalive_garbage _ -> true | _ -> false)
-  | NIS_DOMAIN -> s (function Nis_domain _ -> true | _ -> false)
-  | NIS_SERVERS -> s (function Nis_servers _ -> true | _ -> false)
-  | NTP_SERVERS -> s (function Ntp_servers _ -> true | _ -> false)
-  | VENDOR_SPECIFIC -> s (function Vendor_specific _ -> true | _ -> false)
-  | NETBIOS_NAME_SERVERS -> s (function Netbios_name_servers _ -> true | _ -> false)
-  | NETBIOS_DATAGRAM_DISTRIB_SERVERS ->
-    s (function Netbios_datagram_distrib_servers _ -> true | _ -> false)
-  | NETBIOS_NODE -> s (function Netbios_node _ -> true | _ -> false)
-  | NETBIOS_SCOPE -> s (function Netbios_scope _ -> true | _ -> false)
-  | XWINDOW_FONT_SERVERS -> s (function Xwindow_font_servers _ -> true | _ -> false)
-  | XWINDOW_DISPLAY_MANAGERS -> s (function Xwindow_display_managers _ -> true | _ -> false)
-  | REQUEST_IP -> s (function Request_ip _ -> true | _ -> false)
-  | IP_LEASE_TIME -> s (function Ip_lease_time _ -> true | _ -> false)
-  | OPTION_OVERLOAD -> s (function Option_overload _ -> true | _ -> false)
-  | MESSAGE_TYPE -> s (function Message_type _ -> true | _ -> false)
-  | SERVER_IDENTIFIER -> s (function Server_identifier _ -> true | _ -> false)
-  | PARAMETER_REQUESTS -> s (function Parameter_requests _ -> true | _ -> false)
-  | MESSAGE -> s (function Message _ -> true | _ -> false)
-  | MAX_MESSAGE -> s (function Max_message _ -> true | _ -> false)
-  | RENEWAL_T1 -> s (function Renewal_t1 _ -> true | _ -> false)
-  | REBINDING_T2 -> s (function Rebinding_t2 _ -> true | _ -> false)
-  | VENDOR_CLASS_ID -> s (function Vendor_class_id _ -> true | _ -> false)
-  | CLIENT_ID -> s (function Client_id _ -> true | _ -> false)
-  | NETWARE_IP_DOMAIN -> s (function Netware_ip_domain _ -> true | _ -> false)
-  | NETWARE_IP_OPTION -> s (function Netware_ip_option _ -> true | _ -> false)
-  | NIS_PLUS_DOMAIN -> s (function Nis_plus_domain _ -> true | _ -> false)
-  | NIS_PLUS_SERVERS -> s (function Nis_plus_servers _ -> true | _ -> false)
-  | TFTP_SERVER_NAME -> s (function Tftp_server_name _ -> true | _ -> false)
-  | BOOTFILE_NAME -> s (function Bootfile_name _ -> true | _ -> false)
-  | MOBILE_IP_HOME_AGENT -> s (function Mobile_ip_home_agent _ -> true | _ -> false)
-  | SMTP_SERVERS -> s (function Smtp_servers _ -> true | _ -> false)
-  | POP3_SERVERS -> s (function Pop3_servers _ -> true | _ -> false)
-  | NNTP_SERVERS -> s (function Nntp_servers _ -> true | _ -> false)
-  | WWW_SERVERS -> s (function Www_servers _ -> true | _ -> false)
-  | FINGER_SERVERS -> s (function Finger_servers _ -> true | _ -> false)
-  | IRC_SERVERS -> s (function Irc_servers _ -> true | _ -> false)
-  | STREETTALK_SERVERS -> s (function Streettalk_servers _ -> true | _ -> false)
-  | STREETTALK_DA -> s (function Streettalk_da _ -> true | _ -> false)
-  | USER_CLASS -> s (function User_class _ -> true | _ -> false)
-  | DIRECTORY_AGENT -> s (function Directory_agent _ -> true | _ -> false)
-  | SERVICE_SCOPE -> s (function Service_scope _ -> true | _ -> false)
-  | RAPID_COMMIT -> s (function Rapid_commit -> true | _ -> false)
-  | CLIENT_FQDN -> s (function Client_fqdn _ -> true | _ -> false)
-  | RELAY_AGENT_INFORMATION -> s (function Relay_agent_information _ -> true | _ -> false)
-  | ISNS -> s (function Isns _ -> true | _ -> false)
-  | NDS_SERVERS -> s (function Nds_servers _ -> true | _ -> false)
-  | NDS_TREE_NAME -> s (function Nds_tree_name _ -> true | _ -> false)
-  | NDS_CONTEXT -> s (function Nds_context _ -> true | _ -> false)
-  | BCMCS_CONTROLLER_DOMAIN_NAME_LIST ->
-      s (function Bcmcs_controller_domain_name_list _ -> true | _ -> false)
-  | BCMCS_CONTROLLER_IPV4_ADDR ->
-      s (function Bcmcs_controller_ipv4_addr _ -> true | _ -> false)
-  | AUTHENTICATION -> s (function Authentication _ -> true | _ -> false)
-  | CLIENT_LAST_TRANSACTION_TIME ->
-      s (function Client_last_transaction_time _ -> true | _ -> false)
-  | ASSOCIATED_IP -> s (function Associated_ip _ -> true | _ -> false)
-  | CLIENT_SYSTEM -> s (function Client_system _ -> true | _ -> false)
-  | CLIENT_NDI -> s (function Client_ndi _ -> true | _ -> false)
-  | LDAP -> s (function Ldap _ -> true | _ -> false)
-  | UUID_GUID -> s (function Uuid_guid _ -> true | _ -> false)
-  | USER_AUTH -> s (function User_auth _ -> true | _ -> false)
-  | GEOCONF_CIVIC -> s (function Geoconf_civic _ -> true | _ -> false)
-  | PCODE -> s (function Pcode _ -> true | _ -> false)
-  | TCODE -> s (function Tcode _ -> true | _ -> false)
-  | NETINFO_ADDRESS -> s (function Netinfo_address _ -> true | _ -> false)
-  | NETINFO_TAG -> s (function Netinfo_tag _ -> true | _ -> false)
-  | URL -> s (function Url _ -> true | _ -> false)
-  | AUTO_CONFIG -> s (function Auto_config _ -> true | _ -> false)
-  | NAME_SERVICE_SEARCH -> s (function Name_service_search _ -> true | _ -> false)
-  | SUBNET_SELECTION -> s (function Subnet_selection _ -> true | _ -> false)
-  | DOMAIN_SEARCH -> s (function Domain_search _ -> true | _ -> false)
-  | SIP_SERVERS -> s (function Sip_servers _ -> true | _ -> false)
-  | CLASSLESS_STATIC_ROUTE -> s (function Classless_static_route _ -> true | _ -> false)
-  | CCC -> s (function Ccc _ -> true | _ -> false)
-  | GEOCONF -> s (function Geoconf _ -> true | _ -> false)
-  | VI_VENDOR_CLASS -> s (function Vi_vendor_class _ -> true | _ -> false)
-  | VI_VENDOR_INFO -> s (function Vi_vendor_info _ -> true | _ -> false)
-  | PXE_128 -> s (function Pxe_128 _ -> true | _ -> false)
-  | PXE_129 -> s (function Pxe_129 _ -> true | _ -> false)
-  | PXE_130 -> s (function Pxe_130 _ -> true | _ -> false)
-  | PXE_131 -> s (function Pxe_131 _ -> true | _ -> false)
-  | PXE_132 -> s (function Pxe_132 _ -> true | _ -> false)
-  | PXE_133 -> s (function Pxe_133 _ -> true | _ -> false)
-  | PXE_134 -> s (function Pxe_134 _ -> true | _ -> false)
-  | PXE_135 -> s (function Pxe_135 _ -> true | _ -> false)
-  | PANA_AGENT -> s (function Pana_agent _ -> true | _ -> false)
-  | V4_LOST -> s (function V4_lost _ -> true | _ -> false)
-  | CAPWAP_AC_V4 -> s (function Capwap_ac_v4 _ -> true | _ -> false)
-  | IPV4_ADDRESS_MOS -> s (function Ipv4_address_mos _ -> true | _ -> false)
-  | IPV4_FQDN_MOS -> s (function Ipv4_fqdn_mos _ -> true | _ -> false)
-  | SIP_UA_DOMAINS -> s (function Sip_ua_domains _ -> true | _ -> false)
-  | IPV4_ADDRESS_ANDSF -> s (function Ipv4_address_andsf _ -> true | _ -> false)
-  | GEOLOCK -> s (function Geolock _ -> true | _ -> false)
-  | FORCENEW_NONCE_CAPABLE -> s (function Forcenew_nonce_capable _ -> true | _ -> false)
-  | RDNSS_SELECTION -> s (function Rdnss_selection _ -> true | _ -> false)
-  | MISC_150 -> s (function Misc_150 _ -> true | _ -> false)
-  | STATUS_CODE -> s (function Status_code _ -> true | _ -> false)
-  | ABSOLUTE_TIME -> s (function Absolute_time _ -> true | _ -> false)
-  | START_TIME_OF_STATE -> s (function Start_time_of_state _ -> true | _ -> false)
-  | QUERY_START_TIME -> s (function Query_start_time _ -> true | _ -> false)
-  | QUERY_END_TIME -> s (function Query_end_time _ -> true | _ -> false)
-  | DHCP_STATE -> s (function Dhcp_state _ -> true | _ -> false)
-  | DATA_SOURCE -> s (function Data_source _ -> true | _ -> false)
-  | V4_PCP_SERVER -> s (function V4_pcp_server _ -> true | _ -> false)
-  | V4_PORTPARAMS -> s (function V4_portparams _ -> true | _ -> false)
-  | DHCP_CAPTIVE_PORTAL -> s (function Dhcp_captive_portal _ -> true | _ -> false)
-  | ETHERBOOT_175 -> s (function Etherboot_175 _ -> true | _ -> false)
-  | IP_TELEFONE -> s (function Ip_telefone _ -> true | _ -> false)
-  | ETHERBOOT_177 -> s (function Etherboot_177 _ -> true | _ -> false)
-  | PXE_LINUX -> s (function Pxe_linux _ -> true | _ -> false)
-  | CONFIGURATION_FILE -> s (function Configuration_file _ -> true | _ -> false)
-  | PATH_PREFIX -> s (function Path_prefix _ -> true | _ -> false)
-  | REBOOT_TIME -> s (function Reboot_time _ -> true | _ -> false)
-  | OPTION_6RD -> s (function Option_6rd _ -> true | _ -> false)
-  | V4_ACCESS_DOMAIN -> s (function V4_access_domain _ -> true | _ -> false)
-  | SUBNET_ALLOCATION -> s (function Subnet_allocation _ -> true | _ -> false)
-  | VIRTUAL_SUBNET_SELECTION -> s (function Virtual_subnet_selection _ -> true | _ -> false)
-  | WEB_PROXY_AUTO_DISC -> s (function Web_proxy_auto_disc _ -> true | _ -> false)
-  | END -> s (fun x -> x = End)
-  | PAD -> s (fun x -> x = Pad)
-  | RESERVED_224   | RESERVED_225   | RESERVED_226   | RESERVED_227 | RESERVED_228
-  | RESERVED_229   | RESERVED_230   | RESERVED_231   | RESERVED_232 | RESERVED_233
-  | RESERVED_234   | RESERVED_235   | RESERVED_236   | RESERVED_237 | RESERVED_238
-  | RESERVED_239   | RESERVED_240   | RESERVED_241   | RESERVED_242 | RESERVED_243
-  | RESERVED_244   | RESERVED_245   | RESERVED_246   | RESERVED_247 | RESERVED_248
-  | RESERVED_249   | RESERVED_250   | RESERVED_251   | RESERVED_253 | RESERVED_254
-  | UNASSIGNED_84  | UNASSIGNED_96  | UNASSIGNED_102 | UNASSIGNED_103
-  | UNASSIGNED_104 | UNASSIGNED_105 | UNASSIGNED_106 | UNASSIGNED_107
-  | UNASSIGNED_108 | UNASSIGNED_109 | UNASSIGNED_110 | UNASSIGNED_111
-  | UNASSIGNED_115 | UNASSIGNED_126 | UNASSIGNED_127 | UNASSIGNED_143
-  | UNASSIGNED_147 | UNASSIGNED_148 | UNASSIGNED_149 | UNASSIGNED_161
-  | UNASSIGNED_162 | UNASSIGNED_163 | UNASSIGNED_164 | UNASSIGNED_165
-  | UNASSIGNED_166 | UNASSIGNED_167 | UNASSIGNED_168 | UNASSIGNED_169
-  | UNASSIGNED_170 | UNASSIGNED_171 | UNASSIGNED_172 | UNASSIGNED_173
-  | UNASSIGNED_174 | UNASSIGNED_178 | UNASSIGNED_179 | UNASSIGNED_180
-  | UNASSIGNED_181 | UNASSIGNED_182 | UNASSIGNED_183 | UNASSIGNED_184
-  | UNASSIGNED_185 | UNASSIGNED_186 | UNASSIGNED_187 | UNASSIGNED_188
-  | UNASSIGNED_189 | UNASSIGNED_190 | UNASSIGNED_191 | UNASSIGNED_192
-  | UNASSIGNED_193 | UNASSIGNED_194 | UNASSIGNED_195 | UNASSIGNED_196
-  | UNASSIGNED_197 | UNASSIGNED_198 | UNASSIGNED_199 | UNASSIGNED_200
-  | UNASSIGNED_201 | UNASSIGNED_202 | UNASSIGNED_203 | UNASSIGNED_204
-  | UNASSIGNED_205 | UNASSIGNED_206 | UNASSIGNED_207 | UNASSIGNED_214
-  | UNASSIGNED_215 | UNASSIGNED_216 | UNASSIGNED_217 | UNASSIGNED_218
-  | UNASSIGNED_219 | UNASSIGNED_222 | UNASSIGNED_223
-    -> s (function Unassigned (c, _) -> code = c | _ -> false)
+let find_option f options = Util.find_map f options
 
-let find_option_map f options = Util.find_map f options
-
-let collect_options f options = match (Util.filter_map f options) with
-  | [] -> None
-  | l -> Some (List.flatten l)
+let collect_options f options = Util.filter_map f options |> List.flatten
 
 let client_id_of_pkt pkt =
-  match find_option_map
+  match find_option
           (function Client_id id -> Some id | _ -> None)
           pkt.options
   with
@@ -1316,3 +1124,338 @@ let client_id_of_pkt pkt =
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let client_id_to_string = to_hum sexp_of_client_id
 let pkt_to_string = to_hum sexp_of_pkt
+
+let find_subnet_mask =
+  find_option (function Subnet_mask x -> Some x | _ -> None)
+let find_time_offset =
+  find_option (function Time_offset x -> Some x | _ -> None)
+let collect_routers =
+  collect_options (function Routers x -> Some x | _ -> None)
+let collect_time_servers =
+  collect_options (function Time_servers x -> Some x | _ -> None)
+let collect_name_servers =
+  collect_options (function Name_servers x -> Some x | _ -> None)
+let collect_dns_servers =
+  collect_options (function Dns_servers x -> Some x | _ -> None)
+let collect_log_servers =
+  collect_options (function Log_servers x -> Some x | _ -> None)
+let collect_cookie_servers =
+  collect_options (function Cookie_servers x -> Some x | _ -> None)
+let collect_lpr_servers =
+  collect_options (function Lpr_servers x -> Some x | _ -> None)
+let collect_impress_servers =
+  collect_options (function Impress_servers x -> Some x | _ -> None)
+let collect_rsc_location_servers =
+  collect_options (function Rsclocation_servers x -> Some x | _ -> None)
+let find_hostname =
+  find_option (function Hostname x -> Some x | _ -> None)
+let find_bootfile_size =
+  find_option (function Bootfile_size x -> Some x | _ -> None)
+let find_merit_dumpfile =
+  find_option (function Merit_dumpfile x -> Some x | _ -> None)
+let find_domain_name =
+  find_option (function Domain_name x -> Some x | _ -> None)
+let find_swap_server =
+  find_option (function Swap_server x -> Some x | _ -> None)
+let find_root_path =
+  find_option (function Root_path x -> Some x | _ -> None)
+let find_extension_path =
+  find_option (function Extension_path x -> Some x | _ -> None)
+let find_ipforwarding =
+  find_option (function Ipforwarding x -> Some x | _ -> None)
+let find_nlsr =
+  find_option (function Nlsr x -> Some x | _ -> None)
+let collect_policy_filters =
+  collect_options (function Policy_filters x -> Some x | _ -> None)
+let find_max_datagram =
+  find_option (function Max_datagram x -> Some x | _ -> None)
+let find_default_ip_ttl =
+  find_option (function Default_ip_ttl x -> Some x | _ -> None)
+let find_pmtu_ageing_timo =
+  find_option (function Pmtu_ageing_timo x -> Some x | _ -> None)
+let find_pmtu_plateau_table =
+  find_option (function Pmtu_plateau_table x -> Some x | _ -> None)
+let find_interface_mtu =
+  find_option (function Interface_mtu x -> Some x | _ -> None)
+let find_all_subnets_local =
+  find_option (function All_subnets_local x -> Some x | _ -> None)
+let find_broadcast_addr =
+  find_option (function Broadcast_addr x -> Some x | _ -> None)
+let find_perform_mask_discovery =
+  find_option (function Perform_mask_discovery x -> Some x | _ -> None)
+let find_mask_supplier =
+  find_option (function Mask_supplier x -> Some x | _ -> None)
+let find_perform_router_disc =
+  find_option (function Perform_router_disc x -> Some x | _ -> None)
+let find_router_sol_addr =
+  find_option (function Router_sol_addr x -> Some x | _ -> None)
+let collect_static_routes =
+  collect_options (function Static_routes x -> Some x | _ -> None)
+let find_trailer_encapsulation =
+  find_option (function Trailer_encapsulation x -> Some x | _ -> None)
+let find_arp_cache_timo =
+  find_option (function Arp_cache_timo x -> Some x | _ -> None)
+let find_ethernet_encapsulation =
+  find_option (function Ethernet_encapsulation x -> Some x | _ -> None)
+let find_tcp_default_ttl =
+  find_option (function Tcp_default_ttl x -> Some x | _ -> None)
+let find_tcp_keepalive_interval =
+  find_option (function Tcp_keepalive_interval x -> Some x | _ -> None)
+let find_tcp_keepalive_garbage =
+  find_option (function Tcp_keepalive_garbage x -> Some x | _ -> None)
+let find_nis_domain =
+  find_option (function Nis_domain x -> Some x | _ -> None)
+let collect_nis_servers =
+  collect_options (function Nis_servers x -> Some x | _ -> None)
+let collect_ntp_servers =
+  collect_options (function Ntp_servers x -> Some x | _ -> None)
+let find_vendor_specific =
+  find_option (function Vendor_specific x -> Some x | _ -> None)
+let collect_netbios_name_servers =
+  collect_options (function Netbios_name_servers x -> Some x | _ -> None)
+let collect_netbios_datagram_distrib_servers =
+  collect_options (function Netbios_datagram_distrib_servers x -> Some x | _ -> None)
+let find_netbios_node =
+  find_option (function Netbios_node x -> Some x | _ -> None)
+let find_netbios_scope =
+  find_option (function Netbios_scope x -> Some x | _ -> None)
+let collect_xwindow_font_servers =
+  collect_options (function Xwindow_font_servers x -> Some x | _ -> None)
+let collect_xwindow_display_managers =
+  collect_options (function Xwindow_display_managers x -> Some x | _ -> None)
+let find_request_ip =
+  find_option (function Request_ip x -> Some x | _ -> None)
+let find_ip_lease_time =
+  find_option (function Ip_lease_time x -> Some x | _ -> None)
+let find_option_overload =
+  find_option (function Option_overload x -> Some x | _ -> None)
+let find_message_type =
+  find_option (function Message_type x -> Some x | _ -> None)
+let find_server_identifier =
+  find_option (function Server_identifier x -> Some x | _ -> None)
+let find_parameter_requests =
+  find_option (function Parameter_requests x -> Some x | _ -> None)
+let find_message =
+  find_option (function Message x -> Some x | _ -> None)
+let find_max_message =
+  find_option (function Max_message x -> Some x | _ -> None)
+let find_renewal_t1 =
+  find_option (function Renewal_t1 x -> Some x | _ -> None)
+let find_rebinding_t2 =
+  find_option (function Rebinding_t2 x -> Some x | _ -> None)
+let find_vendor_class_id =
+  find_option (function Vendor_class_id x -> Some x | _ -> None)
+let find_client_id =
+  find_option (function Client_id x -> Some x | _ -> None)
+let find_netware_ip_domain =
+  find_option (function Netware_ip_domain x -> Some x | _ -> None)
+let find_netware_ip_option =
+  find_option (function Netware_ip_option x -> Some x | _ -> None)
+let find_nis_plus_domain =
+  find_option (function Nis_plus_domain x -> Some x | _ -> None)
+let collect_nis_plus_servers =
+  collect_options (function Nis_plus_servers x -> Some x | _ -> None)
+let find_tftp_server_name =
+  find_option (function Tftp_server_name x -> Some x | _ -> None)
+let find_bootfile_name =
+  find_option (function Bootfile_name x -> Some x | _ -> None)
+let find_mobile_ip_home_agent =
+  find_option (function Mobile_ip_home_agent x -> Some x | _ -> None)
+let find_smtp_servers =
+  find_option (function Smtp_servers x -> Some x | _ -> None)
+let find_pop3_servers =
+  find_option (function Pop3_servers x -> Some x | _ -> None)
+let find_nntp_servers =
+  find_option (function Nntp_servers x -> Some x | _ -> None)
+let collect_www_servers =
+  collect_options (function Www_servers x -> Some x | _ -> None)
+let collect_finger_servers =
+  collect_options (function Finger_servers x -> Some x | _ -> None)
+let collect_irc_servers =
+  collect_options (function Irc_servers x -> Some x | _ -> None)
+let collect_streettalk_servers =
+  collect_options (function Streettalk_servers x -> Some x | _ -> None)
+let collect_streettalk_da =
+  collect_options (function Streettalk_da x -> Some x | _ -> None)
+let find_user_class =
+  find_option (function User_class x -> Some x | _ -> None)
+let find_directory_agent =
+  find_option (function Directory_agent x -> Some x | _ -> None)
+let find_service_scope =
+  find_option (function Service_scope x -> Some x | _ -> None)
+let find_rapid_commit =
+  find_option (function Rapid_commit -> Some Rapid_commit | _ -> None)
+let find_client_fqdn =
+  find_option (function Client_fqdn x -> Some x | _ -> None)
+let find_relay_agent_information =
+  find_option (function Relay_agent_information x -> Some x | _ -> None)
+let find_isns =
+  find_option (function Isns x -> Some x | _ -> None)
+let find_nds_servers=
+  find_option (function Nds_servers x -> Some x | _ -> None)
+let find_nds_tree_name =
+  find_option (function Nds_tree_name x -> Some x | _ -> None)
+let find_nds_context =
+  find_option (function Nds_context x -> Some x | _ -> None)
+let find_bcmcs_controller_domain_name =
+  find_option (function Bcmcs_controller_domain_name_list x -> Some x | _ -> None)
+let collect_bcmcs_controller_ipv4_addrs =
+  collect_options (function Bcmcs_controller_ipv4_addrs x -> Some x | _ -> None)
+let find_authentication =
+  find_option (function Authentication x -> Some x | _ -> None)
+let find_client_last_transaction_time =
+  find_option (function Client_last_transaction_time x -> Some x | _ -> None)
+let collect_associated_ips =
+  collect_options (function Associated_ips x -> Some x | _ -> None)
+let find_client_system =
+  find_option (function Client_system x -> Some x | _ -> None)
+let find_client_ndi =
+  find_option (function Client_ndi x -> Some x | _ -> None)
+let find_ldap =
+  find_option (function Ldap x -> Some x | _ -> None)
+let find_uuid_guid =
+  find_option (function Uuid_guid x -> Some x | _ -> None)
+let find_user_auth =
+  find_option (function User_auth x -> Some x | _ -> None)
+let find_geoconf_civic =
+  find_option (function Geoconf_civic x -> Some x | _ -> None)
+let find_pcode =
+  find_option (function Pcode x -> Some x | _ -> None)
+let find_tcode =
+  find_option (function Tcode x -> Some x | _ -> None)
+let find_netinfo_address =
+  find_option (function Netinfo_address x -> Some x | _ -> None)
+let find_netinfo_tag =
+  find_option (function Netinfo_tag x -> Some x | _ -> None)
+let find_url =
+  find_option (function Url x -> Some x | _ -> None)
+let find_auto_config =
+  find_option (function Auto_config x -> Some x | _ -> None)
+let find_name_service_search =
+  find_option (function Name_service_search x -> Some x | _ -> None)
+let find_subnet_selection =
+  find_option (function Subnet_selection x -> Some x | _ -> None)
+let find_domain_search =
+  find_option (function Domain_search x -> Some x | _ -> None)
+let find_sip_servers =
+  find_option (function Sip_servers x -> Some x | _ -> None)
+let find_classless_static_route =
+  find_option (function Classless_static_route x -> Some x | _ -> None)
+let find_ccc =
+  find_option (function Ccc x -> Some x | _ -> None)
+let find_geoconf =
+  find_option (function Geoconf x -> Some x | _ -> None)
+let find_vi_vendor_class =
+  find_option (function Vi_vendor_class x -> Some x | _ -> None)
+let find_vi_vendor_info =
+  find_option (function Vi_vendor_info x -> Some x | _ -> None)
+let find_pxe_128 =
+  find_option (function Pxe_128 x -> Some x | _ -> None)
+let find_pxe_129 =
+  find_option (function Pxe_129 x -> Some x | _ -> None)
+let find_pxe_130 =
+  find_option (function Pxe_130 x -> Some x | _ -> None)
+let find_pxe_131 =
+  find_option (function Pxe_131 x -> Some x | _ -> None)
+let find_pxe_132 =
+  find_option (function Pxe_132 x -> Some x | _ -> None)
+let find_pxe_133 =
+  find_option (function Pxe_133 x -> Some x | _ -> None)
+let find_pxe_134 =
+  find_option (function Pxe_134 x -> Some x | _ -> None)
+let find_pxe_135 =
+  find_option (function Pxe_135 x -> Some x | _ -> None)
+let find_pana_agent =
+  find_option (function Pana_agent x -> Some x | _ -> None)
+let find_v4_lost =
+  find_option (function V4_lost x -> Some x | _ -> None)
+let find_capwap_ac_v4 =
+  find_option (function Capwap_ac_v4 x -> Some x | _ -> None)
+let find_ipv4_address_mos =
+  find_option (function Ipv4_address_mos x -> Some x | _ -> None)
+let find_ipv4_fqdn_mos =
+  find_option (function Ipv4_fqdn_mos x -> Some x | _ -> None)
+let find_sip_ua_domains =
+  find_option (function Sip_ua_domains x -> Some x | _ -> None)
+let find_ipv4_address_andsf =
+  find_option (function Ipv4_address_andsf x -> Some x | _ -> None)
+let find_geolock =
+  find_option (function Geolock x -> Some x | _ -> None)
+let find_forcenew_nonce_capable =
+  find_option (function Forcenew_nonce_capable x -> Some x | _ -> None)
+let find_rdnss_selection =
+  find_option (function Rdnss_selection x -> Some x | _ -> None)
+let find_misc_150 =
+  find_option (function Misc_150 x -> Some x | _ -> None)
+let find_status_code =
+  find_option (function Status_code x -> Some x | _ -> None)
+let find_absolute_time =
+  find_option (function Absolute_time x -> Some x | _ -> None)
+let find_start_time_of_state =
+  find_option (function Start_time_of_state x -> Some x | _ -> None)
+let find_query_start_time =
+  find_option (function Query_start_time x -> Some x | _ -> None)
+let find_query_end_time =
+  find_option (function Query_end_time x -> Some x | _ -> None)
+let find_dhcp_state =
+  find_option (function Dhcp_state x -> Some x | _ -> None)
+let find_data_source=
+  find_option (function Data_source x -> Some x | _ -> None)
+let find_v4_pcp_server =
+  find_option (function V4_pcp_server x -> Some x | _ -> None)
+let find_v4_portparams =
+  find_option (function V4_portparams x -> Some x | _ -> None)
+let find_dhcp_captive_portal =
+  find_option (function Dhcp_captive_portal x -> Some x | _ -> None)
+let find_etherboot_175 =
+  find_option (function Etherboot_175 x -> Some x | _ -> None)
+let find_ip_telefone =
+  find_option (function Ip_telefone x -> Some x | _ -> None)
+let find_etherboot_177 =
+  find_option (function Etherboot_177 x -> Some x | _ -> None)
+let find_pxe_linux =
+  find_option (function Pxe_linux x -> Some x | _ -> None)
+let find_configuration_file =
+  find_option (function Configuration_file x -> Some x | _ -> None)
+let find_path_prefix =
+  find_option (function Path_prefix x -> Some x | _ -> None)
+let find_reboot_time =
+  find_option (function Reboot_time x -> Some x | _ -> None)
+let find_option_6rd =
+  find_option (function Option_6rd x -> Some x | _ -> None)
+let find_v4_access_domain =
+  find_option (function V4_access_domain x -> Some x | _ -> None)
+let find_subnet_allocation =
+  find_option (function Subnet_allocation x -> Some x | _ -> None)
+let find_virtual_subnet_selection =
+  find_option (function Virtual_subnet_selection x -> Some x | _ -> None)
+let find_web_proxy_auto_disc =
+  find_option (function Web_proxy_auto_disc x -> Some x | _ -> None)
+(* let collect_unassigned = *)
+(*     (function Unassigned of option_code * string  (\* code * string *\) *)
+
+(* Find Option helpers *)
+let msgtype_of_options =
+  find_option (function Message_type m -> Some m | _ -> None)
+let client_id_of_options =
+  find_option (function Client_id id -> Some id | _ -> None)
+let request_ip_of_options =
+  find_option (function Request_ip ip -> Some ip | _ -> None)
+let ip_lease_time_of_options =
+  find_option (function Ip_lease_time ip -> Some ip | _ -> None)
+let server_identifier_of_options =
+  find_option (function Server_identifier sid -> Some sid | _ -> None)
+let vendor_class_id_of_options =
+  find_option (function Vendor_class_id vid -> Some vid | _ -> None)
+let message_of_options =
+  find_option (function Message m -> Some m | _ -> None)
+let domain_name_of_options =
+  find_option (function Domain_name dn -> Some dn | _ -> None)
+let parameter_requests_of_options =
+  collect_options (function Parameter_requests x -> Some x | _ -> None)
+let routers_of_options =
+  collect_options (function Routers x -> Some x | _ -> None)
+let dns_servers_of_options =
+  collect_options (function Dns_servers x -> Some x | _ -> None)
+let ntp_servers_of_options =
+  collect_options (function Ntp_servers x -> Some x | _ -> None)
