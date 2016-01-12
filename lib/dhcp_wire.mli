@@ -390,83 +390,163 @@ val client_id_to_string : client_id -> string
 (** {2 DHCP options} *)
 
 type dhcp_option =
-  | Subnet_mask of Ipaddr.V4.t
-  | Time_offset of int32
-  | Routers of Ipaddr.V4.t list
-  | Time_servers of Ipaddr.V4.t list
-  | Name_servers of Ipaddr.V4.t list
-  | Dns_servers of Ipaddr.V4.t list
-  | Log_servers of Ipaddr.V4.t list
-  | Cookie_servers of Ipaddr.V4.t list
-  | Lpr_servers of Ipaddr.V4.t list
-  | Impress_servers of Ipaddr.V4.t list
-  | Rsclocation_servers of Ipaddr.V4.t list
-  | Hostname of string
-  | Bootfile_size of int
-  | Merit_dumpfile of string
-  | Domain_name of string
-  | Swap_server of Ipaddr.V4.t
-  | Root_path of string
-  | Extension_path of string
-  | Ipforwarding of bool
-  | Nlsr of bool
-  | Policy_filters of Ipaddr.V4.Prefix.t list
-  | Max_datagram of int
-  | Default_ip_ttl of int
-  | Pmtu_ageing_timo of int32
-  | Pmtu_plateau_table of int list
-  | Interface_mtu of int
-  | All_subnets_local of bool
-  | Broadcast_addr of Ipaddr.V4.t
-  | Perform_mask_discovery of bool
-  | Mask_supplier of bool
-  | Perform_router_disc of bool
-  | Router_sol_addr of Ipaddr.V4.t
-  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list
-  | Trailer_encapsulation of bool
-  | Arp_cache_timo of int32
-  | Ethernet_encapsulation of bool
-  | Tcp_default_ttl of int
-  | Tcp_keepalive_interval of int32
-  | Tcp_keepalive_garbage of int
-  | Nis_domain of string
-  | Nis_servers of Ipaddr.V4.t list
-  | Ntp_servers of Ipaddr.V4.t list
-  | Vendor_specific of string
-  | Netbios_name_servers of Ipaddr.V4.t list
-  | Netbios_datagram_distrib_servers of Ipaddr.V4.t list
-  | Netbios_node of int
-  | Netbios_scope of string
-  | Xwindow_font_servers of Ipaddr.V4.t list
-  | Xwindow_display_managers of Ipaddr.V4.t list
-  | Request_ip of Ipaddr.V4.t
-  | Ip_lease_time of int32
-  | Option_overload of int
-  | Message_type of msgtype
-  | Server_identifier of Ipaddr.V4.t
-  | Parameter_requests of option_code list
-  | Message of string
-  | Max_message of int
-  | Renewal_t1 of int32
-  | Rebinding_t2 of int32
-  | Vendor_class_id of string
-  | Client_id of client_id
-  | Nis_plus_domain of string
-  | Nis_plus_servers of Ipaddr.V4.t list
-  | Tftp_server_name of string
-  | Bootfile_name of string
-  | Mobile_ip_home_agent of Ipaddr.V4.t list
-  | Smtp_servers of Ipaddr.V4.t list
-  | Pop3_servers of Ipaddr.V4.t list
-  | Nntp_servers of Ipaddr.V4.t list
-  | Www_servers of Ipaddr.V4.t list
-  | Finger_servers of Ipaddr.V4.t list
-  | Irc_servers of Ipaddr.V4.t list
-  | Streettalk_servers of Ipaddr.V4.t list
-  | Streettalk_da of Ipaddr.V4.t list
-  | Domain_search of string
-  | Web_proxy_auto_disc of string
-  | Unknown
+  | Pad                                     (* code 0 *)
+  | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
+  | Time_offset of int32                    (* code 2 *)
+  | Routers of Ipaddr.V4.t list             (* code 3 *)
+  | Time_servers of Ipaddr.V4.t list        (* code 4 *)
+  | Name_servers of Ipaddr.V4.t list        (* code 5 *)
+  | Dns_servers of Ipaddr.V4.t list         (* code 6 *)
+  | Log_servers of Ipaddr.V4.t list         (* code 7 *)
+  | Cookie_servers of Ipaddr.V4.t list      (* code 8 *)
+  | Lpr_servers of Ipaddr.V4.t list         (* code 9 *)
+  | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
+  | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
+  | Hostname of string                      (* code 12 *)
+  | Bootfile_size of int                    (* code 13 *)
+  | Merit_dumpfile of string                (* code 14 *)
+  | Domain_name of string                   (* code 15 *)
+  | Swap_server of Ipaddr.V4.t              (* code 16 *)
+  | Root_path of string                     (* code 17 *)
+  | Extension_path of string                (* code 18 *)
+  | Ipforwarding of bool                    (* code 19 *)
+  | Nlsr of bool                            (* code 20 *)
+  | Policy_filters of Ipaddr.V4.Prefix.t list (* code 21 *)
+  | Max_datagram of int                     (* code 22 *)
+  | Default_ip_ttl of int                   (* code 23 *)
+  | Pmtu_ageing_timo of int32               (* code 24 *)
+  | Pmtu_plateau_table of int list          (* code 25 *)
+  | Interface_mtu of int                    (* code 26 *)
+  | All_subnets_local of bool               (* code 27 *)
+  | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
+  | Perform_mask_discovery of bool          (* code 29 *)
+  | Mask_supplier of bool                   (* code 30 *)
+  | Perform_router_disc of bool             (* code 31 *)
+  | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
+  | Trailer_encapsulation of bool           (* code 34 *)
+  | Arp_cache_timo of int32                 (* code 35 *)
+  | Ethernet_encapsulation of bool          (* code 36 *)
+  | Tcp_default_ttl of int                  (* code 37 *)
+  | Tcp_keepalive_interval of int32         (* code 38 *)
+  | Tcp_keepalive_garbage of int            (* code 39 *)
+  | Nis_domain of string                    (* code 40 *)
+  | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
+  | Ntp_servers of Ipaddr.V4.t list         (* code 42 *)
+  | Vendor_specific of string               (* code 43 *)
+  | Netbios_name_servers of Ipaddr.V4.t list(* code 44 *)
+  | Netbios_datagram_distrib_servers of Ipaddr.V4.t list (* code 45 *)
+  | Netbios_node of int                     (* code 46 *)
+  | Netbios_scope of string                 (* code 47 *)
+  | Xwindow_font_servers of Ipaddr.V4.t list(* code 48 *)
+  | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
+  | Request_ip of Ipaddr.V4.t               (* code 50 *)
+  | Ip_lease_time of int32                  (* code 51 *)
+  | Option_overload of int                  (* code 52 *)
+  | Message_type of msgtype                 (* code 53 *)
+  | Server_identifier of Ipaddr.V4.t        (* code 54 *)
+  | Parameter_requests of option_code list  (* code 55 *)
+  | Message of string                       (* code 56 *)
+  | Max_message of int                      (* code 57 *)
+  | Renewal_t1 of int32                     (* code 58 *)
+  | Rebinding_t2 of int32                   (* code 59 *)
+  | Vendor_class_id of string               (* code 60 *)
+  | Client_id of client_id                  (* code 61 *)
+  | Netware_ip_domain of string             (* code 62 *)
+  | Netware_ip_option of string             (* code 63 *)
+  | Nis_plus_domain of string               (* code 64 *)
+  | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
+  | Tftp_server_name of string              (* code 66 *)
+  | Bootfile_name of string                 (* code 67 *)
+  | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
+  | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
+  | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
+  | Nntp_servers of Ipaddr.V4.t list        (* code 71 *)
+  | Www_servers of Ipaddr.V4.t list         (* code 72 *)
+  | Finger_servers of Ipaddr.V4.t list      (* code 73 *)
+  | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
+  | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
+  | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
+  | User_class of string                    (* code 77 *)
+  | Directory_agent of string               (* code 78 *)
+  | Service_scope of string                 (* code 79 *)
+  | Rapid_commit                            (* code 80 *)
+  | Client_fqdn of string                   (* code 81 *)
+  | Relay_agent_information of string       (* code 82 *)
+  | Isns of string                          (* code 83 *)
+  | Nds_servers of string                   (* code 85 *)
+  | Nds_tree_name of string                 (* code 86 *)
+  | Nds_context of string                   (* code 87 *)
+  | Bcmcs_controller_domain_name_list of string (* code 88 *)
+  | Bcmcs_controller_ipv4_addr of Ipaddr.V4.t list (* code 89 *)
+  | Authentication of string                (* code 90 *)
+  | Client_last_transaction_time of int32   (* code 91 *)
+  | Associated_ip of Ipaddr.V4.t list       (* code 92 *)
+  | Client_system of string                 (* code 93 *)
+  | Client_ndi of string                    (* code 94 *)
+  | Ldap of string                          (* code 95 *)
+  | Uuid_guid of string                     (* code 97 *)
+  | User_auth of string                     (* code 98 *)
+  | Geoconf_civic of string                 (* code 99 *)
+  | Pcode of string                         (* code 100 *)
+  | Tcode of string                         (* code 101 *)
+  | Netinfo_address of string               (* code 112 *)
+  | Netinfo_tag of string                   (* code 113 *)
+  | Url of string                           (* code 114 *)
+  | Auto_config of int                      (* code 116 *)
+  | Name_service_search of string           (* code 117 *)
+  | Subnet_selection of Ipaddr.V4.t         (* code 118 *)
+  | Domain_search of string                 (* code 119 *)
+  | Sip_servers of string                   (* code 120 *)
+  | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
+  | Ccc of string                           (* code 122 *)
+  | Geoconf of string                       (* code 123 *)
+  | Vi_vendor_class of string               (* code 124 *)
+  | Vi_vendor_info of string                (* code 125 *)
+  | Pxe_128 of string                       (* code 128 *)
+  | Pxe_129 of string                       (* code 129 *)
+  | Pxe_130 of string                       (* code 130 *)
+  | Pxe_131 of string                       (* code 131 *)
+  | Pxe_132 of string                       (* code 132 *)
+  | Pxe_133 of string                       (* code 133 *)
+  | Pxe_134 of string                       (* code 134 *)
+  | Pxe_135 of string                       (* code 135 *)
+  | Pana_agent of string                    (* code 136 *)
+  | V4_lost of string                       (* code 137 *)
+  | Capwap_ac_v4 of string                  (* code 138 *)
+  | Ipv4_address_mos of string              (* code 139 *)
+  | Ipv4_fqdn_mos of string                 (* code 140 *)
+  | Sip_ua_domains of string                (* code 141 *)
+  | Ipv4_address_andsf of string            (* code 142 *)
+  | Geolock of string                       (* code 144 *)
+  | Forcenew_nonce_capable of string        (* code 145 *)
+  | Rdnss_selection of string               (* code 146 *)
+  | Misc_150 of string                      (* code 150 *)
+  | Status_code of string                   (* code 151 *)
+  | Absolute_time of int32                  (* code 152 *)
+  | Start_time_of_state of int32            (* code 153 *)
+  | Query_start_time of int32               (* code 154 *)
+  | Query_end_time of int32                 (* code 155 *)
+  | Dhcp_state of int                       (* code 156 *)
+  | Data_source of int                      (* code 157 *)
+  | V4_pcp_server of string                 (* code 158 *)
+  | V4_portparams of string                 (* code 159 *)
+  | Dhcp_captive_portal of string           (* code 160 *)
+  | Etherboot_175 of string                 (* code 175 *)
+  | Ip_telefone of string                   (* code 176 *)
+  | Etherboot_177 of string                 (* code 177 *)
+  | Pxe_linux of int32                      (* code 208 *)
+  | Configuration_file of string            (* code 209 *)
+  | Path_prefix of string                   (* code 210 *)
+  | Reboot_time of int32                    (* code 211 *)
+  | Option_6rd of string                    (* code 212 *)
+  | V4_access_domain of string              (* code 213 *) (* XXX current, better parsing *)
+  | Subnet_allocation of int                (* code 220 *)
+  | Virtual_subnet_selection of string      (* code 221 *)
+  | Web_proxy_auto_disc of string           (* code 252 *)
+  | End                                     (* code 255 *)
+  | Unassigned of option_code * string      (* code * string *)
+  with sexp
 (** Not all options are currently implemented. *)
 
 (** Conversions of {! dhcp_option}. *)
@@ -474,9 +554,11 @@ type dhcp_option =
 val buf_of_options : Cstruct.t -> dhcp_option list -> Cstruct.t
 val options_of_buf : Cstruct.t -> int -> dhcp_option list
 
-val find_option : ('a -> 'b option) -> 'a list -> 'b option
+val find_option : option_code -> dhcp_option list -> dhcp_option option
 (** [find_option f l] finds the first option where [f] evaluates to [Some] value
     on list [l] *)
+
+val find_option_map : (dhcp_option -> 'b option) -> dhcp_option list -> 'b option
 
 val collect_options : ('a -> 'b list option) -> 'a list -> 'b list option
 (** [collect_options f l] collects all options where [f] evaluates to [Some]

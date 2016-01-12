@@ -339,6 +339,7 @@ type client_id =
   | Id of string with sexp
 
 type dhcp_option =
+  | Pad                                     (* code 0 *)
   | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
   | Time_offset of int32                    (* code 2 *)
   | Routers of Ipaddr.V4.t list             (* code 3 *)
@@ -400,6 +401,8 @@ type dhcp_option =
   | Rebinding_t2 of int32                   (* code 59 *)
   | Vendor_class_id of string               (* code 60 *)
   | Client_id of client_id                  (* code 61 *)
+  | Netware_ip_domain of string             (* code 62 *)
+  | Netware_ip_option of string             (* code 63 *)
   | Nis_plus_domain of string               (* code 64 *)
   | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
@@ -413,9 +416,85 @@ type dhcp_option =
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
   | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
+  | User_class of string                    (* code 77 *)
+  | Directory_agent of string               (* code 78 *)
+  | Service_scope of string                 (* code 79 *)
+  | Rapid_commit                            (* code 80 *)
+  | Client_fqdn of string                   (* code 81 *)
+  | Relay_agent_information of string       (* code 82 *)
+  | Isns of string                          (* code 83 *)
+  | Nds_servers of string                   (* code 85 *)
+  | Nds_tree_name of string                 (* code 86 *)
+  | Nds_context of string                   (* code 87 *)
+  | Bcmcs_controller_domain_name_list of string (* code 88 *)
+  | Bcmcs_controller_ipv4_addr of Ipaddr.V4.t list (* code 89 *)
+  | Authentication of string                (* code 90 *)
+  | Client_last_transaction_time of int32   (* code 91 *)
+  | Associated_ip of Ipaddr.V4.t list       (* code 92 *)
+  | Client_system of string                 (* code 93 *)
+  | Client_ndi of string                    (* code 94 *)
+  | Ldap of string                          (* code 95 *)
+  | Uuid_guid of string                     (* code 97 *)
+  | User_auth of string                     (* code 98 *)
+  | Geoconf_civic of string                 (* code 99 *)
+  | Pcode of string                         (* code 100 *)
+  | Tcode of string                         (* code 101 *)
+  | Netinfo_address of string               (* code 112 *)
+  | Netinfo_tag of string                   (* code 113 *)
+  | Url of string                           (* code 114 *)
+  | Auto_config of int                      (* code 116 *)
+  | Name_service_search of string           (* code 117 *)
+  | Subnet_selection of Ipaddr.V4.t         (* code 118 *)
   | Domain_search of string                 (* code 119 *)
+  | Sip_servers of string                   (* code 120 *)
+  | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
+  | Ccc of string                           (* code 122 *)
+  | Geoconf of string                       (* code 123 *)
+  | Vi_vendor_class of string               (* code 124 *)
+  | Vi_vendor_info of string                (* code 125 *)
+  | Pxe_128 of string                       (* code 128 *)
+  | Pxe_129 of string                       (* code 129 *)
+  | Pxe_130 of string                       (* code 130 *)
+  | Pxe_131 of string                       (* code 131 *)
+  | Pxe_132 of string                       (* code 132 *)
+  | Pxe_133 of string                       (* code 133 *)
+  | Pxe_134 of string                       (* code 134 *)
+  | Pxe_135 of string                       (* code 135 *)
+  | Pana_agent of string                    (* code 136 *)
+  | V4_lost of string                       (* code 137 *)
+  | Capwap_ac_v4 of string                  (* code 138 *)
+  | Ipv4_address_mos of string              (* code 139 *)
+  | Ipv4_fqdn_mos of string                 (* code 140 *)
+  | Sip_ua_domains of string                (* code 141 *)
+  | Ipv4_address_andsf of string            (* code 142 *)
+  | Geolock of string                       (* code 144 *)
+  | Forcenew_nonce_capable of string        (* code 145 *)
+  | Rdnss_selection of string               (* code 146 *)
+  | Misc_150 of string                      (* code 150 *)
+  | Status_code of string                   (* code 151 *)
+  | Absolute_time of int32                  (* code 152 *)
+  | Start_time_of_state of int32            (* code 153 *)
+  | Query_start_time of int32               (* code 154 *)
+  | Query_end_time of int32                 (* code 155 *)
+  | Dhcp_state of int                       (* code 156 *)
+  | Data_source of int                      (* code 157 *)
+  | V4_pcp_server of string                 (* code 158 *)
+  | V4_portparams of string                 (* code 159 *)
+  | Dhcp_captive_portal of string           (* code 160 *)
+  | Etherboot_175 of string                 (* code 175 *)
+  | Ip_telefone of string                   (* code 176 *)
+  | Etherboot_177 of string                 (* code 177 *)
+  | Pxe_linux of int32                      (* code 208 *)
+  | Configuration_file of string            (* code 209 *)
+  | Path_prefix of string                   (* code 210 *)
+  | Reboot_time of int32                    (* code 211 *)
+  | Option_6rd of string                    (* code 212 *)
+  | V4_access_domain of string              (* code 213 *) (* XXX current, better parsing *)
+  | Subnet_allocation of int                (* code 220 *)
+  | Virtual_subnet_selection of string      (* code 221 *)
   | Web_proxy_auto_disc of string           (* code 252 *)
-  | Unknown
+  | End                                     (* code 255 *)
+  | Unassigned of option_code * string      (* code * string *)
   with sexp
 
 type pkt = {
@@ -702,6 +781,7 @@ let buf_of_options sbuf options =
   let put_coded_ip_tuple_list = make_listf (fun buf x -> put_ip_tuple x buf) 8 in
   let buf_of_option buf option =
     match option with
+    | Pad -> buf (* we don't pad *)                           (* code 0 *)
     | Subnet_mask mask -> put_coded_ip 1 mask buf             (* code 1 *)
     | Time_offset toff -> put_coded_32 2 toff buf             (* code 2 *)
     | Routers ips -> put_coded_ip_list 3 ips buf              (* code 3 *)
@@ -765,6 +845,8 @@ let buf_of_options sbuf options =
     | Rebinding_t2 rt -> put_coded_32 59 rt buf               (* code 59 *)
     | Vendor_class_id vci -> put_coded_bytes 60 vci buf       (* code 60 *)
     | Client_id id -> put_client_id 61 id buf                 (* code 61 *)
+    | Netware_ip_domain d -> put_coded_bytes 62 d buf         (* code 62 *)
+    | Netware_ip_option o -> put_coded_bytes 63 o buf         (* code 63 *)
     | Nis_plus_domain npd -> put_coded_bytes 64 npd buf       (* code 64 *)
     | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf    (* code 65 *)
     | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf      (* code 66 *)
@@ -778,9 +860,85 @@ let buf_of_options sbuf options =
     | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
     | Streettalk_servers ips -> put_coded_ip_list 75 ips buf  (* code 75 *)
     | Streettalk_da ips -> put_coded_ip_list 76 ips buf       (* code 76 *)
-    | Domain_search dsf -> put_coded_bytes 119 dsf buf        (* code 119 *)
+    | User_class uc -> put_coded_bytes 77 uc buf              (* code 77 *)
+    | Directory_agent da -> put_coded_bytes 78 da buf         (* code 78 *)
+    | Service_scope ss -> put_coded_bytes 79 ss buf           (* code 79 *)
+    | Rapid_commit -> put_coded_bytes 80 Bytes.empty buf      (* code 80 *)
+    | Client_fqdn dn -> put_coded_bytes 81 dn buf             (* code 81 *)
+    | Relay_agent_information ai -> put_coded_bytes 82 ai buf (* code 82 *)
+    | Isns i -> put_coded_bytes 83 i buf                      (* code 83 *)
+    | Nds_servers ns -> put_coded_bytes 85 ns buf             (* code 85 *)
+    | Nds_tree_name nn -> put_coded_bytes 86 nn buf           (* code 86 *)
+    | Nds_context nc -> put_coded_bytes 87 nc buf             (* code 87 *)
+    | Bcmcs_controller_domain_name_list l -> put_coded_bytes 88 l buf (* code 88 *)
+    | Bcmcs_controller_ipv4_addr l -> put_coded_ip_list 98 l buf (* code 89 *)
+    | Authentication a -> put_coded_bytes 90 a buf            (* code 90 *)
+    | Client_last_transaction_time t -> put_coded_32 91 t buf (* code 91 *)
+    | Associated_ip ip -> put_coded_ip_list 92 ip buf         (* code 92 *)
+    | Client_system cs -> put_coded_bytes 93 cs buf           (* code 93 *)
+    | Client_ndi ndi -> put_coded_bytes 94 ndi buf            (* code 94 *)
+    | Ldap ldap -> put_coded_bytes 95 ldap buf                (* code 95 *)
+    | Uuid_guid u -> put_coded_bytes 97 u buf                      (* code 97 *)
+    | User_auth u -> put_coded_bytes 98 u buf                 (* code 98 *)
+    | Geoconf_civic gc -> put_coded_bytes 99 gc buf           (* code 99 *)
+    | Pcode p -> put_coded_bytes 100 p buf                    (* code 100 *)
+    | Tcode t -> put_coded_bytes 101 t buf                    (* code 101 *)
+    | Netinfo_address na -> put_coded_bytes 112 na buf        (* code 112 *)
+    | Netinfo_tag nt -> put_coded_bytes 113 nt buf            (* code 113 *)
+    | Url u -> put_coded_bytes 114 u buf                      (* code 114 *)
+    | Auto_config ac -> put_coded_8 116 ac buf                (* code 116 *)
+    | Name_service_search nss -> put_coded_bytes 117 nss buf  (* code 117 *)
+    | Subnet_selection ip -> put_coded_ip 118 ip buf          (* code 118 *)
+    | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
+    | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
+    | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
+    | Ccc c -> put_coded_bytes 122 c buf                      (* code 122 *)
+    | Geoconf g -> put_coded_bytes 123 g buf                  (* code 123 *)
+    | Vi_vendor_class vc -> put_coded_bytes 124 vc buf        (* code 124 *)
+    | Vi_vendor_info vi -> put_coded_bytes 125 vi buf         (* code 125 *)
+    | Pxe_128 p -> put_coded_bytes 128 p buf                  (* code 128 *)
+    | Pxe_129 p -> put_coded_bytes 129 p buf                  (* code 129 *)
+    | Pxe_130 p -> put_coded_bytes 130 p buf                  (* code 130 *)
+    | Pxe_131 p -> put_coded_bytes 131 p buf                  (* code 131 *)
+    | Pxe_132 p -> put_coded_bytes 132 p buf                  (* code 132 *)
+    | Pxe_133 p -> put_coded_bytes 133 p buf                  (* code 133 *)
+    | Pxe_134 p -> put_coded_bytes 134 p buf                  (* code 134 *)
+    | Pxe_135 p -> put_coded_bytes 135 p buf                  (* code 135 *)
+    | Pana_agent pa -> put_coded_bytes 136 pa buf             (* code 136 *)
+    | V4_lost v -> put_coded_bytes 137 v buf                  (* code 137 *)
+    | Capwap_ac_v4 c -> put_coded_bytes 137 c buf             (* code 138 *)
+    | Ipv4_address_mos m -> put_coded_bytes 139 m buf         (* code 139 *)
+    | Ipv4_fqdn_mos m -> put_coded_bytes 140 m buf            (* code 140 *)
+    | Sip_ua_domains d -> put_coded_bytes 141 d buf           (* code 141 *)
+    | Ipv4_address_andsf a -> put_coded_bytes 142 a buf       (* code 142 *)
+    | Geolock s -> put_coded_bytes 144 s buf                  (* code 144 *)
+    | Forcenew_nonce_capable s -> put_coded_bytes 145 s buf   (* code 145 *)
+    | Rdnss_selection s -> put_coded_bytes 146 s buf          (* code 146 *)
+    | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
+    | Status_code s -> put_coded_bytes 151 s buf              (* code 151 *)
+    | Absolute_time t -> put_coded_32 152 t buf               (* code 152 *)
+    | Start_time_of_state t -> put_coded_32 153 t buf         (* code 153 *)
+    | Query_start_time t -> put_coded_32 154 t buf            (* code 154 *)
+    | Query_end_time t -> put_coded_32 155 t buf              (* code 155 *)
+    | Dhcp_state s -> put_coded_8 156 s buf                   (* code 156 *) (* octet *)
+    | Data_source s -> put_coded_8 157 s buf                  (* code 157 *) (* octet *)
+    | V4_pcp_server s -> put_coded_bytes 158 s buf            (* code 158 *)
+    | V4_portparams s -> put_coded_bytes 159 s buf            (* code 159 *)
+    | Dhcp_captive_portal s -> put_coded_bytes 160 s buf      (* code 160 *)
+    | Etherboot_175 s -> put_coded_bytes 175 s buf            (* code 175 *)
+    | Ip_telefone s -> put_coded_bytes 176 s buf              (* code 176 *)
+    | Etherboot_177 s -> put_coded_bytes 177 s buf            (* code 177 *)
+    | Pxe_linux w -> put_coded_32 208 w buf                   (* code 208 *)
+    | Configuration_file s -> put_coded_bytes 209 s buf       (* code 209 *)
+    | Path_prefix s -> put_coded_bytes 210 s buf              (* code 210 *)
+    | Reboot_time t -> put_coded_32 211 t buf                 (* code 211 *)
+    | Option_6rd s -> put_coded_bytes 212 s buf               (* code 212 *)
+    | V4_access_domain s -> put_coded_bytes 213 s buf         (* code 213 *) (* XXX current, better parsing *)
+    | Subnet_allocation b -> put_coded_8 220 b buf            (* code 220 *) (* octet *)
+    | Virtual_subnet_selection s -> put_coded_bytes 221 s buf (* code 221 *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf(* code 252 *)
-    | Unknown -> buf
+    | Unassigned (code, s) -> put_coded_bytes (option_code_to_int code) s buf (* unassigned *)
+    | End -> buf (* discard, we add ourselves *)              (* code 255 *)
   in
   match options with
   | [] -> sbuf
@@ -929,18 +1087,6 @@ let buf_of_pkt pkt =
   set_udp_checksum udp udp_csum;
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
-let find_option f options = Util.find_map f options
-
-let collect_options f options = match (Util.filter_map f options) with
-  | [] -> None
-  | l -> Some (List.flatten l)
-
-let client_id_of_pkt pkt = match
-    find_option (function Client_id id -> Some id | _ -> None) pkt.options
-  with
-  | Some id -> id
-  | None -> Hwaddr pkt.chaddr
-
 let is_dhcp buf len =
   let open Wire_structs in
   match (parse_ethernet_frame buf) with
@@ -961,6 +1107,210 @@ let is_dhcp buf len =
     else
       false
   | _ -> false
+
+let find_option code options =
+  let s f = Util.find_some @@
+    fun () -> List.find f options
+  in
+  match code with
+  | SUBNET_MASK -> s (function Subnet_mask _ -> true | _ -> false)
+  | TIME_OFFSET -> s (function Time_offset _ -> true | _ -> false)
+  | ROUTERS -> s (function Routers _ -> true | _ -> false)
+  | TIME_SERVERS -> s (function Time_servers _ -> true | _ -> false)
+  | NAME_SERVERS -> s (function Name_servers _ -> true | _ -> false)
+  | DNS_SERVERS -> s (function Dns_servers _ -> true | _ -> false)
+  | LOG_SERVERS -> s (function Log_servers _ -> true | _ -> false)
+  | COOKIE_SERVERS -> s (function Cookie_servers _ -> true | _ -> false)
+  | LPR_SERVERS -> s (function Lpr_servers _ -> true | _ -> false)
+  | IMPRESS_SERVERS -> s (function Impress_servers _ -> true | _ -> false)
+  | RSCLOCATION_SERVERS -> s (function Rsclocation_servers _ -> true | _ -> false)
+  | HOSTNAME -> s (function Hostname _ -> true | _ -> false)
+  | BOOTFILE_SIZE -> s (function Bootfile_size _ -> true | _ -> false)
+  | MERIT_DUMPFILE -> s (function Merit_dumpfile _ -> true | _ -> false)
+  | DOMAIN_NAME -> s (function Domain_name _ -> true | _ -> false)
+  | SWAP_SERVER -> s (function Swap_server _ -> true | _ -> false)
+  | ROOT_PATH -> s (function Root_path _ -> true | _ -> false)
+  | EXTENSION_PATH -> s (function Extension_path _  -> true | _ -> false)
+  | IPFORWARDING -> s (function Ipforwarding _  -> true | _ -> false)
+  | NLSR -> s (function Nlsr _  -> true | _ -> false)
+  | POLICY_FILTERS -> s (function Policy_filters _  -> true | _ -> false)
+  | MAX_DATAGRAM -> s (function Max_datagram _  -> true | _ -> false)
+  | DEFAULT_IP_TTL -> s (function Default_ip_ttl _ -> true | _ -> false)
+  | PMTU_AGEING_TIMO -> s (function Pmtu_ageing_timo _ -> true | _ -> false)
+  | PMTU_PLATEAU_TABLE -> s (function Pmtu_plateau_table _ -> true | _ -> false)
+  | INTERFACE_MTU -> s (function Interface_mtu _ -> true | _ -> false)
+  | ALL_SUBNETS_LOCAL -> s (function All_subnets_local _ -> true | _ -> false)
+  | BROADCAST_ADDR -> s (function Broadcast_addr _ -> true | _ -> false)
+  | PERFORM_MASK_DISCOVERY -> s (function Perform_mask_discovery _ -> true | _ -> false)
+  | MASK_SUPPLIER -> s (function Mask_supplier _ -> true | _ -> false)
+  | PERFORM_ROUTER_DISC -> s (function Perform_router_disc _ -> true | _ -> false)
+  | ROUTER_SOL_ADDR -> s (function Router_sol_addr _ -> true | _ -> false)
+  | STATIC_ROUTES -> s (function Static_routes _ ->  true | _ -> false)
+  | TRAILER_ENCAPSULATION -> s (function Trailer_encapsulation _ -> true | _ -> false)
+  | ARP_CACHE_TIMO -> s (function Arp_cache_timo _ -> true | _ -> false)
+  | ETHERNET_ENCAPSULATION -> s (function Ethernet_encapsulation _ -> true | _ -> false)
+  | TCP_DEFAULT_TTL -> s (function Tcp_default_ttl _ -> true | _ -> false)
+  | TCP_KEEPALIVE_INTERVAL -> s (function Tcp_keepalive_interval _ -> true | _ -> false)
+  | TCP_KEEPALIVE_GARBAGE -> s (function Tcp_keepalive_garbage _ -> true | _ -> false)
+  | NIS_DOMAIN -> s (function Nis_domain _ -> true | _ -> false)
+  | NIS_SERVERS -> s (function Nis_servers _ -> true | _ -> false)
+  | NTP_SERVERS -> s (function Ntp_servers _ -> true | _ -> false)
+  | VENDOR_SPECIFIC -> s (function Vendor_specific _ -> true | _ -> false)
+  | NETBIOS_NAME_SERVERS -> s (function Netbios_name_servers _ -> true | _ -> false)
+  | NETBIOS_DATAGRAM_DISTRIB_SERVERS ->
+    s (function Netbios_datagram_distrib_servers _ -> true | _ -> false)
+  | NETBIOS_NODE -> s (function Netbios_node _ -> true | _ -> false)
+  | NETBIOS_SCOPE -> s (function Netbios_scope _ -> true | _ -> false)
+  | XWINDOW_FONT_SERVERS -> s (function Xwindow_font_servers _ -> true | _ -> false)
+  | XWINDOW_DISPLAY_MANAGERS -> s (function Xwindow_display_managers _ -> true | _ -> false)
+  | REQUEST_IP -> s (function Request_ip _ -> true | _ -> false)
+  | IP_LEASE_TIME -> s (function Ip_lease_time _ -> true | _ -> false)
+  | OPTION_OVERLOAD -> s (function Option_overload _ -> true | _ -> false)
+  | MESSAGE_TYPE -> s (function Message_type _ -> true | _ -> false)
+  | SERVER_IDENTIFIER -> s (function Server_identifier _ -> true | _ -> false)
+  | PARAMETER_REQUESTS -> s (function Parameter_requests _ -> true | _ -> false)
+  | MESSAGE -> s (function Message _ -> true | _ -> false)
+  | MAX_MESSAGE -> s (function Max_message _ -> true | _ -> false)
+  | RENEWAL_T1 -> s (function Renewal_t1 _ -> true | _ -> false)
+  | REBINDING_T2 -> s (function Rebinding_t2 _ -> true | _ -> false)
+  | VENDOR_CLASS_ID -> s (function Vendor_class_id _ -> true | _ -> false)
+  | CLIENT_ID -> s (function Client_id _ -> true | _ -> false)
+  | NETWARE_IP_DOMAIN -> s (function Netware_ip_domain _ -> true | _ -> false)
+  | NETWARE_IP_OPTION -> s (function Netware_ip_option _ -> true | _ -> false)
+  | NIS_PLUS_DOMAIN -> s (function Nis_plus_domain _ -> true | _ -> false)
+  | NIS_PLUS_SERVERS -> s (function Nis_plus_servers _ -> true | _ -> false)
+  | TFTP_SERVER_NAME -> s (function Tftp_server_name _ -> true | _ -> false)
+  | BOOTFILE_NAME -> s (function Bootfile_name _ -> true | _ -> false)
+  | MOBILE_IP_HOME_AGENT -> s (function Mobile_ip_home_agent _ -> true | _ -> false)
+  | SMTP_SERVERS -> s (function Smtp_servers _ -> true | _ -> false)
+  | POP3_SERVERS -> s (function Pop3_servers _ -> true | _ -> false)
+  | NNTP_SERVERS -> s (function Nntp_servers _ -> true | _ -> false)
+  | WWW_SERVERS -> s (function Www_servers _ -> true | _ -> false)
+  | FINGER_SERVERS -> s (function Finger_servers _ -> true | _ -> false)
+  | IRC_SERVERS -> s (function Irc_servers _ -> true | _ -> false)
+  | STREETTALK_SERVERS -> s (function Streettalk_servers _ -> true | _ -> false)
+  | STREETTALK_DA -> s (function Streettalk_da _ -> true | _ -> false)
+  | USER_CLASS -> s (function User_class _ -> true | _ -> false)
+  | DIRECTORY_AGENT -> s (function Directory_agent _ -> true | _ -> false)
+  | SERVICE_SCOPE -> s (function Service_scope _ -> true | _ -> false)
+  | RAPID_COMMIT -> s (function Rapid_commit -> true | _ -> false)
+  | CLIENT_FQDN -> s (function Client_fqdn _ -> true | _ -> false)
+  | RELAY_AGENT_INFORMATION -> s (function Relay_agent_information _ -> true | _ -> false)
+  | ISNS -> s (function Isns _ -> true | _ -> false)
+  | NDS_SERVERS -> s (function Nds_servers _ -> true | _ -> false)
+  | NDS_TREE_NAME -> s (function Nds_tree_name _ -> true | _ -> false)
+  | NDS_CONTEXT -> s (function Nds_context _ -> true | _ -> false)
+  | BCMCS_CONTROLLER_DOMAIN_NAME_LIST ->
+      s (function Bcmcs_controller_domain_name_list _ -> true | _ -> false)
+  | BCMCS_CONTROLLER_IPV4_ADDR ->
+      s (function Bcmcs_controller_ipv4_addr _ -> true | _ -> false)
+  | AUTHENTICATION -> s (function Authentication _ -> true | _ -> false)
+  | CLIENT_LAST_TRANSACTION_TIME ->
+      s (function Client_last_transaction_time _ -> true | _ -> false)
+  | ASSOCIATED_IP -> s (function Associated_ip _ -> true | _ -> false)
+  | CLIENT_SYSTEM -> s (function Client_system _ -> true | _ -> false)
+  | CLIENT_NDI -> s (function Client_ndi _ -> true | _ -> false)
+  | LDAP -> s (function Ldap _ -> true | _ -> false)
+  | UUID_GUID -> s (function Uuid_guid _ -> true | _ -> false)
+  | USER_AUTH -> s (function User_auth _ -> true | _ -> false)
+  | GEOCONF_CIVIC -> s (function Geoconf_civic _ -> true | _ -> false)
+  | PCODE -> s (function Pcode _ -> true | _ -> false)
+  | TCODE -> s (function Tcode _ -> true | _ -> false)
+  | NETINFO_ADDRESS -> s (function Netinfo_address _ -> true | _ -> false)
+  | NETINFO_TAG -> s (function Netinfo_tag _ -> true | _ -> false)
+  | URL -> s (function Url _ -> true | _ -> false)
+  | AUTO_CONFIG -> s (function Auto_config _ -> true | _ -> false)
+  | NAME_SERVICE_SEARCH -> s (function Name_service_search _ -> true | _ -> false)
+  | SUBNET_SELECTION -> s (function Subnet_selection _ -> true | _ -> false)
+  | DOMAIN_SEARCH -> s (function Domain_search _ -> true | _ -> false)
+  | SIP_SERVERS -> s (function Sip_servers _ -> true | _ -> false)
+  | CLASSLESS_STATIC_ROUTE -> s (function Classless_static_route _ -> true | _ -> false)
+  | CCC -> s (function Ccc _ -> true | _ -> false)
+  | GEOCONF -> s (function Geoconf _ -> true | _ -> false)
+  | VI_VENDOR_CLASS -> s (function Vi_vendor_class _ -> true | _ -> false)
+  | VI_VENDOR_INFO -> s (function Vi_vendor_info _ -> true | _ -> false)
+  | PXE_128 -> s (function Pxe_128 _ -> true | _ -> false)
+  | PXE_129 -> s (function Pxe_129 _ -> true | _ -> false)
+  | PXE_130 -> s (function Pxe_130 _ -> true | _ -> false)
+  | PXE_131 -> s (function Pxe_131 _ -> true | _ -> false)
+  | PXE_132 -> s (function Pxe_132 _ -> true | _ -> false)
+  | PXE_133 -> s (function Pxe_133 _ -> true | _ -> false)
+  | PXE_134 -> s (function Pxe_134 _ -> true | _ -> false)
+  | PXE_135 -> s (function Pxe_135 _ -> true | _ -> false)
+  | PANA_AGENT -> s (function Pana_agent _ -> true | _ -> false)
+  | V4_LOST -> s (function V4_lost _ -> true | _ -> false)
+  | CAPWAP_AC_V4 -> s (function Capwap_ac_v4 _ -> true | _ -> false)
+  | IPV4_ADDRESS_MOS -> s (function Ipv4_address_mos _ -> true | _ -> false)
+  | IPV4_FQDN_MOS -> s (function Ipv4_fqdn_mos _ -> true | _ -> false)
+  | SIP_UA_DOMAINS -> s (function Sip_ua_domains _ -> true | _ -> false)
+  | IPV4_ADDRESS_ANDSF -> s (function Ipv4_address_andsf _ -> true | _ -> false)
+  | GEOLOCK -> s (function Geolock _ -> true | _ -> false)
+  | FORCENEW_NONCE_CAPABLE -> s (function Forcenew_nonce_capable _ -> true | _ -> false)
+  | RDNSS_SELECTION -> s (function Rdnss_selection _ -> true | _ -> false)
+  | MISC_150 -> s (function Misc_150 _ -> true | _ -> false)
+  | STATUS_CODE -> s (function Status_code _ -> true | _ -> false)
+  | ABSOLUTE_TIME -> s (function Absolute_time _ -> true | _ -> false)
+  | START_TIME_OF_STATE -> s (function Start_time_of_state _ -> true | _ -> false)
+  | QUERY_START_TIME -> s (function Query_start_time _ -> true | _ -> false)
+  | QUERY_END_TIME -> s (function Query_end_time _ -> true | _ -> false)
+  | DHCP_STATE -> s (function Dhcp_state _ -> true | _ -> false)
+  | DATA_SOURCE -> s (function Data_source _ -> true | _ -> false)
+  | V4_PCP_SERVER -> s (function V4_pcp_server _ -> true | _ -> false)
+  | V4_PORTPARAMS -> s (function V4_portparams _ -> true | _ -> false)
+  | DHCP_CAPTIVE_PORTAL -> s (function Dhcp_captive_portal _ -> true | _ -> false)
+  | ETHERBOOT_175 -> s (function Etherboot_175 _ -> true | _ -> false)
+  | IP_TELEFONE -> s (function Ip_telefone _ -> true | _ -> false)
+  | ETHERBOOT_177 -> s (function Etherboot_177 _ -> true | _ -> false)
+  | PXE_LINUX -> s (function Pxe_linux _ -> true | _ -> false)
+  | CONFIGURATION_FILE -> s (function Configuration_file _ -> true | _ -> false)
+  | PATH_PREFIX -> s (function Path_prefix _ -> true | _ -> false)
+  | REBOOT_TIME -> s (function Reboot_time _ -> true | _ -> false)
+  | OPTION_6RD -> s (function Option_6rd _ -> true | _ -> false)
+  | V4_ACCESS_DOMAIN -> s (function V4_access_domain _ -> true | _ -> false)
+  | SUBNET_ALLOCATION -> s (function Subnet_allocation _ -> true | _ -> false)
+  | VIRTUAL_SUBNET_SELECTION -> s (function Virtual_subnet_selection _ -> true | _ -> false)
+  | WEB_PROXY_AUTO_DISC -> s (function Web_proxy_auto_disc _ -> true | _ -> false)
+  | END -> s (fun x -> x = End)
+  | PAD -> s (fun x -> x = Pad)
+  | RESERVED_224   | RESERVED_225   | RESERVED_226   | RESERVED_227 | RESERVED_228
+  | RESERVED_229   | RESERVED_230   | RESERVED_231   | RESERVED_232 | RESERVED_233
+  | RESERVED_234   | RESERVED_235   | RESERVED_236   | RESERVED_237 | RESERVED_238
+  | RESERVED_239   | RESERVED_240   | RESERVED_241   | RESERVED_242 | RESERVED_243
+  | RESERVED_244   | RESERVED_245   | RESERVED_246   | RESERVED_247 | RESERVED_248
+  | RESERVED_249   | RESERVED_250   | RESERVED_251   | RESERVED_253 | RESERVED_254
+  | UNASSIGNED_84  | UNASSIGNED_96  | UNASSIGNED_102 | UNASSIGNED_103
+  | UNASSIGNED_104 | UNASSIGNED_105 | UNASSIGNED_106 | UNASSIGNED_107
+  | UNASSIGNED_108 | UNASSIGNED_109 | UNASSIGNED_110 | UNASSIGNED_111
+  | UNASSIGNED_115 | UNASSIGNED_126 | UNASSIGNED_127 | UNASSIGNED_143
+  | UNASSIGNED_147 | UNASSIGNED_148 | UNASSIGNED_149 | UNASSIGNED_161
+  | UNASSIGNED_162 | UNASSIGNED_163 | UNASSIGNED_164 | UNASSIGNED_165
+  | UNASSIGNED_166 | UNASSIGNED_167 | UNASSIGNED_168 | UNASSIGNED_169
+  | UNASSIGNED_170 | UNASSIGNED_171 | UNASSIGNED_172 | UNASSIGNED_173
+  | UNASSIGNED_174 | UNASSIGNED_178 | UNASSIGNED_179 | UNASSIGNED_180
+  | UNASSIGNED_181 | UNASSIGNED_182 | UNASSIGNED_183 | UNASSIGNED_184
+  | UNASSIGNED_185 | UNASSIGNED_186 | UNASSIGNED_187 | UNASSIGNED_188
+  | UNASSIGNED_189 | UNASSIGNED_190 | UNASSIGNED_191 | UNASSIGNED_192
+  | UNASSIGNED_193 | UNASSIGNED_194 | UNASSIGNED_195 | UNASSIGNED_196
+  | UNASSIGNED_197 | UNASSIGNED_198 | UNASSIGNED_199 | UNASSIGNED_200
+  | UNASSIGNED_201 | UNASSIGNED_202 | UNASSIGNED_203 | UNASSIGNED_204
+  | UNASSIGNED_205 | UNASSIGNED_206 | UNASSIGNED_207 | UNASSIGNED_214
+  | UNASSIGNED_215 | UNASSIGNED_216 | UNASSIGNED_217 | UNASSIGNED_218
+  | UNASSIGNED_219 | UNASSIGNED_222 | UNASSIGNED_223
+    -> s (function Unassigned (c, _) -> code = c | _ -> false)
+
+let find_option_map f options = Util.find_map f options
+
+let collect_options f options = match (Util.filter_map f options) with
+  | [] -> None
+  | l -> Some (List.flatten l)
+
+let client_id_of_pkt pkt =
+  match find_option_map
+          (function Client_id id -> Some id | _ -> None)
+          pkt.options
+  with
+  | Some id -> id
+  | None -> Hwaddr pkt.chaddr
 
 (* string_of_* functions *)
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
