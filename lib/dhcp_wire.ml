@@ -529,9 +529,9 @@ let options_of_buf buf buf_len =
     let code = Cstruct.get_uint8 buf 0 in
     let padding () = collect_options (Cstruct.shift buf 1) options in
     (* Make sure we never shift into an unexisting body *)
-    match code with
-    | 0 -> padding ()
-    | 255 -> options
+    match int_to_option_code_exn code with
+    | PAD -> padding ()
+    | END -> options
     | _ -> (* Has len:body, generate the get functions *)
       let len = Cstruct.get_uint8 buf 1 in
       let body = Cstruct.shift buf 2 in
@@ -946,7 +946,7 @@ let buf_of_options sbuf options =
     let () = BE.set_uint32 sbuf 0 0x63825363l in       (* put cookie *)
     let sbuf = shift sbuf 4 in
     let ebuf = List.fold_left buf_of_option sbuf options in
-    set_uint8 ebuf 0 255; shift ebuf 1
+    set_uint8 ebuf 0 (option_code_to_int END); shift ebuf 1
 
 let pkt_of_buf buf len =
   let wrap () =
