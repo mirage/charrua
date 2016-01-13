@@ -1431,6 +1431,7 @@ let find_virtual_subnet_selection =
   find_option (function Virtual_subnet_selection x -> Some x | _ -> None)
 let find_web_proxy_auto_disc =
   find_option (function Web_proxy_auto_disc x -> Some x | _ -> None)
-(* let collect_unassigned = *)
-(*     (function Unassigned of option_code * string  (\* code * string *\) *)
-
+let find_unassigned code =
+  find_option (function Unassigned (c, s) when c = code -> Some (c, s) | _ -> None)
+let collect_unassigned code =
+  collect_options (function Unassigned (c, s) when c = code -> Some [(c, s)] | _ -> None)

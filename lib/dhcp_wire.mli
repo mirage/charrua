@@ -719,6 +719,8 @@ val find_vi_vendor_class : dhcp_option list -> string option
 val find_vi_vendor_info : dhcp_option list -> string option
 val find_virtual_subnet_selection : dhcp_option list -> string option
 val find_web_proxy_auto_disc : dhcp_option list -> string option
+val find_unassigned : option_code -> dhcp_option list -> (option_code * string) option
+val collect_unassigned : option_code -> dhcp_option list -> (option_code * string) list
 
 (** {2 DHCP Packet } *)
 
