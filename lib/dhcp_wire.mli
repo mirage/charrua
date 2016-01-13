@@ -170,7 +170,7 @@ type option_code =
   | BCMCS_CONTROLLER_IPV4_ADDR
   | AUTHENTICATION
   | CLIENT_LAST_TRANSACTION_TIME
-  | ASSOCIATED_IP
+  | ASSOCIATED_IPS
   | CLIENT_SYSTEM
   | CLIENT_NDI
   | LDAP
@@ -642,7 +642,7 @@ val find_merit_dumpfile : dhcp_option list -> string option
 val find_message : dhcp_option list -> string option
 val find_message_type : dhcp_option list -> msgtype option
 val find_misc_150 : dhcp_option list -> string option
-val find_mobile_ip_home_agent : dhcp_option list -> Ipaddr.V4.t list option
+val collect_mobile_ip_home_agent : dhcp_option list -> Ipaddr.V4.t list
 val find_name_service_search : dhcp_option list -> string option
 val find_nds_context : dhcp_option list -> string option
 val find_nds_servers : dhcp_option list -> string option
@@ -656,7 +656,7 @@ val find_netware_ip_option : dhcp_option list -> string option
 val find_nis_domain : dhcp_option list -> string option
 val find_nis_plus_domain : dhcp_option list -> string option
 val find_nlsr : dhcp_option list -> bool option
-val find_nntp_servers : dhcp_option list -> Ipaddr.V4.t list option
+val collect_nntp_servers : dhcp_option list -> Ipaddr.V4.t list
 val find_option_6rd : dhcp_option list -> string option
 val find_option_overload : dhcp_option list -> int option
 val find_pana_agent : dhcp_option list -> string option
@@ -666,7 +666,7 @@ val find_perform_mask_discovery : dhcp_option list -> bool option
 val find_perform_router_disc : dhcp_option list -> bool option
 val find_pmtu_ageing_timo : dhcp_option list -> int32 option
 val find_pmtu_plateau_table : dhcp_option list -> int list option
-val find_pop3_servers : dhcp_option list -> Ipaddr.V4.t list option
+val collect_pop3_servers : dhcp_option list -> Ipaddr.V4.t list
 val find_pxe_128 : dhcp_option list -> string option
 val find_pxe_129 : dhcp_option list -> string option
 val find_pxe_130 : dhcp_option list -> string option
@@ -691,7 +691,7 @@ val find_server_identifier : dhcp_option list -> Ipaddr.V4.t option
 val find_service_scope : dhcp_option list -> string option
 val find_sip_servers : dhcp_option list -> string option
 val find_sip_ua_domains : dhcp_option list -> string option
-val find_smtp_servers : dhcp_option list -> Ipaddr.V4.t list option
+val collect_smtp_servers : dhcp_option list -> Ipaddr.V4.t list
 val find_start_time_of_state : dhcp_option list -> int32 option
 val find_status_code : dhcp_option list -> string option
 val find_subnet_allocation : dhcp_option list -> int option

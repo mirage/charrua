@@ -158,7 +158,7 @@ cenum option_code {
   BCMCS_CONTROLLER_IPV4_ADDR = 89;
   AUTHENTICATION = 90;
   CLIENT_LAST_TRANSACTION_TIME = 91;
-  ASSOCIATED_IP = 92;
+  ASSOCIATED_IPS = 92;
   CLIENT_SYSTEM = 93;
   CLIENT_NDI = 94;
   LDAP = 95;
@@ -1259,14 +1259,14 @@ let find_tftp_server_name =
   find_option (function Tftp_server_name x -> Some x | _ -> None)
 let find_bootfile_name =
   find_option (function Bootfile_name x -> Some x | _ -> None)
-let find_mobile_ip_home_agent =
-  find_option (function Mobile_ip_home_agent x -> Some x | _ -> None)
-let find_smtp_servers =
-  find_option (function Smtp_servers x -> Some x | _ -> None)
-let find_pop3_servers =
-  find_option (function Pop3_servers x -> Some x | _ -> None)
-let find_nntp_servers =
-  find_option (function Nntp_servers x -> Some x | _ -> None)
+let collect_mobile_ip_home_agent =
+  collect_options (function Mobile_ip_home_agent x -> Some x | _ -> None)
+let collect_smtp_servers =
+  collect_options (function Smtp_servers x -> Some x | _ -> None)
+let collect_pop3_servers =
+  collect_options (function Pop3_servers x -> Some x | _ -> None)
+let collect_nntp_servers =
+  collect_options (function Nntp_servers x -> Some x | _ -> None)
 let collect_www_servers =
   collect_options (function Www_servers x -> Some x | _ -> None)
 let collect_finger_servers =
