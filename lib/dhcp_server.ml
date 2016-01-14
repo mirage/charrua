@@ -131,7 +131,7 @@ module Config = struct
 
     (* Prepend a Subnet_mask, since we can always infer that from the network,
        the user doesn't need to specify, it must always come first in case there
-       is a Router option later on RFC2132 3.3. subnet.Ast.options must come
+       is a Router option later on, RFC2132 3.3. subnet.Ast.options must come
        first, this way we make sure we hit the more specific option when
        searching for a single entry. *)
     let options = Dhcp_wire.Subnet_mask (Ipaddr.V4.Prefix.netmask network) ::
@@ -411,8 +411,13 @@ module Input = struct
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies (config : Config.t)
-      (preqs : option_code list) =
+  let collect_replies (config : Config.t) preqs =
+    (* Sort parameter requests to guarantee ordering. *)
+    let preqs =
+      List.sort
+        (fun a b -> compare (option_code_to_int a) (option_code_to_int b))
+        preqs
+    in
     let unassigned_options =
       List.filter (function Unassigned (_ ,_) -> true | _ -> false)
         config.options
