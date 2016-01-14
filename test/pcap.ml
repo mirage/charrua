@@ -18,6 +18,7 @@
 open Printf
 
 let () = Printexc.record_backtrace true
+let verbose = false
 
 cstruct pcap_header {
   uint32_t magic_number;   (* magic number *)
@@ -38,11 +39,12 @@ cstruct pcap_packet {
 
 let num_packets = ref 0
 
-let print_packet p len =
+let test_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with
   | `Error e -> failwith e
   | `Ok pkt ->
-    printf "DHCP: %s\n%!" (Dhcp_wire.pkt_to_string pkt);
+    if verbose then
+      printf "DHCP: %s\n%!" (Dhcp_wire.pkt_to_string pkt);
     let buf = Dhcp_wire.buf_of_pkt pkt in
     match (Dhcp_wire.pkt_of_buf buf len) with
     | `Error e -> failwith e
@@ -57,16 +59,17 @@ let print_packet p len =
         failwith "Serialization bug found !"
   end
 
-let rec print_pcap_packet (hdr, pkt) =
+let test_pcap_packet (hdr, pkt) =
   let ts_sec = get_pcap_packet_ts_sec hdr in
   let ts_usec = get_pcap_packet_ts_usec hdr in
   let incl_len = get_pcap_packet_incl_len hdr in
   let orig_len = get_pcap_packet_orig_len hdr in
-  printf "***** %lu.%lu  bytes %lu (of %lu)\n%!"
-    ts_sec ts_usec incl_len orig_len;
-  print_packet pkt (Int32.to_int incl_len)
+  if verbose then
+    printf "***** %lu.%lu  bytes %lu (of %lu)\n%!"
+      ts_sec ts_usec incl_len orig_len;
+  test_packet pkt (Int32.to_int incl_len)
 
-let print_pcap_header buf =
+let test_pcap_header buf =
   let magic = get_pcap_header_magic_number buf in
   let endian =
     match magic with
@@ -80,22 +83,27 @@ let print_pcap_header buf =
   let sigfis = get_pcap_header_sigfigs buf in
   let snaplen = get_pcap_header_snaplen buf in
   let header_network = get_pcap_header_network buf in
-  printf "pcap_header (len %d)\n%!" sizeof_pcap_header;
-  printf "magic_number %lx (%s)\n%!" magic endian;
-  printf "version %d %d\n%!" version_major version_minor;
-  printf "timezone shift %lu\n%!" thiszone;
-  printf "timestamp accuracy %lu\n%!" sigfis;
-  printf "snaplen %lu\n%!" snaplen;
-  printf "lltype %lx\n%!" header_network
+  if verbose then begin
+    printf "pcap_header (len %d)\n%!" sizeof_pcap_header;
+    printf "magic_number %lx (%s)\n%!" magic endian;
+    printf "version %d %d\n%!" version_major version_minor;
+    printf "timezone shift %lu\n%!" thiszone;
+    printf "timestamp accuracy %lu\n%!" sigfis;
+    printf "snaplen %lu\n%!" snaplen;
+    printf "lltype %lx\n%!" header_network
+  end
 
 let parse file =
-  printf "parsing %s\n%!" file;
+  if verbose then
+    printf "parsing %s\n%!" file;
   let fd = Unix.(openfile file [O_RDONLY] 0) in
   let t = Unix_cstruct.of_fd fd in
-  printf "total pcap file length %d\n%!" (Cstruct.len t);
+  if verbose then
+    printf "total pcap file length %d\n%!" (Cstruct.len t);
 
   let header, body = Cstruct.split t sizeof_pcap_header in
-  (* print_pcap_header header; *)
+  if verbose then
+      test_pcap_header header;
 
   let packets = Cstruct.iter
       (fun buf -> Some (sizeof_pcap_packet + Int32.to_int (get_pcap_packet_incl_len buf)))
@@ -103,18 +111,14 @@ let parse file =
       body
   in
   let num_packets = Cstruct.fold
-      (fun a packet -> print_pcap_packet packet; (a+1))
+      (fun a packet -> test_pcap_packet packet; (a+1))
       packets 0
   in
   Unix.close fd;
-  printf "%s had %d packets\n\n%!" file num_packets
+  if verbose then
+    printf "%s had %d packets\n\n%!" file num_packets
 
 let testfiles = ["test/dhcp.pcap"; "test/dhcp2.pcap" ]
 
-let _ =
-  (* XXX move this to a test file. *)
-  (* Make sure parameters 0-255 are there. *)
-  for i = 0 to 255 do
-      ignore (Dhcp_wire.int_to_option_code_exn i)
-  done;
+let t_pcap () =
   List.iter parse testfiles
