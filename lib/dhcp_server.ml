@@ -99,7 +99,7 @@ module Config = struct
     let choke lex s =
       let open Lexing in
       let pos = lex.lex_curr_p in
-      let str = Printf.sprintf "%s at ZZZZ line %d around `%s`"
+      let str = Printf.sprintf "%s at line %d around `%s`"
           s pos.pos_lnum (Lexing.lexeme lex)
       in
       invalid_arg str
