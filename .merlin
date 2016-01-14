@@ -1,6 +1,7 @@
 S .
 S lib
 B _build/lib
+B _build/test
 PKG cmdliner
 PKG cstruct
 PKG ipaddr
