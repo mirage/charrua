@@ -24,7 +24,7 @@ let find_map f t =
   in
   loop t
 
-let filter_map f l =
+let filter_map f l = List.rev @@
   List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
 
 let finalize f g =
