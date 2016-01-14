@@ -52,7 +52,7 @@ module Config : sig
   val sexp_of_t : t -> Sexplib.Sexp.t
 
   val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) -> t
-  (** [parse cf prefix mac] Creates a server configuration by parsing [cf] as an
+  (** [parse cf (prefix * mac)] Creates a server configuration by parsing [cf] as an
       ISC dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
       supported. [addr] and [mac] are the prefix address and mac address to be
       used for building replies, it must match one subnet section in [cf] *)

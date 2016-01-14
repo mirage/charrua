@@ -85,7 +85,17 @@ module Config = struct
     let max_lease_time = Util.some_or_default
         subnet.Ast.max_lease_time ast.Ast.max_lease_time
     in
-    { options = subnet.Ast.options @ ast.Ast.options;
+    let network = subnet.Ast.network in
+
+    (* Prepend a Subnet_mask, since we can always infer that from the network,
+       the user doesn't need to specify, it must always come first in case there
+       is a Router option later on RFC2132 3.3. subnet.Ast.options must come
+       first, this way we make sure we hit the more specific option when
+       searching for a single entry. *)
+    let options = Dhcp_wire.Subnet_mask (Ipaddr.V4.Prefix.netmask network) ::
+                  (subnet.Ast.options @ ast.Ast.options)
+    in
+    { options;
       hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
       default_lease_time;
       max_lease_time;
@@ -377,8 +387,7 @@ module Input = struct
       | None -> None
     in
     let consider = function
-      | SUBNET_MASK -> None (* XXX Already included, TODO: use code below *)
-(* | SUBNET_MASK -> s find_subnet_mask (fun x -> Subnet_mask x) *)
+      | SUBNET_MASK -> s find_subnet_mask (fun x -> Subnet_mask x)
       | TIME_OFFSET -> s find_time_offset (fun x -> Time_offset x)
       | ROUTERS -> m collect_routers (fun x -> Routers x)
       | TIME_SERVERS -> m collect_time_servers (fun x -> Time_servers x)
@@ -686,7 +695,6 @@ module Input = struct
       in
       let options =
         cons (Message_type DHCPACK) @@
-        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask config.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
@@ -812,7 +820,6 @@ module Input = struct
           (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
         cons (Message_type DHCPOFFER) @@
-        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask config.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
