@@ -42,7 +42,9 @@ module Config = struct
 
   let lease_time_good config time = time <= config.max_lease_time
 
-  let config_of_ast (ast : Ast.t) ip_addr mac_addr =
+  let config_of_ast (ast : Ast.t) addr_tuple =
+    let ip_addr = fst addr_tuple in
+    let mac_addr = snd addr_tuple in
     let subnets = ast.Ast.subnets in
     let subnet = try
         List.find (fun s -> Ipaddr.V4.Prefix.mem ip_addr s.Ast.network) subnets
@@ -94,7 +96,7 @@ module Config = struct
       hosts = hosts;
     }
 
-  let parse configtxt ip_addr mac_addr =
+  let parse configtxt addr_tuple =
     let choke lex s =
       let open Lexing in
       let pos = lex.lex_curr_p in
@@ -109,7 +111,7 @@ module Config = struct
       | Parser.Error -> choke lex "Parser Error"
       | Invalid_argument e -> choke lex e
     in
-    config_of_ast ast ip_addr mac_addr
+    config_of_ast ast addr_tuple
 
 end
 
