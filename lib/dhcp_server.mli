@@ -35,41 +35,27 @@ module Config : sig
   val host_of_sexp : Sexplib.Sexp.t -> host
   val sexp_of_host : host -> Sexplib.Sexp.t
 
-  type subnet = {
-    ip_addr : Ipaddr.V4.t;
-    mac_addr : Macaddr.t;
-    network : Ipaddr.V4.Prefix.t;
-    range : Ipaddr.V4.t * Ipaddr.V4.t;
-    options : Dhcp_wire.dhcp_option list;
-    hosts : host list;
-    default_lease_time : int32 option;
-    max_lease_time : int32 option;
-  }
-  (** {! subnet} config section entry *)
-
-  val subnet_of_sexp : Sexplib.Sexp.t -> subnet
-  val sexp_of_subnet : subnet -> Sexplib.Sexp.t
-
   type t = {
-    addresses : (Ipaddr.V4.t * Macaddr.t) list;
-    subnets : subnet list;
     options : Dhcp_wire.dhcp_option list;
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
+    ip_addr : Ipaddr.V4.t;
+    mac_addr : Macaddr.t;
+    network : Ipaddr.V4.Prefix.t;
+    range : Ipaddr.V4.t * Ipaddr.V4.t;
+    hosts : host list;
   }
   (** Server configuration *)
 
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
 
-  val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) list -> t
-  (** [parse cf l] Creates a server configuration by parsing [cf] as an ISC
-      dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
-      supported. [l] is a list of network addresses, each pair is the output
-      address to be used for building replies and each must match a [network
-      section] of [cf]. A normal usage would be a list of all interfaces
-      configured in the system *)
+  val parse : string -> Ipaddr.V4.Prefix.addr -> Macaddr.t -> t
+  (** [parse cf prefix mac] Creates a server configuration by parsing [cf] as an
+      ISC dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
+      supported. [addr] and [mac] are the prefix address and mac address to be
+      used for building replies, it must match one subnet section in [cf] *)
 end
 
 (** {2 DHCP Leases (bindings) } *)
@@ -118,20 +104,19 @@ module Input : sig
     | Silence (** Input packet didn't belong to us, normal nop event.*)
     | Update of Lease.database (** Lease database update. *)
     | Reply of Dhcp_wire.pkt * Lease.database
-    (** Reply packet to be sent on the same subnet and the corresponding lease
-        database to be used in case the sent of the reply pkt is successfull *)
+    (** Reply packet to be sent back and the corresponding lease database to be
+        used in case the sent of the reply pkt is successfull *)
     | Warning of string (** An odd event, could be logged. *)
     | Error of string (** Input packet is invalid, or some other error ocurred. *)
     (** The result of [input_pkt]. *)
 
-  val for_subnet : Dhcp_wire.pkt -> Config.subnet -> bool
-  (** True if the packet is destined for this subnet. *)
+  val for_us : Config.t -> Dhcp_wire.pkt -> bool
+  (** Check the packet headers, true if the packet is destined for us. *)
 
-  val input_pkt : Config.t -> Lease.database -> Config.subnet ->
-    Dhcp_wire.pkt -> float -> result
-  (** [input_pkt config lease_db subnet pkt time] Inputs packet [pkt], lease_db
+  val input_pkt : Config.t -> Lease.database -> Dhcp_wire.pkt -> float -> result
+  (** [input_pkt config lease_db pkt time] Inputs packet [pkt], lease_db
       is the current lease database state, the resulting action should be
-      performed by the caller, normally a [Reply] packet is returned and must be
-      sent on the same subnet. [time] is a float representing time as in
-      [Unix.time] or Mirage's [Clock.time]. *)
+      performed by the caller, normally a [Reply] packet is returned and should be
+      sent back. [time] is a float representing time as in [Unix.time] or
+      Mirage's [Clock.time]. *)
 end

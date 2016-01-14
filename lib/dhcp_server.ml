@@ -25,77 +25,71 @@ module Config = struct
     hw_addr : Macaddr.t option;
   } with sexp
 
-  type subnet = {
-    ip_addr : Ipaddr.V4.t;
-    mac_addr : Macaddr.t;
-    network : Ipaddr.V4.Prefix.t;
-    range : Ipaddr.V4.t * Ipaddr.V4.t;
-    options : Dhcp_wire.dhcp_option list;
-    hosts : host list;
-    default_lease_time : int32 option;
-    max_lease_time : int32 option;
-  } with sexp
-
   type t = {
-    addresses : (Ipaddr.V4.t * Macaddr.t) list;
-    subnets : subnet list;
     options : Dhcp_wire.dhcp_option list;
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
+    ip_addr : Ipaddr.V4.t;
+    mac_addr : Macaddr.t;
+    network : Ipaddr.V4.Prefix.t;
+    range : Ipaddr.V4.t * Ipaddr.V4.t;
+    hosts : host list;
   } with sexp
 
-  let config_of_ast (ast : Ast.t) addresses =
-    let subnet_of_subnet_ast (s : Ast.subnet) =
-      let ip_addr, mac_addr = try List.find (function
-          | ipaddr, _ -> Ipaddr.V4.Prefix.mem ipaddr s.Ast.network) addresses
-        with Not_found ->
-          invalid_arg ("No address found for network " ^
-                       (Ipaddr.V4.Prefix.to_string s.Ast.network))
-      in
-      let () = List.iter (fun (host : Ast.host) ->
-          match host.Ast.fixed_addr with
-          | None -> ()
-          | Some addr ->
-            if not (Ipaddr.V4.Prefix.mem addr s.Ast.network) then
-              invalid_arg (Printf.sprintf "Fixed address %s does not \
-                                           belong to subnet %s"
+  let config_of_ast (ast : Ast.t) ip_addr mac_addr =
+    let subnets = ast.Ast.subnets in
+    let subnet = try
+        List.find (fun s -> Ipaddr.V4.Prefix.mem ip_addr s.Ast.network) subnets
+      with Not_found ->
+        invalid_arg ("No subnet found for address address found for network " ^
+                     (Ipaddr.V4.to_string ip_addr))
+    in
+    (* Sanity checks. *)
+    let () = List.iter (fun (host : Ast.host) ->
+        match host.Ast.fixed_addr with
+        | None -> ()
+        | Some addr ->
+          if not (Ipaddr.V4.Prefix.mem addr subnet.Ast.network) then
+            invalid_arg (Printf.sprintf "Fixed address %s does not \
+                                         belong to subnet %s"
+                           (Ipaddr.V4.to_string addr)
+                           (Ipaddr.V4.Prefix.to_string subnet.Ast.network))
+          else if Util.addr_in_range addr subnet.Ast.range then
+            match subnet.Ast.range with
+            | low, high ->
+              invalid_arg (Printf.sprintf "Fixed address %s must be \
+                                           outside of range %s:%s"
                              (Ipaddr.V4.to_string addr)
-                             (Ipaddr.V4.Prefix.to_string s.Ast.network))
-            else if Util.addr_in_range addr s.Ast.range then
-              match s.Ast.range with
-              | low, high ->
-                invalid_arg (Printf.sprintf "Fixed address %s must be \
-                                             outside of range %s:%s"
-                               (Ipaddr.V4.to_string addr)
-                               (Ipaddr.V4.to_string low)
-                               (Ipaddr.V4.to_string high)))
-          s.Ast.hosts
-      in
-      let hosts = List.map (fun h ->
+                             (Ipaddr.V4.to_string low)
+                             (Ipaddr.V4.to_string high)))
+        subnet.Ast.hosts
+    in
+    let hosts = List.map (fun h ->
           { hostname = h.Ast.hostname;
             options = h.Ast.options;
             fixed_addr = h.Ast.fixed_addr;
             hw_addr = h.Ast.hw_addr;
-          }) s.Ast.hosts
-      in
-      { ip_addr;
-        mac_addr;
-        network = s.Ast.network;
-        range = s.Ast.range;
-        options = s.Ast.options;
-        hosts;
-        default_lease_time = s.Ast.default_lease_time;
-        max_lease_time = s.Ast.max_lease_time }
+          }) subnet.Ast.hosts
     in
-    let subnets = List.map subnet_of_subnet_ast ast.Ast.subnets in
-    { addresses; subnets;
-      options = ast.Ast.options;
+    let default_lease_time = Util.some_or_default
+        subnet.Ast.default_lease_time ast.Ast.default_lease_time
+    in
+    let max_lease_time = Util.some_or_default
+        subnet.Ast.max_lease_time ast.Ast.max_lease_time
+    in
+    { options = subnet.Ast.options @ ast.Ast.options;
       hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
-      default_lease_time = ast.Ast.default_lease_time;
-      max_lease_time = ast.Ast.max_lease_time }
+      default_lease_time;
+      max_lease_time;
+      ip_addr;
+      mac_addr;
+      network = subnet.Ast.network;
+      range = subnet.Ast.range;
+      hosts = hosts;
+    }
 
-  let parse configtxt addresses =
+  let parse configtxt ip_addr mac_addr =
     let choke lex s =
       let open Lexing in
       let pos = lex.lex_curr_p in
@@ -110,22 +104,12 @@ module Config = struct
       | Parser.Error -> choke lex "Parser Error"
       | Invalid_argument e -> choke lex e
     in
-    config_of_ast ast addresses
+    config_of_ast ast ip_addr mac_addr
 
   let t1_time_ratio = 0.5
   let t2_time_ratio = 0.8
 
-  let default_lease_time (config : t) (subnet : subnet) =
-    match subnet.default_lease_time with
-    | Some time -> time
-    | None -> config.default_lease_time
-
-  let lease_time_good (config : t) (subnet : subnet) time =
-    let max_lease_time = match subnet.max_lease_time with
-      | Some time -> time
-      | None -> config.max_lease_time
-    in
-    time <= max_lease_time
+  let lease_time_good config time = time <= config.max_lease_time
 
 end
 
@@ -286,25 +270,25 @@ module Input = struct
     | Warning of string
     | Error of string
 
-  let fixed_addr_of_mac mac subnet =
+  let fixed_addr_of_mac config mac =
     Util.find_map
       (fun host -> match host.hw_addr with
          | Some hw_addr -> if hw_addr = mac then host.fixed_addr else None
          | None         -> None)
-          subnet.hosts
+          config.hosts
 
-  let find_lease client_id mac db subnet ~now =
-    match (fixed_addr_of_mac mac subnet) with
+  let find_lease config client_id mac db ~now =
+    match (fixed_addr_of_mac config mac) with
     | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~now), true
     | None -> Lease.lease_of_client_id client_id db, false
 
-  let good_address mac addr subnet db =
-    match (fixed_addr_of_mac mac subnet) with
+  let good_address config mac addr db =
+    match (fixed_addr_of_mac config mac) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
-    | None -> Util.addr_in_range addr subnet.range
+    | None -> Util.addr_in_range addr config.range
 
-  let make_reply config subnet reqpkt
+  let make_reply config reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =
     let op = BOOTREPLY in
     let htype = Ethernet_10mb in
@@ -323,7 +307,7 @@ module Input = struct
         server_port
     in
     let srcport = server_port in
-    let srcmac = subnet.mac_addr in
+    let srcmac = config.mac_addr in
     let dstmac, dstip = match (find_message_type options) with
       | None -> failwith "make_reply: No msgtype in options"
       | Some m -> match m with
@@ -342,21 +326,21 @@ module Input = struct
             (Macaddr.broadcast, Ipaddr.V4.broadcast)
         | _ -> invalid_arg ("Can't send message type " ^ (msgtype_to_string m))
     in
-    let srcip = subnet.ip_addr in
+    let srcip = config.ip_addr in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
       op; htype; hlen; hops; xid; secs; flags;
       ciaddr; yiaddr; siaddr; giaddr; chaddr; sname; file;
       options }
 
-  let for_subnet pkt subnet =
+  let for_us config pkt =
     pkt.dstport = Dhcp_wire.server_port
     &&
     pkt.srcport = Dhcp_wire.client_port
     &&
-    (pkt.dstmac = subnet.mac_addr ||
+    (pkt.dstmac = config.mac_addr ||
      pkt.dstmac = Macaddr.broadcast)
     &&
-    (pkt.dstip = subnet.ip_addr ||
+    (pkt.dstip = config.ip_addr ||
      pkt.dstip = Ipaddr.V4.broadcast)
 
   let valid_pkt pkt =
@@ -372,22 +356,21 @@ module Input = struct
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies (config : Config.t) (subnet : Config.subnet)
+  let collect_replies (config : Config.t)
       (preqs : option_code list) =
-    let all_options = subnet.options @ config.options in
     let unassigned_options =
       List.filter (function Unassigned (_ ,_) -> true | _ -> false)
-        all_options
+        config.options
     in
     (* merge *)
     let m fn fnr =
-      match fn all_options with
+      match fn config.options with
       | [] -> None
       | l -> Some (fnr l)
     in
     (* replace *)
     let r fn fnr =
-      match fn all_options with
+      match fn config.options with
       | Some x -> Some (fnr x)
       | None -> None
     in
@@ -617,13 +600,13 @@ module Input = struct
     in
     Util.filter_map consider preqs
 
-  let input_decline_release config db subnet pkt now =
+  let input_decline_release config db pkt now =
     let open Util in
     let msgtype = match find_message_type pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
     in
-    let ourip = subnet.ip_addr in
+    let ourip = config.ip_addr in
     let reqip = find_request_ip pkt.options in
     let sidip = find_server_identifier pkt.options in
     let client_id = client_id_of_pkt pkt in
@@ -636,7 +619,7 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          let lease, fixed_lease = find_lease client_id pkt.chaddr db subnet ~now in
+          let lease, fixed_lease = find_lease config client_id pkt.chaddr db ~now in
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
           | Some lease ->
@@ -649,11 +632,11 @@ module Input = struct
   let input_decline = input_decline_release
   let input_release = input_decline_release
 
-  let input_inform (config : Config.t) db subnet pkt =
+  let input_inform config db pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
       bad_packet "DHCPINFORM without ciaddr"
     else
-      let ourip = subnet.ip_addr in
+      let ourip = config.ip_addr in
       let options =
         let open Util in
         cons (Message_type DHCPACK) @@
@@ -661,19 +644,19 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config subnet preqs
+        | Some preqs -> collect_replies config preqs
         | None -> []
       in
-      let pkt = make_reply config subnet pkt
+      let pkt = make_reply config pkt
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Reply (pkt, db)
 
-  let input_request config db subnet pkt now =
+  let input_request config db pkt now =
     let client_id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease client_id pkt.chaddr db subnet ~now in
-    let ourip = subnet.ip_addr in
+    let lease, fixed_lease = find_lease config client_id pkt.chaddr db ~now in
+    let ourip = config.ip_addr in
     let reqip = find_request_ip pkt.options in
     let sidip = find_server_identifier pkt.options in
     let nak ?msg () =
@@ -687,7 +670,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) []
       in
-      let pkt = make_reply config subnet pkt
+      let pkt = make_reply config pkt
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
@@ -701,7 +684,7 @@ module Input = struct
       in
       let options =
         cons (Message_type DHCPACK) @@
-        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
+        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask config.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
@@ -709,10 +692,10 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config subnet preqs
+        | Some preqs -> collect_replies config preqs
         | None -> []
       in
-      let reply = make_reply config subnet pkt
+      let reply = make_reply config pkt
           ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
@@ -728,7 +711,7 @@ module Input = struct
         Silence
       else if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         Warning "Bad DHCPREQUEST, ciaddr is not 0"
-      else if not (good_address pkt.chaddr reqip subnet db) then
+      else if not (good_address config pkt.chaddr reqip db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else
         (match lease with
@@ -744,7 +727,7 @@ module Input = struct
              nak ~msg:"Requested address is not available" ()
            else
              ack (Lease.make client_id reqip
-                    ~duration:(Config.default_lease_time config subnet) ~now))
+                    ~duration:config.default_lease_time ~now))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         bad_packet "Bad DHCPREQUEST, ciaddr is not 0"
@@ -753,7 +736,7 @@ module Input = struct
         nak ~msg:"Lease has expired and address is taken" ()
         (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
-              not (good_address pkt.chaddr reqip subnet db) then
+              not (good_address config pkt.chaddr reqip db) then
         nak ~msg:"Requested address is not in subnet range" ()
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
@@ -771,7 +754,7 @@ module Input = struct
         ack ~renew:true lease
     | _ -> Silence
 
-  let discover_addr lease db subnet pkt now =
+  let discover_addr config lease db pkt now =
     let id = client_id_of_pkt pkt in
     match lease with
     (* Handle the case where we have a lease *)
@@ -782,40 +765,40 @@ module Input = struct
       else if (Lease.addr_available lease.Lease.addr db ~now) then
         Some lease.Lease.addr
       else
-        Lease.get_usable_addr id db subnet.range ~now
+        Lease.get_usable_addr id db config.range ~now
     (* Handle the case where we have no lease *)
     | None -> match (find_request_ip pkt.options) with
       | Some req_addr ->
-        if (good_address pkt.chaddr req_addr subnet db) &&
+        if (good_address config pkt.chaddr req_addr db) &&
            (Lease.addr_available req_addr db ~now) then
           Some req_addr
         else
-          Lease.get_usable_addr id db subnet.range ~now
-      | None -> Lease.get_usable_addr id db subnet.range ~now
+          Lease.get_usable_addr id db config.range ~now
+      | None -> Lease.get_usable_addr id db config.range ~now
 
-  let discover_lease_time config subnet lease db pkt now =
+  let discover_lease_time config lease db pkt now =
     match (find_ip_lease_time pkt.options) with
     | Some ip_lease_time ->
-      if Config.lease_time_good config subnet ip_lease_time then
+      if Config.lease_time_good config ip_lease_time then
         ip_lease_time
       else
-        Config.default_lease_time config subnet
+        config.default_lease_time
     | None -> match lease with
-      | None -> Config.default_lease_time config subnet
+      | None -> config.default_lease_time
       | Some lease -> if Lease.expired lease ~now then
-          Config.default_lease_time config subnet
+          config.default_lease_time
         else
           Lease.timeleft lease ~now
 
-  let input_discover config db subnet pkt now =
+  let input_discover config db pkt now =
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease id pkt.chaddr db subnet ~now in
-    let ourip = subnet.ip_addr in
-    let addr = discover_addr lease db subnet pkt now in
+    let lease, fixed_lease = find_lease config id pkt.chaddr db ~now in
+    let ourip = config.ip_addr in
+    let addr = discover_addr config lease db pkt now in
     (* Figure out the lease lease_time *)
-    let lease_time = discover_lease_time config subnet lease db pkt now in
+    let lease_time = discover_lease_time config lease db pkt now in
     match addr with
     | None -> Warning "No ips left to offer"
     | Some addr ->
@@ -827,7 +810,7 @@ module Input = struct
           (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
         cons (Message_type DHCPOFFER) @@
-        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask subnet.network)) @@
+        cons (Subnet_mask (Ipaddr.V4.Prefix.netmask config.network)) @@
         cons (Ip_lease_time lease_time) @@
         cons (Renewal_t1 t1) @@
         cons (Rebinding_t2 t2) @@
@@ -835,26 +818,26 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config subnet preqs
+        | Some preqs -> collect_replies config preqs
         | None -> []
       in
-      let pkt = make_reply config subnet pkt
+      let pkt = make_reply config pkt
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
       Reply (pkt, db)
 
-  let input_pkt config db subnet pkt time =
+  let input_pkt config db pkt time =
     try
-      if not (for_subnet pkt subnet) then
+      if not (for_us config pkt) then
         Silence
       else if valid_pkt pkt then
         match find_message_type pkt.options with
-        | Some DHCPDISCOVER -> input_discover config db subnet pkt time
-        | Some DHCPREQUEST  -> input_request config db subnet pkt time
-        | Some DHCPDECLINE  -> input_decline config db subnet pkt time
-        | Some DHCPRELEASE  -> input_release config db subnet pkt time
-        | Some DHCPINFORM   -> input_inform config db subnet pkt
+        | Some DHCPDISCOVER -> input_discover config db pkt time
+        | Some DHCPREQUEST  -> input_request config db pkt time
+        | Some DHCPDECLINE  -> input_decline config db pkt time
+        | Some DHCPRELEASE  -> input_release config db pkt time
+        | Some DHCPINFORM   -> input_inform config db pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
         | Some m -> Warning ("Unhandled msgtype " ^ (msgtype_to_string m))
       else
