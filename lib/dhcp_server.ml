@@ -37,6 +37,11 @@ module Config = struct
     hosts : host list;
   } with sexp
 
+  let t1_time_ratio = 0.5
+  let t2_time_ratio = 0.8
+
+  let lease_time_good config time = time <= config.max_lease_time
+
   let config_of_ast (ast : Ast.t) ip_addr mac_addr =
     let subnets = ast.Ast.subnets in
     let subnet = try
@@ -105,11 +110,6 @@ module Config = struct
       | Invalid_argument e -> choke lex e
     in
     config_of_ast ast ip_addr mac_addr
-
-  let t1_time_ratio = 0.5
-  let t2_time_ratio = 0.8
-
-  let lease_time_good config time = time <= config.max_lease_time
 
 end
 
