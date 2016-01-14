@@ -1124,6 +1124,7 @@ let client_id_of_pkt pkt =
 let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
 let client_id_to_string = to_hum sexp_of_client_id
 let pkt_to_string = to_hum sexp_of_pkt
+let dhcp_option_to_string = to_hum sexp_of_dhcp_option
 
 let find_subnet_mask =
   find_option (function Subnet_mask x -> Some x | _ -> None)

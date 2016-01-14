@@ -566,6 +566,8 @@ val collect_options : ('a -> 'b list option) -> 'a list -> 'b list
 val dhcp_option_of_sexp : Sexplib.Sexp.t -> dhcp_option
 val sexp_of_dhcp_option : dhcp_option -> Sexplib.Sexp.t
 
+val dhcp_option_to_string : dhcp_option -> string
+
 val collect_associated_ips : dhcp_option list -> Ipaddr.V4.t list
 val collect_bcmcs_controller_ipv4_addrs : dhcp_option list -> Ipaddr.V4.t list
 val collect_cookie_servers : dhcp_option list -> Ipaddr.V4.t list
