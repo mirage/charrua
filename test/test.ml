@@ -27,16 +27,45 @@ let t_option_codes () =
       ignore (Dhcp_wire.int_to_option_code_exn i)
   done
 
+let make_simple_config =
+  let open Dhcp_server.Config in
+  let ip = Ipaddr.V4.of_string_exn "192.168.1.1" in
+  let mac = Macaddr.of_string_exn "aa:bb:cc:dd:ee:00" in
+  let range = (ip, Ipaddr.V4.of_string_exn "192.168.1.100") in
+  make
+    ~hostname:"Tests are awesome!"
+    ~default_lease_time:(60 * 60 * 1)
+    ~max_lease_time:(60 * 60 * 10)
+    ~hosts:[]
+    ~addr_tuple:(ip, mac)
+    ~network:(Ipaddr.V4.Prefix.make 24 ip)
+    ~range:range
+
+let t_simple_config () =
+  ignore @@ make_simple_config ~options:[]
+
+let t_bad_simple_config () =
+  let ok = try
+      ignore @@ make_simple_config ~options:[Dhcp_wire.End];
+      false
+    with
+      Invalid_argument _ -> true
+  in
+  if not ok then
+    failwith "Config succeeded, this is an error !"
+
 let run_test test =
   let f = fst test in
   let name = snd test in
-  Printf.printf "%s %-24s%!" (blue "%s" "Test") (yellow "%s" name);
+  Printf.printf "%s %-27s%!" (blue "%s" "Test") (yellow "%s" name);
   f ();
   Printf.printf "%s\n%!" (green "ok")
 
 let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
+  (t_simple_config, "simple config");
+  (t_bad_simple_config, "bad simple config");
 ]
 
 let _ =

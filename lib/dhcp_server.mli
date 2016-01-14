@@ -56,6 +56,17 @@ module Config : sig
       ISC dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
       supported. [addr] and [mac] are the prefix address and mac address to be
       used for building replies, it must match one subnet section in [cf] *)
+
+  val make :
+    ?hostname:string ->
+    ?default_lease_time:int ->
+    ?max_lease_time:int ->
+    ?hosts:host list ->
+    addr_tuple:Ipaddr.V4.t * Macaddr.t ->
+    network:Ipaddr.V4.Prefix.t ->
+    range:Ipaddr.V4.t * Ipaddr.V4.t ->
+    options:Dhcp_wire.dhcp_option list -> t
+
 end
 
 (** {2 DHCP Leases (bindings) } *)

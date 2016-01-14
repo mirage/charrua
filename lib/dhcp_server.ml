@@ -66,8 +66,8 @@ module Config = struct
 
   let make
       ?(hostname = "Charrua DHCP Server")
-      ?(default_lease_time = Int32.of_int (60 * 60 * 2)) (* 2 hours *)
-      ?(max_lease_time = Int32.of_int (60 * 60 * 24))    (* 24 hours *)
+      ?(default_lease_time = 60 * 60 * 2) (* 2 hours *)
+      ?(max_lease_time = 60 * 60 * 24)    (* 24 hours *)
       ?(hosts = [])
       ~addr_tuple
       ~network
@@ -95,8 +95,8 @@ module Config = struct
     sanity_check {
       options;
       hostname;
-      default_lease_time;
-      max_lease_time;
+      default_lease_time = Int32.of_int default_lease_time;
+      max_lease_time = Int32.of_int max_lease_time;
       ip_addr;
       mac_addr;
       network;
