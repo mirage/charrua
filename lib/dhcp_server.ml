@@ -42,7 +42,69 @@ module Config = struct
 
   let lease_time_good config time = time <= config.max_lease_time
 
-  let config_of_ast (ast : Ast.t) addr_tuple =
+  let sanity_check config =
+    (* Check if fixed addresses make sense *)
+    List.iter (fun host ->
+        match host.fixed_addr with
+        | None -> ()
+        | Some addr ->
+          if not (Ipaddr.V4.Prefix.mem addr config.network) then
+            invalid_arg (Printf.sprintf "Fixed address %s does not \
+                                         belong to subnet %s"
+                           (Ipaddr.V4.to_string addr)
+                           (Ipaddr.V4.Prefix.to_string config.network))
+          else if Util.addr_in_range addr config.range then
+            let low = fst config.range in
+            let high = snd config.range in
+            invalid_arg (Printf.sprintf "Fixed address %s must be \
+                                         outside of range %s:%s"
+                           (Ipaddr.V4.to_string addr)
+                           (Ipaddr.V4.to_string low)
+                           (Ipaddr.V4.to_string high)))
+      config.hosts;
+    config
+
+  let make
+      ?(hostname = "Charrua DHCP Server")
+      ?(default_lease_time = Int32.of_int (60 * 60 * 2)) (* 2 hours *)
+      ?(max_lease_time = Int32.of_int (60 * 60 * 24))    (* 24 hours *)
+      ?(hosts = [])
+      ~addr_tuple
+      ~network
+      ~range
+      ~options =
+
+    let open Dhcp_wire in
+    (* Try to ensure the user doesn't pass bad options *)
+    let () =
+      List.iter (function
+          | Subnet_mask _ | Renewal_t1 _ | Rebinding_t2 _ | Client_id _
+          | Ip_lease_time _ | End | Pad
+          as option ->
+            invalid_arg (Printf.sprintf "option %s is not allowed"
+                           (dhcp_option_to_string option))
+          | _ -> ())
+        options
+    in
+    (* Prepend a Subnet_mask, since we can always infer that from the network,
+       the user doesn't need to specify, it must always come first in case there
+       is a Router option later on RFC2132 3.3 *)
+    let options = Subnet_mask (Ipaddr.V4.Prefix.netmask network) :: options in
+    let ip_addr = fst addr_tuple in
+    let mac_addr = snd addr_tuple in
+    sanity_check {
+      options;
+      hostname;
+      default_lease_time;
+      max_lease_time;
+      ip_addr;
+      mac_addr;
+      network;
+      range;
+      hosts;
+    }
+
+  let config_of_ast addr_tuple (ast : Ast.t) =
     let ip_addr = fst addr_tuple in
     let mac_addr = snd addr_tuple in
     let subnets = ast.Ast.subnets in
@@ -51,26 +113,6 @@ module Config = struct
       with Not_found ->
         invalid_arg ("No subnet found for address address found for network " ^
                      (Ipaddr.V4.to_string ip_addr))
-    in
-    (* Sanity checks. *)
-    let () = List.iter (fun (host : Ast.host) ->
-        match host.Ast.fixed_addr with
-        | None -> ()
-        | Some addr ->
-          if not (Ipaddr.V4.Prefix.mem addr subnet.Ast.network) then
-            invalid_arg (Printf.sprintf "Fixed address %s does not \
-                                         belong to subnet %s"
-                           (Ipaddr.V4.to_string addr)
-                           (Ipaddr.V4.Prefix.to_string subnet.Ast.network))
-          else if Util.addr_in_range addr subnet.Ast.range then
-            match subnet.Ast.range with
-            | low, high ->
-              invalid_arg (Printf.sprintf "Fixed address %s must be \
-                                           outside of range %s:%s"
-                             (Ipaddr.V4.to_string addr)
-                             (Ipaddr.V4.to_string low)
-                             (Ipaddr.V4.to_string high)))
-        subnet.Ast.hosts
     in
     let hosts = List.map (fun h ->
           { hostname = h.Ast.hostname;
@@ -95,7 +137,8 @@ module Config = struct
     let options = Dhcp_wire.Subnet_mask (Ipaddr.V4.Prefix.netmask network) ::
                   (subnet.Ast.options @ ast.Ast.options)
     in
-    { options;
+    sanity_check {
+      options;
       hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
       default_lease_time;
       max_lease_time;
@@ -121,7 +164,7 @@ module Config = struct
       | Parser.Error -> choke lex "Parser Error"
       | Invalid_argument e -> choke lex e
     in
-    config_of_ast ast addr_tuple
+    config_of_ast addr_tuple ast
 
 end
 
