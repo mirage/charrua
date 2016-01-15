@@ -46,11 +46,10 @@ let make_simple_config =
     ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
     ~range:range_t
 
-let t_simple_config_1 () =
+let t_simple_config () =
   let config = make_simple_config ~options:[] in
-  assert ((List.length config.Config.options) = 1)
+  assert ((List.length config.Config.options) = 1);
 
-let t_simple_config_2 () =
   let config = make_simple_config ~options:[Routers [ip_t; ip2_t]; ] in
   assert ((List.length config.Config.options) = 2);
   match List.hd config.Config.options with
@@ -113,8 +112,7 @@ let run_test test =
 let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
-  (t_simple_config_1, "simple config 1");
-  (t_simple_config_2, "simple config 2");
+  (t_simple_config, "simple config");
   (t_bad_simple_config, "bad simple config");
   (t_collect_replies, "collect replies");
 ]
