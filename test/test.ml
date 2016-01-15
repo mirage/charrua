@@ -21,38 +21,84 @@ let green fmt  = Printf.sprintf ("\027[32m"^^fmt^^"\027[m")
 let yellow fmt = Printf.sprintf ("\027[33m"^^fmt^^"\027[m")
 let blue fmt   = Printf.sprintf ("\027[36m"^^fmt^^"\027[m")
 
+let ip_t = Ipaddr.V4.of_string_exn "192.168.1.1"
+let ip2_t = Ipaddr.V4.of_string_exn "192.168.1.2"
+let mac_t = Macaddr.of_string_exn "aa:bb:cc:dd:ee:00"
+let mask_t = Ipaddr.V4.of_string_exn "255.255.255.0"
+let range_t = (ip_t, Ipaddr.V4.of_string_exn "192.168.1.100")
+
+open Dhcp_wire
+open Dhcp_server
+
 let t_option_codes () =
     (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
-      ignore (Dhcp_wire.int_to_option_code_exn i)
+      ignore (int_to_option_code_exn i)
   done
 
 let make_simple_config =
-  let open Dhcp_server.Config in
-  let ip = Ipaddr.V4.of_string_exn "192.168.1.1" in
-  let mac = Macaddr.of_string_exn "aa:bb:cc:dd:ee:00" in
-  let range = (ip, Ipaddr.V4.of_string_exn "192.168.1.100") in
-  make
+  Config.make
     ~hostname:"Tests are awesome!"
     ~default_lease_time:(60 * 60 * 1)
     ~max_lease_time:(60 * 60 * 10)
     ~hosts:[]
-    ~addr_tuple:(ip, mac)
-    ~network:(Ipaddr.V4.Prefix.make 24 ip)
-    ~range:range
+    ~addr_tuple:(ip_t, mac_t)
+    ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
+    ~range:range_t
 
-let t_simple_config () =
-  ignore @@ make_simple_config ~options:[]
+let t_simple_config_1 () =
+  let config = make_simple_config ~options:[] in
+  assert ((List.length config.Config.options) = 1)
+
+let t_simple_config_2 () =
+  let config = make_simple_config ~options:[Routers [ip_t; ip2_t]; ] in
+  assert ((List.length config.Config.options) = 2);
+  match List.hd config.Config.options with
+  | Subnet_mask _ -> ()
+  | _ -> failwith "Subnet mask expected as first option"
 
 let t_bad_simple_config () =
   let ok = try
-      ignore @@ make_simple_config ~options:[Dhcp_wire.End];
+      ignore @@ make_simple_config ~options:[
+        Subnet_mask mask_t;
+        Renewal_t1 Int32.max_int;
+        End;
+        Pad;
+        Ip_lease_time Int32.max_int;
+        Client_id (Id "chapolim");
+      ];
       false
     with
       Invalid_argument _ -> true
   in
   if not ok then
     failwith "Config succeeded, this is an error !"
+
+let t_collect_replies () =
+  let config = make_simple_config
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "wololo";
+                Url "url";
+                Pop3_servers [ip_t; ip2_t];
+                Max_message 1200]
+  in
+  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+                  POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1]
+  in
+  (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
+  let replies = Input.collect_replies_test config requests in
+  assert ((List.length replies) = ((List.length requests) - 1));
+  let () = match List.hd replies with
+    | Subnet_mask _ -> ()
+    | _ -> failwith "Subnet mask expected as first option"
+  in
+  assert ((List.length replies) = (List.length requests) - 1);
+  let () = match List.hd @@ List.rev replies with
+    | Url _ -> ()
+    | _ -> failwith "Url expected to be last"
+  in
+  assert ((collect_routers replies) = [ip_t; ip2_t])
 
 let run_test test =
   let f = fst test in
@@ -67,8 +113,10 @@ let run_test test =
 let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
-  (t_simple_config, "simple config");
+  (t_simple_config_1, "simple config 1");
+  (t_simple_config_2, "simple config 2");
   (t_bad_simple_config, "bad simple config");
+  (t_collect_replies, "collect replies");
 ]
 
 let _ =

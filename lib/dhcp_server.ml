@@ -659,6 +659,8 @@ module Input = struct
     in
     Util.filter_map consider preqs
 
+  let collect_replies_test = collect_replies
+
   let input_decline_release config db pkt now =
     let open Util in
     let msgtype = match find_message_type pkt.options with
