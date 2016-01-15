@@ -500,9 +500,8 @@ module Input = struct
       | REQUEST_IP -> s find_request_ip (fun x -> Request_ip x)
       | IP_LEASE_TIME -> None   (* Previously included *)
       | OPTION_OVERLOAD -> s find_option_overload (fun x -> Option_overload x)
-      | MESSAGE_TYPE -> s find_message_type (fun x -> Message_type x)
-      | SERVER_IDENTIFIER ->
-        s find_server_identifier (fun x -> Server_identifier x)
+      | MESSAGE_TYPE -> None (* Senseless *)
+      | SERVER_IDENTIFIER -> None (* Previously included *)
       | PARAMETER_REQUESTS -> None (* Senseless *)
       | MESSAGE -> s find_message (fun x -> Message x)
       | MAX_MESSAGE -> s find_max_message (fun x -> Max_message x)
