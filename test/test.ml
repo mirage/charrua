@@ -58,7 +58,10 @@ let run_test test =
   let f = fst test in
   let name = snd test in
   Printf.printf "%s %-27s%!" (blue "%s" "Test") (yellow "%s" name);
-  f ();
+  let () = try f () with
+      exn -> Printf.printf "%s\n%!" (red "failed");
+      raise exn
+  in
   Printf.printf "%s\n%!" (green "ok")
 
 let all_tests = [
