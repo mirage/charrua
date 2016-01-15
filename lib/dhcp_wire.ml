@@ -525,9 +525,9 @@ let client_port = 68
 let server_port = 67
 
 let options_of_buf buf buf_len =
-  let rec collect_options buf options =
+  let rec collect buf options =
     let code = Cstruct.get_uint8 buf 0 in
-    let padding () = collect_options (Cstruct.shift buf 1) options in
+    let padding () = collect (Cstruct.shift buf 1) options in
     (* Make sure we never shift into an unexisting body *)
     match int_to_option_code_exn code with
     | PAD -> padding ()
@@ -537,9 +537,9 @@ let options_of_buf buf buf_len =
       let body = Cstruct.shift buf 2 in
       let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
       (* discard discards the option from the resulting list *)
-      let discard () = collect_options (Cstruct.shift body len) options in
+      let discard () = collect (Cstruct.shift body len) options in
       (* take includes the option in the resulting list *)
-      let take op = collect_options (Cstruct.shift body len) (op :: options) in
+      let take op = collect (Cstruct.shift body len) (op :: options) in
       let get_8 () = if len <> 1 then invalid_arg bad_len else
           Cstruct.get_uint8 body 0 in
       let get_8_list () =
@@ -697,7 +697,7 @@ let options_of_buf buf buf_len =
       | code -> discard ()
   in
   (* Extends options if it finds an Option_overload *)
-  let extend_options buf options =
+  let extend buf options =
     let rec search = function
       | [] -> None
       | opt :: tl -> match opt with
@@ -707,10 +707,10 @@ let options_of_buf buf buf_len =
     match search options with
     | None -> options           (* Nothing to do, identity function *)
     | Some v -> match v with
-      | 1 -> collect_options (get_dhcp_file buf) options    (* It's in file *)
-      | 2 -> collect_options (get_dhcp_sname buf) options   (* It's in sname *)
-      | 3 -> collect_options (get_dhcp_file buf) options |> (* OMG both *)
-             collect_options (get_dhcp_sname buf)
+      | 1 -> collect (get_dhcp_file buf) options    (* It's in file *)
+      | 2 -> collect (get_dhcp_sname buf) options   (* It's in sname *)
+      | 3 -> collect (get_dhcp_file buf) options |> (* OMG both *)
+             collect (get_dhcp_sname buf)
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
@@ -723,8 +723,8 @@ let options_of_buf buf buf_len =
       invalid_arg "Invalid cookie";
     let options_start = Cstruct.shift buf (sizeof_dhcp + 4) in
     (* Jump over cookie and start options, also extend them if necessary *)
-    collect_options options_start [] |>
-    extend_options buf |>
+    collect options_start [] |>
+    extend buf |>
     List.rev
 
 let buf_of_options sbuf options =
