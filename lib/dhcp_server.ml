@@ -79,7 +79,7 @@ module Config = struct
     let () =
       List.iter (function
           | Subnet_mask _ | Renewal_t1 _ | Rebinding_t2 _ | Client_id _
-          | Ip_lease_time _ | End | Pad
+          | Ip_lease_time _ | End | Pad | Request_ip _ | Parameter_requests _
           as option ->
             invalid_arg (Printf.sprintf "option %s is not allowed"
                            (dhcp_option_to_string option))
@@ -497,7 +497,7 @@ module Input = struct
         m collect_xwindow_font_servers (fun x -> Xwindow_font_servers x)
       | XWINDOW_DISPLAY_MANAGERS ->
         m collect_xwindow_display_managers (fun x -> Xwindow_display_managers x)
-      | REQUEST_IP -> s find_request_ip (fun x -> Request_ip x)
+      | REQUEST_IP -> None (* Previously included *)
       | IP_LEASE_TIME -> None   (* Previously included *)
       | OPTION_OVERLOAD -> s find_option_overload (fun x -> Option_overload x)
       | MESSAGE_TYPE -> None (* Senseless *)
