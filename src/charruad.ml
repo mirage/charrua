@@ -16,6 +16,9 @@
 
 let () = Printexc.record_backtrace true
 
+let filter_map f l = List.rev @@
+  List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
+
 let level_of_string = function
   | "warning" -> Lwt_log.Warning
   | "notice" -> Lwt_log.Notice
@@ -81,7 +84,7 @@ let init_log vlevel daemon =
         ~channel:Lwt_io.stdout
         ()
 
-let rec input config db subnet link =
+let rec input config db link =
   let open Dhcp_server.Input in
   let open Lwt in
 
@@ -94,7 +97,7 @@ let rec input config db subnet link =
     | `Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
-      match (input_pkt config db subnet pkt (Unix.time ())) with
+      match (input_pkt config db pkt (Unix.time ())) with
       | Silence -> return db
       | Update db -> return db
       | Reply (reply, db) ->
@@ -110,7 +113,7 @@ let rec input config db subnet link =
         >>= fun () ->
         return db
   in
-  t >>= fun db -> input config db subnet link
+  t >>= fun db -> input config db link
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
@@ -126,20 +129,36 @@ let charruad configfile verbosity daemonize =
   init_log (level_of_string verbosity) daemonize;
   let interfaces = Tuntap.getifaddrs_v4 () in
   let addresses = List.map
-      (function name, (ip_addr, _) -> (ip_addr, Tuntap.get_macaddr name))
+      (function name, (addr, _) -> (addr, Tuntap.get_macaddr name))
       interfaces
   in
-  let config = parse (read_file configfile) addresses in
+  let configtxt = read_file configfile in
+  (* let config = parse configtxt addresses in *)
   let db = make_db () in
   if daemonize then
     go_daemon ();
   Lwt_log.ign_notice "Charrua DHCPD starting";
-  let threads = List.map (fun subnet ->
-      let ifname = ifname_of_address subnet.ip_addr interfaces in
-      let link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) ifname) in
-      input config db subnet link)
-      config.subnets
+  (* Filter out the addresses which have networks assigned *)
+  let threads = filter_map
+      (fun addr_tuple ->
+         let addr = fst addr_tuple in
+         let s = Ipaddr.V4.to_string addr in
+         let config = try Some (parse configtxt addr_tuple) with Not_found -> None in
+         match config with
+         | Some config ->
+           Lwt_log.ign_notice_f "Found network for %s" s;
+           (* Get a rawlink on the interface *)
+           let ifname = ifname_of_address addr interfaces in
+           let link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) ifname) in
+           (* Create a thread *)
+           Some (input config db link)
+         | None ->
+           let () = Lwt_log.ign_debug_f "No network found for %s" s in
+           None)
+      addresses
   in
+  if List.length threads = 0 then
+    failwith "Could not match any interface address with any network section.";
   go_safe ();
   Lwt_main.run (Lwt.pick threads >>= fun _ ->
                 Lwt_log.notice "Charrua DHCPD exiting")
