@@ -108,11 +108,9 @@ module Config = struct
     let ip_addr = fst addr_tuple in
     let mac_addr = snd addr_tuple in
     let subnets = ast.Ast.subnets in
-    let subnet = try
-        List.find (fun s -> Ipaddr.V4.Prefix.mem ip_addr s.Ast.network) subnets
-      with Not_found ->
-        invalid_arg ("No subnet found for address address found for network " ^
-                     (Ipaddr.V4.to_string ip_addr))
+    let subnet = List.find
+        (fun s -> Ipaddr.V4.Prefix.mem ip_addr s.Ast.network)
+        subnets
     in
     let hosts = List.map (fun h ->
           { hostname = h.Ast.hostname;

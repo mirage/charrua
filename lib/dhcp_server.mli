@@ -51,11 +51,13 @@ module Config : sig
   val t_of_sexp : Sexplib.Sexp.t -> t
   val sexp_of_t : t -> Sexplib.Sexp.t
 
-  val parse : string -> (Ipaddr.V4.Prefix.addr * Macaddr.t) -> t
-  (** [parse cf (prefix * mac)] Creates a server configuration by parsing [cf] as an
+  val parse : string -> (Ipaddr.V4.t * Macaddr.t) -> t
+  (** [parse cf (addr * mac)] Creates a server configuration by parsing [cf] as an
       ISC dhcpd.conf file, currently only the options at [sample/dhcpd.conf] are
       supported. [addr] and [mac] are the prefix address and mac address to be
-      used for building replies, it must match one subnet section in [cf] *)
+      used for building replies, it must match one subnet section in [cf].
+      Raises Not_found if the (addr * mac) tuple does not match any network
+      section. *)
 
   val make :
     ?hostname:string ->
