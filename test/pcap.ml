@@ -15,10 +15,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-open Printf
-
 let () = Printexc.record_backtrace true
-let verbose = false
+
+let printf = Printf.printf
+
+let verbose = (Array.length Sys.argv) = 2 && Sys.argv.(1) = "-v"
 
 cstruct pcap_header {
   uint32_t magic_number;   (* magic number *)
