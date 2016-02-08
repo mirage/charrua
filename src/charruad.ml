@@ -52,7 +52,7 @@ let go_safe () =
       Unix.setuid ouid;
       Unix.setuid oeuid;
       Unix.setgid ogid;
-      Unix.setuid oegid;
+      Unix.setgid oegid;
       true
     with _ -> false in
   if canrestore then
