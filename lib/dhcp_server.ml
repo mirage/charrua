@@ -778,7 +778,7 @@ module Input = struct
            else if lease.Lease.addr <> reqip then
              nak ~msg:"Requested address is incorrect" ()
            else
-             ack lease
+             ack ~renew:true lease
          | None ->
            if not (Lease.addr_available reqip db ~now) then
              nak ~msg:"Requested address is not available" ()
