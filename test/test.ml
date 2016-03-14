@@ -42,9 +42,9 @@ open Dhcp_wire
 open Dhcp_server
 
 let t_option_codes () =
-    (* Make sure parameters 0-255 are there. *)
+  (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
-      ignore (int_to_option_code_exn i)
+    ignore (int_to_option_code_exn i)
   done
 
 let make_simple_config =
@@ -59,17 +59,17 @@ let make_simple_config =
 
 (* Check if 3 lease timers are present and are what we expect. *)
 let assert_timers options =
-    let () = match find_ip_lease_time options with
-      | None -> failwith "no Ip_lease_time found"
-      | Some x -> assert (x = Int32.of_int 3600)
-    in
-    let () = match find_renewal_t1 options with
-      | None -> failwith "no Renewal_t1 found"
-      | Some x -> assert (x = Int32.of_int 1800)
-    in
-    match find_rebinding_t2 options with
-    | None -> failwith "no Rebinding_t2 found"
-    | Some x -> assert (x = Int32.of_int 2880)
+  let () = match find_ip_lease_time options with
+    | None -> failwith "no Ip_lease_time found"
+    | Some x -> assert (x = Int32.of_int 3600)
+  in
+  let () = match find_renewal_t1 options with
+    | None -> failwith "no Renewal_t1 found"
+    | Some x -> assert (x = Int32.of_int 1800)
+  in
+  match find_rebinding_t2 options with
+  | None -> failwith "no Rebinding_t2 found"
+  | Some x -> assert (x = Int32.of_int 2880)
 
 let t_simple_config () =
   let config = make_simple_config ~options:[] in
@@ -81,22 +81,42 @@ let t_simple_config () =
   | Subnet_mask _ -> ()
   | _ -> failwith "Subnet mask expected as first option"
 
-let t_bad_simple_config () =
+let t_renewal_time_inoptions () =
+  let ok = try
+      ignore @@ make_simple_config
+        ~options:[Renewal_t1 Int32.max_int];
+      false
+    with
+      Invalid_argument _ -> true
+  in
+  if not ok then
+    failwith "user cannot request renewal via options"
+
+let t_bad_junk_padding_config () =
   let ok = try
       ignore @@ make_simple_config ~options:[
         Subnet_mask mask_t;
-        Renewal_t1 Int32.max_int;
-        End;
-        Pad;
-        Ip_lease_time Int32.max_int;
-        Client_id (Id "chapolim");
+        End; (* Should not allow end in configuration *)
+        Pad; (* Should not allow pad in configuration *)
+        Client_id (Id "The dude");
       ];
       false
     with
       Invalid_argument _ -> true
   in
   if not ok then
-    failwith "Config succeeded, this is an error !"
+    failwith "can't insert padding and random numbers via options"
+
+let t_ip_lease_time_inoptions () =
+  let ok = try
+      ignore @@ make_simple_config
+        ~options:[Ip_lease_time Int32.max_int];
+      false
+    with
+      Invalid_argument _ -> true
+  in
+  if not ok then
+    failwith "can't request ip lease time via options"
 
 let t_collect_replies () =
   let config = make_simple_config
@@ -134,7 +154,6 @@ let t_discover () =
                 Time_servers [ip_t];
                ]
   in
-
   let discover = {
     srcmac = mac2_t;
     dstmac = mac_t;
@@ -207,8 +226,54 @@ let t_discover () =
     assert ((List.length routers) = 2);
     assert ((List.hd routers) = ip_t);
     if verbose then
-        printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
+      printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
   | _ -> failwith "No reply"
+
+let t_bad_discover () =
+  let config = make_simple_config
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "The Dude";
+                Url "New shit has come to light, man.";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
+  in
+  let bad_discover = {
+    srcmac = mac2_t;
+    dstmac = Macaddr.of_string_exn "cc:cc:cc:cc:cc:cc";
+    srcip = Ipaddr.V4.any;
+    dstip = Ipaddr.V4.broadcast;
+    srcport = client_port;
+    dstport = server_port;
+    op = BOOTREQUEST;
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = Int32.of_int 0xabacabb;
+    secs = 0;
+    flags = Unicast;
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    siaddr = Ipaddr.V4.any;
+    giaddr = Ipaddr.V4.any;
+    chaddr = mac_t;
+    sname = Bytes.empty;
+    file = Bytes.empty;
+    options = [
+      Message_type DHCPDISCOVER;
+      Client_id (Id "W.Sobchak");
+      Parameter_requests [
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
+        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+      ]
+    ]
+  }
+  in
+  match Input.input_pkt config (Lease.make_db ()) bad_discover (Unix.time ()) with
+  | Input.Silence -> ()
+  | _ -> failwith "This packet was not for us, should be Silence"
 
 let t_request () =
   let now = Unix.time () in
@@ -294,7 +359,7 @@ let t_request () =
       assert (reply.giaddr = Ipaddr.V4.any);
       assert (reply.sname = "Duder DHCP server!");
       assert (reply.file = Bytes.empty);
-    (* 5 options are included regardless of parameter requests. *)
+      (* 5 options are included regardless of parameter requests. *)
       assert ((List.length reply.options) = (5 + 6));
       let () = match List.hd reply.options with
         | Message_type x -> assert (x = DHCPACK);
@@ -311,7 +376,7 @@ let t_request () =
       if verbose then
         printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply);
       db
-  | _ -> failwith "No reply"
+    | _ -> failwith "No reply"
   in
 
   (* Build a second request from a different client, we should get a NAK. *)
@@ -329,7 +394,7 @@ let t_request () =
     hops = 0;
     xid = Int32.of_int 0xabacabb;
     secs = 0;
-    flags = Broadcast;          (* Requesta broadcast answer *)
+    flags = Broadcast;          (* Request a broadcast answer *)
     ciaddr = Ipaddr.V4.any;
     yiaddr = Ipaddr.V4.any;
     siaddr = Ipaddr.V4.any;
@@ -376,9 +441,12 @@ let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
-  (t_bad_simple_config, "bad simple config");
+  (t_renewal_time_inoptions, "renewal_t in opts");
+  (t_bad_junk_padding_config, "padding in opts");
+  (t_ip_lease_time_inoptions, "lease time in opts");
   (t_collect_replies, "collect replies");
   (t_discover, "discover->offer");
+  (t_bad_discover, "wrong mac address");
   (t_request, "request->ack/nak");
 ]
 
