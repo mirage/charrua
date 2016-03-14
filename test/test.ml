@@ -81,7 +81,7 @@ let t_simple_config () =
   | Subnet_mask _ -> ()
   | _ -> failwith "Subnet mask expected as first option"
 
-let t_bad_renewal_time () =
+let t_renewal_time_inoptions () =
   let ok = try
       ignore @@ make_simple_config
         ~options:[Renewal_t1 Int32.max_int];
@@ -90,7 +90,7 @@ let t_bad_renewal_time () =
       Invalid_argument _ -> true
   in
   if not ok then
-    failwith "we can't have a renewal time that's over the max-time"
+    failwith "user cannot request renewal via options"
 
 let t_bad_junk_padding_config () =
   let ok = try
@@ -105,9 +105,9 @@ let t_bad_junk_padding_config () =
       Invalid_argument _ -> true
   in
   if not ok then
-    failwith "we can't insert padding and random numbers in the middle of the config"
+    failwith "can't insert padding and random numbers via options"
 
-let t_bad_lease_time_config () =
+let t_ip_lease_time_inoptions () =
   let ok = try
       ignore @@ make_simple_config
         ~options:[Ip_lease_time Int32.max_int];
@@ -116,7 +116,7 @@ let t_bad_lease_time_config () =
       Invalid_argument _ -> true
   in
   if not ok then
-    failwith "we can't request a lease time bigger than the max lease time"
+    failwith "can't request ip lease time via options"
 
 let t_collect_replies () =
   let config = make_simple_config
@@ -322,7 +322,6 @@ let t_request () =
   in
   if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
-
   let db =
     match Input.input_pkt config (Lease.make_db ()) request now with
     | Input.Reply (reply, db) ->
@@ -442,9 +441,9 @@ let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
-  (t_bad_renewal_time, "fuzz renewal time");
-  (t_bad_junk_padding_config, "fuzz padding");
-  (t_bad_lease_time_config, "fuzz lease time");
+  (t_renewal_time_inoptions, "renewal_t in opts");
+  (t_bad_junk_padding_config, "padding in opts");
+  (t_ip_lease_time_inoptions, "lease time in opts");
   (t_collect_replies, "collect replies");
   (t_discover, "discover->offer");
   (t_bad_discover, "wrong mac address");
