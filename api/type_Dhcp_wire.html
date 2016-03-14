@@ -136,7 +136,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">BCMCS_CONTROLLER_IPV4_ADDR</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">AUTHENTICATION</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CLIENT_LAST_TRANSACTION_TIME</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">ASSOCIATED_IP</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">ASSOCIATED_IPS</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CLIENT_SYSTEM</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CLIENT_NDI</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">LDAP</span><br>
@@ -318,7 +318,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sexp_of_client_id&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.client_id&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;client_id_to_string&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.client_id&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;dhcp_option&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Subnet_mask</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Pad</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Subnet_mask</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Time_offset</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Routers</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Time_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
@@ -379,6 +380,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Rebinding_t2</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Vendor_class_id</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Client_id</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Dhcp_wire</span>.client_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Netware_ip_domain</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Netware_ip_option</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nis_plus_domain</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nis_plus_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Tftp_server_name</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
@@ -392,15 +395,276 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Irc_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Streettalk_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Streettalk_da</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">User_class</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Directory_agent</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Service_scope</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Rapid_commit</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Client_fqdn</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Relay_agent_information</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Isns</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nds_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nds_tree_name</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Nds_context</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Bcmcs_controller_domain_name_list</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Bcmcs_controller_ipv4_addrs</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Authentication</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Client_last_transaction_time</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Associated_ips</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Client_system</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Client_ndi</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ldap</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Uuid_guid</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">User_auth</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Geoconf_civic</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pcode</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Tcode</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Netinfo_address</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Netinfo_tag</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Url</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Auto_config</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Name_service_search</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Subnet_selection</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Domain_search</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Sip_servers</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Classless_static_route</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ccc</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Geoconf</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Vi_vendor_class</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Vi_vendor_info</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_128</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_129</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_130</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_131</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_132</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_133</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_134</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_135</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pana_agent</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">V4_lost</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Capwap_ac_v4</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ipv4_address_mos</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ipv4_fqdn_mos</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Sip_ua_domains</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ipv4_address_andsf</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Geolock</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Forcenew_nonce_capable</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Rdnss_selection</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Misc_150</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Status_code</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Absolute_time</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Start_time_of_state</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Query_start_time</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Query_end_time</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Dhcp_state</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Data_source</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">V4_pcp_server</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">V4_portparams</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Dhcp_captive_portal</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Etherboot_175</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ip_telefone</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Etherboot_177</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Pxe_linux</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Configuration_file</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Path_prefix</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Reboot_time</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Option_6rd</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">V4_access_domain</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Subnet_allocation</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Virtual_subnet_selection</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Web_proxy_auto_disc</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unknown</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">End</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unassigned</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Dhcp_wire</span>.option_code&nbsp;*&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;buf_of_options&nbsp;:&nbsp;<span class="constructor">Cstruct</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cstruct</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;options_of_buf&nbsp;:&nbsp;<span class="constructor">Cstruct</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_option&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_options&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;list&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;list&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dhcp_option_of_sexp&nbsp;:&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sexp_of_dhcp_option&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_option&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_options&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;list&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dhcp_option_to_string&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_associated_ips&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_bcmcs_controller_ipv4_addrs&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_cookie_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_dns_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_finger_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_impress_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_irc_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_log_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_lpr_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_name_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_netbios_datagram_distrib_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_netbios_name_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_nis_plus_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_nis_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_ntp_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_parameter_requests&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.option_code&nbsp;list&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_policy_filters&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.<span class="constructor">Prefix</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_routers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_rsc_location_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_static_routes&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;*&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t)&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_streettalk_da&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_streettalk_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_time_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_www_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_xwindow_display_managers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_xwindow_font_servers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_absolute_time&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_all_subnets_local&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_arp_cache_timo&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_authentication&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_auto_config&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_bcmcs_controller_domain_name&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_bootfile_name&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_bootfile_size&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_broadcast_addr&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_capwap_ac_v4&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ccc&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_classless_static_route&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_client_fqdn&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_client_id&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.client_id&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_client_last_transaction_time&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_client_ndi&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_client_system&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_configuration_file&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_data_source&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_default_ip_ttl&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_dhcp_captive_portal&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_dhcp_state&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_directory_agent&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_domain_name&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_domain_search&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_etherboot_175&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_etherboot_177&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ethernet_encapsulation&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_extension_path&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_forcenew_nonce_capable&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_geoconf&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_geoconf_civic&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_geolock&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_hostname&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_interface_mtu&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ip_lease_time&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ip_telefone&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ipforwarding&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ipv4_address_andsf&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ipv4_address_mos&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ipv4_fqdn_mos&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_isns&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_ldap&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_mask_supplier&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_max_datagram&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_max_message&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_merit_dumpfile&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_message&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_message_type&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.msgtype&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_misc_150&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_mobile_ip_home_agent&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_name_service_search&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nds_context&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nds_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nds_tree_name&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netbios_node&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netbios_scope&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netinfo_address&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netinfo_tag&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netware_ip_domain&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_netware_ip_option&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nis_domain&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nis_plus_domain&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_nlsr&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_nntp_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_option_6rd&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_option_overload&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pana_agent&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_path_prefix&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pcode&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_perform_mask_discovery&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_perform_router_disc&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pmtu_ageing_timo&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pmtu_plateau_table&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;list&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_pop3_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_128&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_129&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_130&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_131&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_132&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_133&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_134&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_135&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_pxe_linux&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_query_end_time&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_query_start_time&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_rapid_commit&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_rdnss_selection&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_rebinding_t2&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_reboot_time&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_relay_agent_information&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_renewal_t1&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_request_ip&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_root_path&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_router_sol_addr&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_server_identifier&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_service_scope&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_sip_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_sip_ua_domains&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_smtp_servers&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_start_time_of_state&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_status_code&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_subnet_allocation&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_subnet_mask&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_subnet_selection&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_swap_server&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_tcode&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_tcp_default_ttl&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_tcp_keepalive_garbage&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_tcp_keepalive_interval&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_tftp_server_name&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_time_offset&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_trailer_encapsulation&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_url&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_user_auth&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_user_class&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_uuid_guid&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_v4_access_domain&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_v4_lost&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_v4_pcp_server&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_v4_portparams&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_vendor_class_id&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_vendor_specific&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_vi_vendor_class&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_vi_vendor_info&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_virtual_subnet_selection&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_web_proxy_auto_disc&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_unassigned&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.option_code&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Dhcp_wire</span>.option_code&nbsp;*&nbsp;string)&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_unassigned&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.option_code&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Dhcp_wire</span>.option_code&nbsp;*&nbsp;string)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pkt&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;srcmac&nbsp;:&nbsp;<span class="constructor">Macaddr</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;dstmac&nbsp;:&nbsp;<span class="constructor">Macaddr</span>.t;<br>
@@ -432,4 +696,6 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;client_id_of_pkt&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.client_id<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pkt_to_string&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_dhcp&nbsp;:&nbsp;<span class="constructor">Cstruct</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dhcp_option_of_sexp&nbsp;:&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sexp_of_dhcp_option&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t<br>
 <span class="keyword">end</span></code></body></html>

@@ -1,0 +1,52 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
+<link title="Dhcp_server" rel="Chapter" href="Dhcp_server.html"><title>Dhcp_server.Lease</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tm_start&nbsp;:&nbsp;int32;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tm_end&nbsp;:&nbsp;int32;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;addr&nbsp;:&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;client_id&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.client_id;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_fixed&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Macaddr</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;timeleft&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;timeleft_exn&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;timeleft3&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;*&nbsp;int32&nbsp;*&nbsp;int32<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;extend&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;expired&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;database<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_db&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;garbage_collect&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;replace&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lease_of_client_id&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.client_id&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lease_of_addr&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;addr_allocated&nbsp;:&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;addr_available&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_usable_addr&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.client_id&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;*&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;now:float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ipaddr</span>.<span class="constructor">V4</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;t_of_sexp&nbsp;:&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sexp_of_t&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sexplib</span>.<span class="constructor">Sexp</span>.t<br>
+<span class="keyword">end</span></code></body></html>

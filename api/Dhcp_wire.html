@@ -19,6 +19,7 @@
 <link title="DHCP Client identifier" rel="Section" href="#2_DHCPClientidentifier">
 <link title="DHCP options" rel="Section" href="#2_DHCPoptions">
 <link title="DHCP Packet " rel="Section" href="#2_DHCPPacket">
+<link title="DHCP Packet " rel="Section" href="#2_DHCPPacket">
 <title>Dhcp_wire</title>
 </head>
 <body>
@@ -848,7 +849,7 @@ Conversions of <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code">Dhcp_wire
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELToption_code.ASSOCIATED_IP"><span class="constructor">ASSOCIATED_IP</span></span></code></td>
+<code><span id="TYPEELToption_code.ASSOCIATED_IPS"><span class="constructor">ASSOCIATED_IPS</span></span></code></td>
 
 </tr>
 <tr>
@@ -2092,6 +2093,13 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pad"><span class="constructor">Pad</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTdhcp_option.Subnet_mask"><span class="constructor">Subnet_mask</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
 
 </tr>
@@ -2519,6 +2527,20 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netware_ip_domain"><span class="constructor">Netware_ip_domain</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netware_ip_option"><span class="constructor">Netware_ip_option</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTdhcp_option.Nis_plus_domain"><span class="constructor">Nis_plus_domain</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
@@ -2610,7 +2632,532 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.User_class"><span class="constructor">User_class</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Directory_agent"><span class="constructor">Directory_agent</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Service_scope"><span class="constructor">Service_scope</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Rapid_commit"><span class="constructor">Rapid_commit</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Client_fqdn"><span class="constructor">Client_fqdn</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Relay_agent_information"><span class="constructor">Relay_agent_information</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Isns"><span class="constructor">Isns</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nds_servers"><span class="constructor">Nds_servers</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nds_tree_name"><span class="constructor">Nds_tree_name</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Nds_context"><span class="constructor">Nds_context</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Bcmcs_controller_domain_name_list"><span class="constructor">Bcmcs_controller_domain_name_list</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Bcmcs_controller_ipv4_addrs"><span class="constructor">Bcmcs_controller_ipv4_addrs</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Authentication"><span class="constructor">Authentication</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Client_last_transaction_time"><span class="constructor">Client_last_transaction_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Associated_ips"><span class="constructor">Associated_ips</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Client_system"><span class="constructor">Client_system</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Client_ndi"><span class="constructor">Client_ndi</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ldap"><span class="constructor">Ldap</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Uuid_guid"><span class="constructor">Uuid_guid</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.User_auth"><span class="constructor">User_auth</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Geoconf_civic"><span class="constructor">Geoconf_civic</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pcode"><span class="constructor">Pcode</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Tcode"><span class="constructor">Tcode</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netinfo_address"><span class="constructor">Netinfo_address</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Netinfo_tag"><span class="constructor">Netinfo_tag</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Url"><span class="constructor">Url</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Auto_config"><span class="constructor">Auto_config</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Name_service_search"><span class="constructor">Name_service_search</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Subnet_selection"><span class="constructor">Subnet_selection</span></span> <span class="keyword">of</span> <code class="type">Ipaddr.V4.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTdhcp_option.Domain_search"><span class="constructor">Domain_search</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Sip_servers"><span class="constructor">Sip_servers</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Classless_static_route"><span class="constructor">Classless_static_route</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ccc"><span class="constructor">Ccc</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Geoconf"><span class="constructor">Geoconf</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Vi_vendor_class"><span class="constructor">Vi_vendor_class</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Vi_vendor_info"><span class="constructor">Vi_vendor_info</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_128"><span class="constructor">Pxe_128</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_129"><span class="constructor">Pxe_129</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_130"><span class="constructor">Pxe_130</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_131"><span class="constructor">Pxe_131</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_132"><span class="constructor">Pxe_132</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_133"><span class="constructor">Pxe_133</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_134"><span class="constructor">Pxe_134</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_135"><span class="constructor">Pxe_135</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pana_agent"><span class="constructor">Pana_agent</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.V4_lost"><span class="constructor">V4_lost</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Capwap_ac_v4"><span class="constructor">Capwap_ac_v4</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ipv4_address_mos"><span class="constructor">Ipv4_address_mos</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ipv4_fqdn_mos"><span class="constructor">Ipv4_fqdn_mos</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Sip_ua_domains"><span class="constructor">Sip_ua_domains</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ipv4_address_andsf"><span class="constructor">Ipv4_address_andsf</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Geolock"><span class="constructor">Geolock</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Forcenew_nonce_capable"><span class="constructor">Forcenew_nonce_capable</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Rdnss_selection"><span class="constructor">Rdnss_selection</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Misc_150"><span class="constructor">Misc_150</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Status_code"><span class="constructor">Status_code</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Absolute_time"><span class="constructor">Absolute_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Start_time_of_state"><span class="constructor">Start_time_of_state</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Query_start_time"><span class="constructor">Query_start_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Query_end_time"><span class="constructor">Query_end_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Dhcp_state"><span class="constructor">Dhcp_state</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Data_source"><span class="constructor">Data_source</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.V4_pcp_server"><span class="constructor">V4_pcp_server</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.V4_portparams"><span class="constructor">V4_portparams</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Dhcp_captive_portal"><span class="constructor">Dhcp_captive_portal</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Etherboot_175"><span class="constructor">Etherboot_175</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Ip_telefone"><span class="constructor">Ip_telefone</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Etherboot_177"><span class="constructor">Etherboot_177</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Pxe_linux"><span class="constructor">Pxe_linux</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Configuration_file"><span class="constructor">Configuration_file</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Path_prefix"><span class="constructor">Path_prefix</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Reboot_time"><span class="constructor">Reboot_time</span></span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Option_6rd"><span class="constructor">Option_6rd</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.V4_access_domain"><span class="constructor">V4_access_domain</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Subnet_allocation"><span class="constructor">Subnet_allocation</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Virtual_subnet_selection"><span class="constructor">Virtual_subnet_selection</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
@@ -2624,32 +3171,194 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTdhcp_option.Unknown"><span class="constructor">Unknown</span></span></code></td>
-<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
-Not all options are currently implemented.<br>
-</div>
-</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+<code><span id="TYPEELTdhcp_option.End"><span class="constructor">End</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTdhcp_option.Unassigned"><span class="constructor">Unassigned</span></span> <span class="keyword">of</span> <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> * string</code></code></td>
+
 </tr></table>
 
 
+<br>
+Not all options are currently implemented.<br>
 <br>
 Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
 
 <pre><span id="VALbuf_of_options"><span class="keyword">val</span> buf_of_options</span> : <code class="type">Cstruct.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Cstruct.t</code></pre>
 <pre><span id="VALoptions_of_buf"><span class="keyword">val</span> options_of_buf</span> : <code class="type">Cstruct.t -> int -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list</code></pre>
-<pre><span id="VALfind_option"><span class="keyword">val</span> find_option</span> : <code class="type">('a -> 'b option) -> 'a list -> 'b option</code></pre><div class="info ">
+<pre><span id="VALfind_option"><span class="keyword">val</span> find_option</span> : <code class="type">(<a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> 'b option) -><br>       <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> 'b option</code></pre><div class="info ">
 <code class="code">find_option f l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code">Some</code> value
     on list <code class="code">l</code><br>
 </div>
 
-<pre><span id="VALcollect_options"><span class="keyword">val</span> collect_options</span> : <code class="type">('a -> 'b list option) -> 'a list -> 'b list option</code></pre><div class="info ">
+<pre><span id="VALcollect_options"><span class="keyword">val</span> collect_options</span> : <code class="type">('a -> 'b list option) -> 'a list -> 'b list</code></pre><div class="info ">
 <code class="code">collect_options f l</code> collects all options where <code class="code">f</code> evaluates to <code class="code">Some</code>
     value on list <code class="code">l</code>, this is useful for list options like <code class="code">Routers</code>, if
     multiple list options are found, the resulting list is flattened.<br>
 </div>
 
 <pre><span id="VALdhcp_option_of_sexp"><span class="keyword">val</span> dhcp_option_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a></code></pre>
-<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre><br>
+<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALdhcp_option_to_string"><span class="keyword">val</span> dhcp_option_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> string</code></pre>
+<pre><span id="VALcollect_associated_ips"><span class="keyword">val</span> collect_associated_ips</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_bcmcs_controller_ipv4_addrs"><span class="keyword">val</span> collect_bcmcs_controller_ipv4_addrs</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_cookie_servers"><span class="keyword">val</span> collect_cookie_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_dns_servers"><span class="keyword">val</span> collect_dns_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_finger_servers"><span class="keyword">val</span> collect_finger_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_impress_servers"><span class="keyword">val</span> collect_impress_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_irc_servers"><span class="keyword">val</span> collect_irc_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_log_servers"><span class="keyword">val</span> collect_log_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_lpr_servers"><span class="keyword">val</span> collect_lpr_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_name_servers"><span class="keyword">val</span> collect_name_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_netbios_datagram_distrib_servers"><span class="keyword">val</span> collect_netbios_datagram_distrib_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_netbios_name_servers"><span class="keyword">val</span> collect_netbios_name_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_nis_plus_servers"><span class="keyword">val</span> collect_nis_plus_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_nis_servers"><span class="keyword">val</span> collect_nis_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_ntp_servers"><span class="keyword">val</span> collect_ntp_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_parameter_requests"><span class="keyword">val</span> find_parameter_requests</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a> list option</code></pre>
+<pre><span id="VALcollect_policy_filters"><span class="keyword">val</span> collect_policy_filters</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.Prefix.t list</code></pre>
+<pre><span id="VALcollect_routers"><span class="keyword">val</span> collect_routers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_rsc_location_servers"><span class="keyword">val</span> collect_rsc_location_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_static_routes"><span class="keyword">val</span> collect_static_routes</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> (Ipaddr.V4.t * Ipaddr.V4.t) list</code></pre>
+<pre><span id="VALcollect_streettalk_da"><span class="keyword">val</span> collect_streettalk_da</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_streettalk_servers"><span class="keyword">val</span> collect_streettalk_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_time_servers"><span class="keyword">val</span> collect_time_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_www_servers"><span class="keyword">val</span> collect_www_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_xwindow_display_managers"><span class="keyword">val</span> collect_xwindow_display_managers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALcollect_xwindow_font_servers"><span class="keyword">val</span> collect_xwindow_font_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_absolute_time"><span class="keyword">val</span> find_absolute_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_all_subnets_local"><span class="keyword">val</span> find_all_subnets_local</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_arp_cache_timo"><span class="keyword">val</span> find_arp_cache_timo</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_authentication"><span class="keyword">val</span> find_authentication</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_auto_config"><span class="keyword">val</span> find_auto_config</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_bcmcs_controller_domain_name"><span class="keyword">val</span> find_bcmcs_controller_domain_name</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_bootfile_name"><span class="keyword">val</span> find_bootfile_name</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_bootfile_size"><span class="keyword">val</span> find_bootfile_size</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_broadcast_addr"><span class="keyword">val</span> find_broadcast_addr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_capwap_ac_v4"><span class="keyword">val</span> find_capwap_ac_v4</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ccc"><span class="keyword">val</span> find_ccc</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_classless_static_route"><span class="keyword">val</span> find_classless_static_route</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_client_fqdn"><span class="keyword">val</span> find_client_fqdn</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_client_id"><span class="keyword">val</span> find_client_id</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> <a href="Dhcp_wire.html#TYPEclient_id">client_id</a> option</code></pre>
+<pre><span id="VALfind_client_last_transaction_time"><span class="keyword">val</span> find_client_last_transaction_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_client_ndi"><span class="keyword">val</span> find_client_ndi</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_client_system"><span class="keyword">val</span> find_client_system</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_configuration_file"><span class="keyword">val</span> find_configuration_file</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_data_source"><span class="keyword">val</span> find_data_source</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_default_ip_ttl"><span class="keyword">val</span> find_default_ip_ttl</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_dhcp_captive_portal"><span class="keyword">val</span> find_dhcp_captive_portal</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_dhcp_state"><span class="keyword">val</span> find_dhcp_state</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_directory_agent"><span class="keyword">val</span> find_directory_agent</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_domain_name"><span class="keyword">val</span> find_domain_name</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_domain_search"><span class="keyword">val</span> find_domain_search</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_etherboot_175"><span class="keyword">val</span> find_etherboot_175</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_etherboot_177"><span class="keyword">val</span> find_etherboot_177</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ethernet_encapsulation"><span class="keyword">val</span> find_ethernet_encapsulation</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_extension_path"><span class="keyword">val</span> find_extension_path</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_forcenew_nonce_capable"><span class="keyword">val</span> find_forcenew_nonce_capable</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_geoconf"><span class="keyword">val</span> find_geoconf</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_geoconf_civic"><span class="keyword">val</span> find_geoconf_civic</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_geolock"><span class="keyword">val</span> find_geolock</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_hostname"><span class="keyword">val</span> find_hostname</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_interface_mtu"><span class="keyword">val</span> find_interface_mtu</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_ip_lease_time"><span class="keyword">val</span> find_ip_lease_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_ip_telefone"><span class="keyword">val</span> find_ip_telefone</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ipforwarding"><span class="keyword">val</span> find_ipforwarding</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_ipv4_address_andsf"><span class="keyword">val</span> find_ipv4_address_andsf</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ipv4_address_mos"><span class="keyword">val</span> find_ipv4_address_mos</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ipv4_fqdn_mos"><span class="keyword">val</span> find_ipv4_fqdn_mos</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_isns"><span class="keyword">val</span> find_isns</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_ldap"><span class="keyword">val</span> find_ldap</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_mask_supplier"><span class="keyword">val</span> find_mask_supplier</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_max_datagram"><span class="keyword">val</span> find_max_datagram</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_max_message"><span class="keyword">val</span> find_max_message</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_merit_dumpfile"><span class="keyword">val</span> find_merit_dumpfile</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_message"><span class="keyword">val</span> find_message</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_message_type"><span class="keyword">val</span> find_message_type</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> option</code></pre>
+<pre><span id="VALfind_misc_150"><span class="keyword">val</span> find_misc_150</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALcollect_mobile_ip_home_agent"><span class="keyword">val</span> collect_mobile_ip_home_agent</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_name_service_search"><span class="keyword">val</span> find_name_service_search</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nds_context"><span class="keyword">val</span> find_nds_context</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nds_servers"><span class="keyword">val</span> find_nds_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nds_tree_name"><span class="keyword">val</span> find_nds_tree_name</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_netbios_node"><span class="keyword">val</span> find_netbios_node</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_netbios_scope"><span class="keyword">val</span> find_netbios_scope</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_netinfo_address"><span class="keyword">val</span> find_netinfo_address</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_netinfo_tag"><span class="keyword">val</span> find_netinfo_tag</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_netware_ip_domain"><span class="keyword">val</span> find_netware_ip_domain</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_netware_ip_option"><span class="keyword">val</span> find_netware_ip_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nis_domain"><span class="keyword">val</span> find_nis_domain</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nis_plus_domain"><span class="keyword">val</span> find_nis_plus_domain</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_nlsr"><span class="keyword">val</span> find_nlsr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALcollect_nntp_servers"><span class="keyword">val</span> collect_nntp_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_option_6rd"><span class="keyword">val</span> find_option_6rd</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_option_overload"><span class="keyword">val</span> find_option_overload</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_pana_agent"><span class="keyword">val</span> find_pana_agent</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_path_prefix"><span class="keyword">val</span> find_path_prefix</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pcode"><span class="keyword">val</span> find_pcode</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_perform_mask_discovery"><span class="keyword">val</span> find_perform_mask_discovery</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_perform_router_disc"><span class="keyword">val</span> find_perform_router_disc</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_pmtu_ageing_timo"><span class="keyword">val</span> find_pmtu_ageing_timo</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_pmtu_plateau_table"><span class="keyword">val</span> find_pmtu_plateau_table</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int list option</code></pre>
+<pre><span id="VALcollect_pop3_servers"><span class="keyword">val</span> collect_pop3_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_pxe_128"><span class="keyword">val</span> find_pxe_128</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_129"><span class="keyword">val</span> find_pxe_129</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_130"><span class="keyword">val</span> find_pxe_130</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_131"><span class="keyword">val</span> find_pxe_131</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_132"><span class="keyword">val</span> find_pxe_132</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_133"><span class="keyword">val</span> find_pxe_133</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_134"><span class="keyword">val</span> find_pxe_134</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_135"><span class="keyword">val</span> find_pxe_135</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_pxe_linux"><span class="keyword">val</span> find_pxe_linux</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_query_end_time"><span class="keyword">val</span> find_query_end_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_query_start_time"><span class="keyword">val</span> find_query_start_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_rapid_commit"><span class="keyword">val</span> find_rapid_commit</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> option</code></pre>
+<pre><span id="VALfind_rdnss_selection"><span class="keyword">val</span> find_rdnss_selection</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_rebinding_t2"><span class="keyword">val</span> find_rebinding_t2</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_reboot_time"><span class="keyword">val</span> find_reboot_time</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_relay_agent_information"><span class="keyword">val</span> find_relay_agent_information</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_renewal_t1"><span class="keyword">val</span> find_renewal_t1</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_request_ip"><span class="keyword">val</span> find_request_ip</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_root_path"><span class="keyword">val</span> find_root_path</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_router_sol_addr"><span class="keyword">val</span> find_router_sol_addr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_server_identifier"><span class="keyword">val</span> find_server_identifier</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_service_scope"><span class="keyword">val</span> find_service_scope</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_sip_servers"><span class="keyword">val</span> find_sip_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_sip_ua_domains"><span class="keyword">val</span> find_sip_ua_domains</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALcollect_smtp_servers"><span class="keyword">val</span> collect_smtp_servers</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t list</code></pre>
+<pre><span id="VALfind_start_time_of_state"><span class="keyword">val</span> find_start_time_of_state</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_status_code"><span class="keyword">val</span> find_status_code</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_subnet_allocation"><span class="keyword">val</span> find_subnet_allocation</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_subnet_mask"><span class="keyword">val</span> find_subnet_mask</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_subnet_selection"><span class="keyword">val</span> find_subnet_selection</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_swap_server"><span class="keyword">val</span> find_swap_server</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALfind_tcode"><span class="keyword">val</span> find_tcode</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_tcp_default_ttl"><span class="keyword">val</span> find_tcp_default_ttl</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_tcp_keepalive_garbage"><span class="keyword">val</span> find_tcp_keepalive_garbage</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int option</code></pre>
+<pre><span id="VALfind_tcp_keepalive_interval"><span class="keyword">val</span> find_tcp_keepalive_interval</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_tftp_server_name"><span class="keyword">val</span> find_tftp_server_name</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_time_offset"><span class="keyword">val</span> find_time_offset</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> int32 option</code></pre>
+<pre><span id="VALfind_trailer_encapsulation"><span class="keyword">val</span> find_trailer_encapsulation</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> bool option</code></pre>
+<pre><span id="VALfind_url"><span class="keyword">val</span> find_url</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_user_auth"><span class="keyword">val</span> find_user_auth</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_user_class"><span class="keyword">val</span> find_user_class</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_uuid_guid"><span class="keyword">val</span> find_uuid_guid</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_v4_access_domain"><span class="keyword">val</span> find_v4_access_domain</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_v4_lost"><span class="keyword">val</span> find_v4_lost</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_v4_pcp_server"><span class="keyword">val</span> find_v4_pcp_server</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_v4_portparams"><span class="keyword">val</span> find_v4_portparams</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_vendor_class_id"><span class="keyword">val</span> find_vendor_class_id</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_vendor_specific"><span class="keyword">val</span> find_vendor_specific</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_vi_vendor_class"><span class="keyword">val</span> find_vi_vendor_class</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_vi_vendor_info"><span class="keyword">val</span> find_vi_vendor_info</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_virtual_subnet_selection"><span class="keyword">val</span> find_virtual_subnet_selection</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_web_proxy_auto_disc"><span class="keyword">val</span> find_web_proxy_auto_disc</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> string option</code></pre>
+<pre><span id="VALfind_unassigned"><span class="keyword">val</span> find_unassigned</span> : <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> -><br>       <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> (<a href="Dhcp_wire.html#TYPEoption_code">option_code</a> * string) option</code></pre>
+<pre><span id="VALcollect_unassigned"><span class="keyword">val</span> collect_unassigned</span> : <code class="type"><a href="Dhcp_wire.html#TYPEoption_code">option_code</a> -><br>       <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> (<a href="Dhcp_wire.html#TYPEoption_code">option_code</a> * string) list</code></pre><br>
 <h2 id="2_DHCPPacket">DHCP Packet </h2><br>
 
 <pre><code><span id="TYPEpkt"><span class="keyword">type</span> <code class="type"></code>pkt</span> = {</code></pre><table class="typetable">
@@ -2814,7 +3523,25 @@ Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pk
 <pre><span id="VALpkt_to_string"><span class="keyword">val</span> pkt_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> string</code></pre><br>
 Helpers.<br>
 
-<pre><span id="VALis_dhcp"><span class="keyword">val</span> is_dhcp</span> : <code class="type">Cstruct.t -> int -> bool</code></pre><div class="info ">
+<pre><span id="VALis_dhcp"><span class="keyword">val</span> is_dhcp</span> : <code class="type">Cstruct.t -> int -> bool</code></pre>
+<pre><span id="VALdhcp_option_of_sexp"><span class="keyword">val</span> dhcp_option_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a></code></pre>
+<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre><br>
+Not all options are currently implemented.<br>
+<br>
+Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
+<br>
+<code class="code">find_option f l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code">Some</code> value
+    on list <code class="code">l</code><br>
+<br>
+<code class="code">collect_options f l</code> collects all options where <code class="code">f</code> evaluates to <code class="code">Some</code>
+    value on list <code class="code">l</code>, this is useful for list options like <code class="code">Routers</code>, if
+    multiple list options are found, the resulting list is flattened.<br>
+<br>
+<h2 id="2_DHCPPacket">DHCP Packet </h2><br>
+<br>
+Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pkt</code></a>.<br>
+<br>
+Helpers.<br>
+<br>
 <code class="code">is_dhcp buf len</code> is true if <code class="code">buf</code> is a DHCP packet.<br>
-</div>
 </body></html>

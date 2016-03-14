@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Dhcp_server.Config.html">
+<link rel="next" href="Dhcp_server.Input.html">
+<link rel="Up" href="Dhcp_server.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Dhcp_wire" rel="Chapter" href="Dhcp_wire.html">
+<link title="Dhcp_server" rel="Chapter" href="Dhcp_server.html"><title>Dhcp_server.Lease</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Dhcp_server.Config.html" title="Dhcp_server.Config">Previous</a>
+&nbsp;<a class="up" href="Dhcp_server.html" title="Dhcp_server">Up</a>
+&nbsp;<a class="post" href="Dhcp_server.Input.html" title="Dhcp_server.Input">Next</a>
+</div>
+<h1>Module <a href="type_Dhcp_server.Lease.html">Dhcp_server.Lease</a></h1>
+
+<pre><span class="keyword">module</span> Lease: <code class="code">sig</code> <a href="Dhcp_server.Lease.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.tm_start">tm_start</span>&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.tm_end">tm_end</span>&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.addr">addr</span>&nbsp;: <code class="type">Ipaddr.V4.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.client_id">client_id</span>&nbsp;: <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">Dhcp_wire.client_id</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmake_fixed"><span class="keyword">val</span> make_fixed</span> : <code class="type">Macaddr.t -> Ipaddr.V4.t -> now:float -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
+<pre><span id="VALtimeleft"><span class="keyword">val</span> timeleft</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> now:float -> int32</code></pre>
+<pre><span id="VALtimeleft_exn"><span class="keyword">val</span> timeleft_exn</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> now:float -> int32</code></pre>
+<pre><span id="VALtimeleft3"><span class="keyword">val</span> timeleft3</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> float -> float -> now:float -> int32 * int32 * int32</code></pre>
+<pre><span id="VALextend"><span class="keyword">val</span> extend</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> now:float -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
+<pre><span id="VALexpired"><span class="keyword">val</span> expired</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> now:float -> bool</code></pre>
+<pre><span id="TYPEdatabase"><span class="keyword">type</span> <code class="type"></code>database</span> </pre>
+
+
+<pre><span id="VALmake_db"><span class="keyword">val</span> make_db</span> : <code class="type">unit -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a></code></pre>
+<pre><span id="VALgarbage_collect"><span class="keyword">val</span> garbage_collect</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> now:float -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a></code></pre>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a></code></pre>
+<pre><span id="VALreplace"><span class="keyword">val</span> replace</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a></code></pre>
+<pre><span id="VALlease_of_client_id"><span class="keyword">val</span> lease_of_client_id</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">Dhcp_wire.client_id</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> <a href="Dhcp_server.Lease.html#TYPEt">t</a> option</code></pre>
+<pre><span id="VALlease_of_addr"><span class="keyword">val</span> lease_of_addr</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> <a href="Dhcp_server.Lease.html#TYPEt">t</a> option</code></pre>
+<pre><span id="VALaddr_allocated"><span class="keyword">val</span> addr_allocated</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> bool</code></pre>
+<pre><span id="VALaddr_available"><span class="keyword">val</span> addr_available</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> now:float -> bool</code></pre>
+<pre><span id="VALget_usable_addr"><span class="keyword">val</span> get_usable_addr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">Dhcp_wire.client_id</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -><br>       Ipaddr.V4.t * Ipaddr.V4.t -> now:float -> Ipaddr.V4.t option</code></pre>
+<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre></body></html>

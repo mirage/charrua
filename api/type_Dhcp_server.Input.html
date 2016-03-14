@@ -12,12 +12,16 @@
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;result&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Silence</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Reply</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Dhcp_wire</span>.pkt<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Update</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Reply</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;*&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Warning</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Error</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;for_subnet&nbsp;:&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span>.subnet&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;for_us&nbsp;:&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;input_pkt&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span>.subnet&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Lease</span>.database&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.pkt&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;float&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Input</span>.result<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;collect_replies_test&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dhcp_wire</span>.option_code&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dhcp_wire</span>.dhcp_option&nbsp;list<br>
 <span class="keyword">end</span></code></body></html>
