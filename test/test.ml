@@ -82,7 +82,7 @@ let t_simple_config () =
   | Subnet_mask _ -> ()
   | _ -> failwith "Subnet mask expected as first option"
 
-let t_renewal_time_inoptions () =
+let t_bad_options () =
   let ok = try
       ignore @@ make_simple_config
         ~options:[Renewal_t1 Int32.max_int];
@@ -91,7 +91,26 @@ let t_renewal_time_inoptions () =
       Invalid_argument _ -> true
   in
   if not ok then
-    failwith "user cannot request renewal via options"
+    failwith "user cannot request renewal via options";
+  let ok = try
+      ignore @@ make_simple_config
+        ~options:[Rebinding_t2 Int32.max_int];
+      false
+    with
+      Invalid_argument _ -> true
+  in
+  if not ok then
+    failwith "user cannot request rebinding via options";
+  let ok = try
+      ignore @@ make_simple_config
+        ~options:[Ip_lease_time Int32.max_int];
+      false
+    with
+      Invalid_argument _ -> true
+  in
+  if not ok then
+    failwith "can't request ip lease time via options"
+  
 
 let t_bad_junk_padding_config () =
   let ok = try
@@ -107,17 +126,6 @@ let t_bad_junk_padding_config () =
   in
   if not ok then
     failwith "can't insert padding and random numbers via options"
-
-let t_ip_lease_time_inoptions () =
-  let ok = try
-      ignore @@ make_simple_config
-        ~options:[Ip_lease_time Int32.max_int];
-      false
-    with
-      Invalid_argument _ -> true
-  in
-  if not ok then
-    failwith "can't request ip lease time via options"
 
 let t_collect_replies () =
   let config = make_simple_config
@@ -442,9 +450,8 @@ let all_tests = [
   (t_option_codes, "option codes");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
-  (t_renewal_time_inoptions, "renewal_t in opts");
+  (t_bad_options, "renewal_t in opts");
   (t_bad_junk_padding_config, "padding in opts");
-  (t_ip_lease_time_inoptions, "lease time in opts");
   (t_collect_replies, "collect replies");
   (t_discover, "discover->offer");
   (t_bad_discover, "wrong mac address");
