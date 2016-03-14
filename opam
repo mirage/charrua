@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "charrua-unix"
-version: "0.2"
+version: "0.3"
 maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 homepage: "https://github.com/haesbaert/charrua-unix"
@@ -12,5 +12,5 @@ build: [
   ["sh" "build.sh"]
 ]
 depends: [
-  "ocamlfind" {build} "lwt" "charrua-core" "cmdliner" "rawlink"
+  "ocamlfind" {build} "lwt" "charrua-core" "cmdliner" "rawlink" "tuntap"
 ]
