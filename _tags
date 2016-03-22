@@ -1,7 +1,7 @@
-true: debug, bin_annot, syntax(camlp4o), syntax(pa_cstruct), strict_sequence
+true: debug, bin_annot, strict_sequence
 true: use_menhir
-true: package(cstruct), package(cstruct.syntax)
+true: package(cstruct), package(cstruct.ppx)
 true: package(cstruct.unix), package(ipaddr)
-true: package(sexplib), package(sexplib.syntax)
+true: package(sexplib), package(ppx_type_conv), package(ppx_sexp_conv)
 true: package(tcpip)
 <test/*.native>: package(io-page.unix)

@@ -79,7 +79,7 @@ module Lease : sig
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
-  } with sexp
+  } [@@deriving sexp]
 
   val sexp_of_t : t -> Sexplib.Sexp.t
   val t_of_sexp : Sexplib.Sexp.t -> t
