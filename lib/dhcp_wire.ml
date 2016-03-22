@@ -43,7 +43,7 @@ type dhcp = {
 type op =
   | BOOTREQUEST [@id 1]
   | BOOTREPLY   [@id 2]
-[@@uint8_t]][@@deriving sexp]
+[@@uint8_t][@@sexp]]
 
 let int_to_op_exn v = some_or_invalid int_to_op v
 
@@ -64,7 +64,7 @@ type msgtype =
   | DHCPLEASEACTIVE
   | DHCPBULKLEASEQUERY
   | DHCPLEASEQUERYDONE
-[@@uint8_t]][@@deriving sexp]
+[@@uint8_t][@@sexp]]
 
 let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v
 
@@ -326,7 +326,7 @@ type option_code =
   | RESERVED_253 [@id 253]
   | RESERVED_254 [@id 254]
   | END [@id 255]
-[@@uint8_t]][@@deriving sexp]
+[@@uint8_t][@@sexp]]
 
 let int_to_option_code_exn v = some_or_invalid int_to_option_code v
 

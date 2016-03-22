@@ -21,22 +21,24 @@ let printf = Printf.printf
 
 let verbose = (Array.length Sys.argv) = 2 && Sys.argv.(1) = "-v"
 
-cstruct pcap_header {
-  uint32_t magic_number;   (* magic number *)
-  uint16_t version_major;  (* major version number *)
-  uint16_t version_minor;  (* minor version number *)
-  uint32_t thiszone;       (* GMT to local correction *)
-  uint32_t sigfigs;        (* accuracy of timestamps *)
-  uint32_t snaplen;        (* max length of captured packets, in octets *)
-  uint32_t network;        (* data link type *)
-} as little_endian
+[%%cstruct
+type pcap_header = {
+  magic_number:  uint32_t;   (* magic number *)
+  version_major: uint16_t;  (* major version number *)
+  version_minor: uint16_t;  (* minor version number *)
+  thiszone:      uint32_t;       (* GMT to local correction *)
+  sigfigs:       uint32_t;        (* accuracy of timestamps *)
+  snaplen:       uint32_t;        (* max length of captured packets, in octets *)
+  network:       uint32_t;        (* data link type *)
+} [@@little_endian]]
 
-cstruct pcap_packet {
-  uint32_t ts_sec;         (* timestamp seconds *)
-  uint32_t ts_usec;        (* timestamp microseconds *)
-  uint32_t incl_len;       (* number of octets of packet saved in file *)
-  uint32_t orig_len;       (* actual length of packet *)
-} as little_endian
+[%%cstruct
+type pcap_packet = {
+  ts_sec:  uint32_t;         (* timestamp seconds *)
+  ts_usec:  uint32_t;        (* timestamp microseconds *)
+  incl_len: uint32_t;       (* number of octets of packet saved in file *)
+  orig_len: uint32_t;       (* actual length of packet *)
+} [@@little_endian]]
 
 let num_packets = ref 0
 
