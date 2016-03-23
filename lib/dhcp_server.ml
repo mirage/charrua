@@ -23,7 +23,7 @@ module Config = struct
     options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t option;
-  } with sexp
+  } [@@deriving sexp]
 
   type t = {
     options : Dhcp_wire.dhcp_option list;
@@ -35,7 +35,7 @@ module Config = struct
     network : Ipaddr.V4.Prefix.t;
     range : Ipaddr.V4.t * Ipaddr.V4.t;
     hosts : host list;
-  } with sexp
+  } [@@deriving sexp]
 
   let t1_time_ratio = 0.5
   let t2_time_ratio = 0.8
@@ -193,7 +193,7 @@ module Lease = struct
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
-  } with sexp
+  } [@@deriving sexp]
 
   (* Database, collection of leases *)
   type database = {

@@ -21,322 +21,326 @@ let some_or_invalid f v = match f v with
   | Some x -> x
   | None -> invalid_arg ("Invalid value " ^ (string_of_int v))
 
-cstruct dhcp {
-  uint8_t      op;
-  uint8_t      htype;
-  uint8_t      hlen;
-  uint8_t      hops;
-  uint32_t     xid;
-  uint16_t     secs;
-  uint16_t     flags;
-  uint32_t     ciaddr;
-  uint32_t     yiaddr;
-  uint32_t     siaddr;
-  uint32_t     giaddr;
-  uint8_t      chaddr[16];
-  uint8_t      sname[64];
-  uint8_t      file[128];
-} as big_endian
-
-cenum op {
-  BOOTREQUEST = 1;
-  BOOTREPLY   = 2;
-} as uint8_t(sexp)
+[%%cstruct
+type dhcp = {
+  op:     uint8_t;
+  htype:  uint8_t;
+  hlen:   uint8_t;
+  hops:   uint8_t;
+  xid:    uint32_t;
+  secs:   uint16_t;
+  flags:  uint16_t;
+  ciaddr: uint32_t;
+  yiaddr: uint32_t;
+  siaddr: uint32_t;
+  giaddr: uint32_t;
+  chaddr: uint8_t   [@len 16];
+  sname:  uint8_t   [@len 64];
+  file:   uint8_t   [@len 128];
+} [@@big_endian]
+]
+[%%cenum
+type op =
+  | BOOTREQUEST [@id 1]
+  | BOOTREPLY   [@id 2]
+[@@uint8_t][@@sexp]]
 
 let int_to_op_exn v = some_or_invalid int_to_op v
 
-cenum msgtype {
-  DHCPDISCOVER = 1;
-  DHCPOFFER;
-  DHCPREQUEST;
-  DHCPDECLINE;
-  DHCPACK;
-  DHCPNAK;
-  DHCPRELEASE;
-  DHCPINFORM;
-  DHCPFORCERENEW;
-  DHCPLEASEQUERY;
-  DHCPLEASEUNASSIGNED;
-  DHCPLEASEUNKNOWN;
-  DHCPLEASEACTIVE;
-  DHCPBULKLEASEQUERY;
-  DHCPLEASEQUERYDONE;
-} as uint8_t(sexp)
+[%%cenum
+type msgtype =
+  | DHCPDISCOVER [@id 1]
+  | DHCPOFFER
+  | DHCPREQUEST
+  | DHCPDECLINE
+  | DHCPACK
+  | DHCPNAK
+  | DHCPRELEASE
+  | DHCPINFORM
+  | DHCPFORCERENEW
+  | DHCPLEASEQUERY
+  | DHCPLEASEUNASSIGNED
+  | DHCPLEASEUNKNOWN
+  | DHCPLEASEACTIVE
+  | DHCPBULKLEASEQUERY
+  | DHCPLEASEQUERYDONE
+[@@uint8_t][@@sexp]]
 
 let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v
 
-cenum option_code {
-  PAD = 0;
-  SUBNET_MASK = 1;
-  TIME_OFFSET = 2;
-  ROUTERS = 3;
-  TIME_SERVERS = 4;
-  NAME_SERVERS = 5;
-  DNS_SERVERS = 6;
-  LOG_SERVERS = 7;
-  COOKIE_SERVERS = 8;
-  LPR_SERVERS = 9;
-  IMPRESS_SERVERS = 10;
-  RSCLOCATION_SERVERS = 11;
-  HOSTNAME = 12;
-  BOOTFILE_SIZE = 13;
-  MERIT_DUMPFILE = 14;
-  DOMAIN_NAME = 15;
-  SWAP_SERVER = 16;
-  ROOT_PATH = 17;
-  EXTENSION_PATH = 18;
-  IPFORWARDING = 19;
-  NLSR = 20;
-  POLICY_FILTERS = 21;
-  MAX_DATAGRAM = 22;
-  DEFAULT_IP_TTL = 23;
-  PMTU_AGEING_TIMO = 24;
-  PMTU_PLATEAU_TABLE = 25;
-  INTERFACE_MTU = 26;
-  ALL_SUBNETS_LOCAL = 27;
-  BROADCAST_ADDR = 28;
-  PERFORM_MASK_DISCOVERY = 29;
-  MASK_SUPPLIER = 30;
-  PERFORM_ROUTER_DISC = 31;
-  ROUTER_SOL_ADDR = 32;
-  STATIC_ROUTES = 33;
-  TRAILER_ENCAPSULATION = 34;
-  ARP_CACHE_TIMO = 35;
-  ETHERNET_ENCAPSULATION = 36;
-  TCP_DEFAULT_TTL = 37;
-  TCP_KEEPALIVE_INTERVAL = 38;
-  TCP_KEEPALIVE_GARBAGE = 39;
-  NIS_DOMAIN = 40;
-  NIS_SERVERS = 41;
-  NTP_SERVERS = 42;
-  VENDOR_SPECIFIC = 43;
-  NETBIOS_NAME_SERVERS = 44;
-  NETBIOS_DATAGRAM_DISTRIB_SERVERS = 45;
-  NETBIOS_NODE = 46;
-  NETBIOS_SCOPE = 47;
-  XWINDOW_FONT_SERVERS = 48;
-  XWINDOW_DISPLAY_MANAGERS = 49;
-  REQUEST_IP = 50;
-  IP_LEASE_TIME = 51;
-  OPTION_OVERLOAD = 52;
-  MESSAGE_TYPE = 53;
-  SERVER_IDENTIFIER = 54;
-  PARAMETER_REQUESTS = 55;
-  MESSAGE = 56;
-  MAX_MESSAGE = 57;
-  RENEWAL_T1 = 58;
-  REBINDING_T2 = 59;
-  VENDOR_CLASS_ID = 60;
-  CLIENT_ID = 61;
-  NETWARE_IP_DOMAIN = 62;
-  NETWARE_IP_OPTION = 63;
-  NIS_PLUS_DOMAIN = 64;
-  NIS_PLUS_SERVERS = 65;
-  TFTP_SERVER_NAME = 66;
-  BOOTFILE_NAME = 67;
-  MOBILE_IP_HOME_AGENT = 68;
-  SMTP_SERVERS = 69;
-  POP3_SERVERS = 70;
-  NNTP_SERVERS = 71;
-  WWW_SERVERS = 72;
-  FINGER_SERVERS = 73;
-  IRC_SERVERS = 74;
-  STREETTALK_SERVERS = 75;
-  STREETTALK_DA = 76;
-  USER_CLASS = 77;
-  DIRECTORY_AGENT = 78;
-  SERVICE_SCOPE = 79;
-  RAPID_COMMIT = 80;
-  CLIENT_FQDN = 81;
-  RELAY_AGENT_INFORMATION = 82;
-  ISNS = 83;
-  UNASSIGNED_84 = 84;
-  NDS_SERVERS = 85;
-  NDS_TREE_NAME = 86;
-  NDS_CONTEXT = 87;
-  BCMCS_CONTROLLER_DOMAIN_NAME_LIST = 88;
-  BCMCS_CONTROLLER_IPV4_ADDR = 89;
-  AUTHENTICATION = 90;
-  CLIENT_LAST_TRANSACTION_TIME = 91;
-  ASSOCIATED_IPS = 92;
-  CLIENT_SYSTEM = 93;
-  CLIENT_NDI = 94;
-  LDAP = 95;
-  UNASSIGNED_96 = 96;
-  UUID_GUID = 97;
-  USER_AUTH = 98;
-  GEOCONF_CIVIC = 99;
-  PCODE = 100;
-  TCODE = 101;
-  UNASSIGNED_102 = 102;
-  UNASSIGNED_103 = 103;
-  UNASSIGNED_104 = 104;
-  UNASSIGNED_105 = 105;
-  UNASSIGNED_106 = 106;
-  UNASSIGNED_107 = 107;
-  UNASSIGNED_108 = 108;
-  UNASSIGNED_109 = 109;
-  UNASSIGNED_110 = 110;
-  UNASSIGNED_111 = 111;
-  NETINFO_ADDRESS = 112;
-  NETINFO_TAG = 113;
-  URL = 114;
-  UNASSIGNED_115 = 115;
-  AUTO_CONFIG = 116;
-  NAME_SERVICE_SEARCH = 117;
-  SUBNET_SELECTION = 118;
-  DOMAIN_SEARCH = 119;
-  SIP_SERVERS = 120;
-  CLASSLESS_STATIC_ROUTE = 121;
-  CCC = 122;
-  GEOCONF = 123;
-  VI_VENDOR_CLASS = 124;
-  VI_VENDOR_INFO = 125;
-  UNASSIGNED_126 = 126;
-  UNASSIGNED_127 = 127;
-  PXE_128 = 128;
-  PXE_129 = 129;
-  PXE_130 = 130;
-  PXE_131 = 131;
-  PXE_132 = 132;
-  PXE_133 = 133;
-  PXE_134 = 134;
-  PXE_135 = 135;
-  PANA_AGENT = 136;
-  V4_LOST = 137;
-  CAPWAP_AC_V4 = 138;
-  IPV4_ADDRESS_MOS = 139;
-  IPV4_FQDN_MOS = 140;
-  SIP_UA_DOMAINS = 141;
-  IPV4_ADDRESS_ANDSF = 142;
-  UNASSIGNED_143 = 143;
-  GEOLOCK = 144;
-  FORCENEW_NONCE_CAPABLE = 145;
-  RDNSS_SELECTION = 146;
-  UNASSIGNED_147 = 147;
-  UNASSIGNED_148 = 148;
-  UNASSIGNED_149 = 149;
-  MISC_150 = 150;
-  STATUS_CODE = 151;
-  ABSOLUTE_TIME = 152;
-  START_TIME_OF_STATE = 153;
-  QUERY_START_TIME = 154;
-  QUERY_END_TIME = 155;
-  DHCP_STATE = 156;
-  DATA_SOURCE = 157;
-  V4_PCP_SERVER = 158;
-  V4_PORTPARAMS = 159;
-  DHCP_CAPTIVE_PORTAL = 160;
-  UNASSIGNED_161 = 161;
-  UNASSIGNED_162 = 162;
-  UNASSIGNED_163 = 163;
-  UNASSIGNED_164 = 164;
-  UNASSIGNED_165 = 165;
-  UNASSIGNED_166 = 166;
-  UNASSIGNED_167 = 167;
-  UNASSIGNED_168 = 168;
-  UNASSIGNED_169 = 169;
-  UNASSIGNED_170 = 170;
-  UNASSIGNED_171 = 171;
-  UNASSIGNED_172 = 172;
-  UNASSIGNED_173 = 173;
-  UNASSIGNED_174 = 174;
-  ETHERBOOT_175 = 175;
-  IP_TELEFONE = 176;
-  ETHERBOOT_177 = 177;
-  UNASSIGNED_178 = 178;
-  UNASSIGNED_179 = 179;
-  UNASSIGNED_180 = 180;
-  UNASSIGNED_181 = 181;
-  UNASSIGNED_182 = 182;
-  UNASSIGNED_183 = 183;
-  UNASSIGNED_184 = 184;
-  UNASSIGNED_185 = 185;
-  UNASSIGNED_186 = 186;
-  UNASSIGNED_187 = 187;
-  UNASSIGNED_188 = 188;
-  UNASSIGNED_189 = 189;
-  UNASSIGNED_190 = 190;
-  UNASSIGNED_191 = 191;
-  UNASSIGNED_192 = 192;
-  UNASSIGNED_193 = 193;
-  UNASSIGNED_194 = 194;
-  UNASSIGNED_195 = 195;
-  UNASSIGNED_196 = 196;
-  UNASSIGNED_197 = 197;
-  UNASSIGNED_198 = 198;
-  UNASSIGNED_199 = 199;
-  UNASSIGNED_200 = 200;
-  UNASSIGNED_201 = 201;
-  UNASSIGNED_202 = 202;
-  UNASSIGNED_203 = 203;
-  UNASSIGNED_204 = 204;
-  UNASSIGNED_205 = 205;
-  UNASSIGNED_206 = 206;
-  UNASSIGNED_207 = 207;
-  PXE_LINUX = 208;
-  CONFIGURATION_FILE = 209;
-  PATH_PREFIX = 210;
-  REBOOT_TIME = 211;
-  OPTION_6RD = 212;
-  V4_ACCESS_DOMAIN = 213;
-  UNASSIGNED_214 = 214;
-  UNASSIGNED_215 = 215;
-  UNASSIGNED_216 = 216;
-  UNASSIGNED_217 = 217;
-  UNASSIGNED_218 = 218;
-  UNASSIGNED_219 = 219;
-  SUBNET_ALLOCATION = 220;
-  VIRTUAL_SUBNET_SELECTION = 221;
-  UNASSIGNED_222 = 222;
-  UNASSIGNED_223 = 223;
-  RESERVED_224 = 224;
-  RESERVED_225 = 225;
-  RESERVED_226 = 226;
-  RESERVED_227 = 227;
-  RESERVED_228 = 228;
-  RESERVED_229 = 229;
-  RESERVED_230 = 230;
-  RESERVED_231 = 231;
-  RESERVED_232 = 232;
-  RESERVED_233 = 233;
-  RESERVED_234 = 234;
-  RESERVED_235 = 235;
-  RESERVED_236 = 236;
-  RESERVED_237 = 237;
-  RESERVED_238 = 238;
-  RESERVED_239 = 239;
-  RESERVED_240 = 240;
-  RESERVED_241 = 241;
-  RESERVED_242 = 242;
-  RESERVED_243 = 243;
-  RESERVED_244 = 244;
-  RESERVED_245 = 245;
-  RESERVED_246 = 246;
-  RESERVED_247 = 247;
-  RESERVED_248 = 248;
-  RESERVED_249 = 249;
-  RESERVED_250 = 250;
-  RESERVED_251 = 251;
-  WEB_PROXY_AUTO_DISC = 252;
-  RESERVED_253 = 253;
-  RESERVED_254 = 254;
-  END = 255;
-} as uint8_t(sexp)
+[%%cenum
+type option_code =
+  | PAD [@id 0]
+  | SUBNET_MASK [@id 1]
+  | TIME_OFFSET [@id 2]
+  | ROUTERS [@id 3]
+  | TIME_SERVERS [@id 4]
+  | NAME_SERVERS [@id 5]
+  | DNS_SERVERS [@id 6]
+  | LOG_SERVERS [@id 7]
+  | COOKIE_SERVERS [@id 8]
+  | LPR_SERVERS [@id 9]
+  | IMPRESS_SERVERS [@id 10]
+  | RSCLOCATION_SERVERS [@id 11]
+  | HOSTNAME [@id 12]
+  | BOOTFILE_SIZE [@id 13]
+  | MERIT_DUMPFILE [@id 14]
+  | DOMAIN_NAME [@id 15]
+  | SWAP_SERVER [@id 16]
+  | ROOT_PATH [@id 17]
+  | EXTENSION_PATH [@id 18]
+  | IPFORWARDING [@id 19]
+  | NLSR [@id 20]
+  | POLICY_FILTERS [@id 21]
+  | MAX_DATAGRAM [@id 22]
+  | DEFAULT_IP_TTL [@id 23]
+  | PMTU_AGEING_TIMO [@id 24]
+  | PMTU_PLATEAU_TABLE [@id 25]
+  | INTERFACE_MTU [@id 26]
+  | ALL_SUBNETS_LOCAL [@id 27]
+  | BROADCAST_ADDR [@id 28]
+  | PERFORM_MASK_DISCOVERY [@id 29]
+  | MASK_SUPPLIER [@id 30]
+  | PERFORM_ROUTER_DISC [@id 31]
+  | ROUTER_SOL_ADDR [@id 32]
+  | STATIC_ROUTES [@id 33]
+  | TRAILER_ENCAPSULATION [@id 34]
+  | ARP_CACHE_TIMO [@id 35]
+  | ETHERNET_ENCAPSULATION [@id 36]
+  | TCP_DEFAULT_TTL [@id 37]
+  | TCP_KEEPALIVE_INTERVAL [@id 38]
+  | TCP_KEEPALIVE_GARBAGE [@id 39]
+  | NIS_DOMAIN [@id 40]
+  | NIS_SERVERS [@id 41]
+  | NTP_SERVERS [@id 42]
+  | VENDOR_SPECIFIC [@id 43]
+  | NETBIOS_NAME_SERVERS [@id 44]
+  | NETBIOS_DATAGRAM_DISTRIB_SERVERS [@id 45]
+  | NETBIOS_NODE [@id 46]
+  | NETBIOS_SCOPE [@id 47]
+  | XWINDOW_FONT_SERVERS [@id 48]
+  | XWINDOW_DISPLAY_MANAGERS [@id 49]
+  | REQUEST_IP [@id 50]
+  | IP_LEASE_TIME [@id 51]
+  | OPTION_OVERLOAD [@id 52]
+  | MESSAGE_TYPE [@id 53]
+  | SERVER_IDENTIFIER [@id 54]
+  | PARAMETER_REQUESTS [@id 55]
+  | MESSAGE [@id 56]
+  | MAX_MESSAGE [@id 57]
+  | RENEWAL_T1 [@id 58]
+  | REBINDING_T2 [@id 59]
+  | VENDOR_CLASS_ID [@id 60]
+  | CLIENT_ID [@id 61]
+  | NETWARE_IP_DOMAIN [@id 62]
+  | NETWARE_IP_OPTION [@id 63]
+  | NIS_PLUS_DOMAIN [@id 64]
+  | NIS_PLUS_SERVERS [@id 65]
+  | TFTP_SERVER_NAME [@id 66]
+  | BOOTFILE_NAME [@id 67]
+  | MOBILE_IP_HOME_AGENT [@id 68]
+  | SMTP_SERVERS [@id 69]
+  | POP3_SERVERS [@id 70]
+  | NNTP_SERVERS [@id 71]
+  | WWW_SERVERS [@id 72]
+  | FINGER_SERVERS [@id 73]
+  | IRC_SERVERS [@id 74]
+  | STREETTALK_SERVERS [@id 75]
+  | STREETTALK_DA [@id 76]
+  | USER_CLASS [@id 77]
+  | DIRECTORY_AGENT [@id 78]
+  | SERVICE_SCOPE [@id 79]
+  | RAPID_COMMIT [@id 80]
+  | CLIENT_FQDN [@id 81]
+  | RELAY_AGENT_INFORMATION [@id 82]
+  | ISNS [@id 83]
+  | UNASSIGNED_84 [@id 84]
+  | NDS_SERVERS [@id 85]
+  | NDS_TREE_NAME [@id 86]
+  | NDS_CONTEXT [@id 87]
+  | BCMCS_CONTROLLER_DOMAIN_NAME_LIST [@id 88]
+  | BCMCS_CONTROLLER_IPV4_ADDR [@id 89]
+  | AUTHENTICATION [@id 90]
+  | CLIENT_LAST_TRANSACTION_TIME [@id 91]
+  | ASSOCIATED_IPS [@id 92]
+  | CLIENT_SYSTEM [@id 93]
+  | CLIENT_NDI [@id 94]
+  | LDAP [@id 95]
+  | UNASSIGNED_96 [@id 96]
+  | UUID_GUID [@id 97]
+  | USER_AUTH [@id 98]
+  | GEOCONF_CIVIC [@id 99]
+  | PCODE [@id 100]
+  | TCODE [@id 101]
+  | UNASSIGNED_102 [@id 102]
+  | UNASSIGNED_103 [@id 103]
+  | UNASSIGNED_104 [@id 104]
+  | UNASSIGNED_105 [@id 105]
+  | UNASSIGNED_106 [@id 106]
+  | UNASSIGNED_107 [@id 107]
+  | UNASSIGNED_108 [@id 108]
+  | UNASSIGNED_109 [@id 109]
+  | UNASSIGNED_110 [@id 110]
+  | UNASSIGNED_111 [@id 111]
+  | NETINFO_ADDRESS [@id 112]
+  | NETINFO_TAG [@id 113]
+  | URL [@id 114]
+  | UNASSIGNED_115 [@id 115]
+  | AUTO_CONFIG [@id 116]
+  | NAME_SERVICE_SEARCH [@id 117]
+  | SUBNET_SELECTION [@id 118]
+  | DOMAIN_SEARCH [@id 119]
+  | SIP_SERVERS [@id 120]
+  | CLASSLESS_STATIC_ROUTE [@id 121]
+  | CCC [@id 122]
+  | GEOCONF [@id 123]
+  | VI_VENDOR_CLASS [@id 124]
+  | VI_VENDOR_INFO [@id 125]
+  | UNASSIGNED_126 [@id 126]
+  | UNASSIGNED_127 [@id 127]
+  | PXE_128 [@id 128]
+  | PXE_129 [@id 129]
+  | PXE_130 [@id 130]
+  | PXE_131 [@id 131]
+  | PXE_132 [@id 132]
+  | PXE_133 [@id 133]
+  | PXE_134 [@id 134]
+  | PXE_135 [@id 135]
+  | PANA_AGENT [@id 136]
+  | V4_LOST [@id 137]
+  | CAPWAP_AC_V4 [@id 138]
+  | IPV4_ADDRESS_MOS [@id 139]
+  | IPV4_FQDN_MOS [@id 140]
+  | SIP_UA_DOMAINS [@id 141]
+  | IPV4_ADDRESS_ANDSF [@id 142]
+  | UNASSIGNED_143 [@id 143]
+  | GEOLOCK [@id 144]
+  | FORCENEW_NONCE_CAPABLE [@id 145]
+  | RDNSS_SELECTION [@id 146]
+  | UNASSIGNED_147 [@id 147]
+  | UNASSIGNED_148 [@id 148]
+  | UNASSIGNED_149 [@id 149]
+  | MISC_150 [@id 150]
+  | STATUS_CODE [@id 151]
+  | ABSOLUTE_TIME [@id 152]
+  | START_TIME_OF_STATE [@id 153]
+  | QUERY_START_TIME [@id 154]
+  | QUERY_END_TIME [@id 155]
+  | DHCP_STATE [@id 156]
+  | DATA_SOURCE [@id 157]
+  | V4_PCP_SERVER [@id 158]
+  | V4_PORTPARAMS [@id 159]
+  | DHCP_CAPTIVE_PORTAL [@id 160]
+  | UNASSIGNED_161 [@id 161]
+  | UNASSIGNED_162 [@id 162]
+  | UNASSIGNED_163 [@id 163]
+  | UNASSIGNED_164 [@id 164]
+  | UNASSIGNED_165 [@id 165]
+  | UNASSIGNED_166 [@id 166]
+  | UNASSIGNED_167 [@id 167]
+  | UNASSIGNED_168 [@id 168]
+  | UNASSIGNED_169 [@id 169]
+  | UNASSIGNED_170 [@id 170]
+  | UNASSIGNED_171 [@id 171]
+  | UNASSIGNED_172 [@id 172]
+  | UNASSIGNED_173 [@id 173]
+  | UNASSIGNED_174 [@id 174]
+  | ETHERBOOT_175 [@id 175]
+  | IP_TELEFONE [@id 176]
+  | ETHERBOOT_177 [@id 177]
+  | UNASSIGNED_178 [@id 178]
+  | UNASSIGNED_179 [@id 179]
+  | UNASSIGNED_180 [@id 180]
+  | UNASSIGNED_181 [@id 181]
+  | UNASSIGNED_182 [@id 182]
+  | UNASSIGNED_183 [@id 183]
+  | UNASSIGNED_184 [@id 184]
+  | UNASSIGNED_185 [@id 185]
+  | UNASSIGNED_186 [@id 186]
+  | UNASSIGNED_187 [@id 187]
+  | UNASSIGNED_188 [@id 188]
+  | UNASSIGNED_189 [@id 189]
+  | UNASSIGNED_190 [@id 190]
+  | UNASSIGNED_191 [@id 191]
+  | UNASSIGNED_192 [@id 192]
+  | UNASSIGNED_193 [@id 193]
+  | UNASSIGNED_194 [@id 194]
+  | UNASSIGNED_195 [@id 195]
+  | UNASSIGNED_196 [@id 196]
+  | UNASSIGNED_197 [@id 197]
+  | UNASSIGNED_198 [@id 198]
+  | UNASSIGNED_199 [@id 199]
+  | UNASSIGNED_200 [@id 200]
+  | UNASSIGNED_201 [@id 201]
+  | UNASSIGNED_202 [@id 202]
+  | UNASSIGNED_203 [@id 203]
+  | UNASSIGNED_204 [@id 204]
+  | UNASSIGNED_205 [@id 205]
+  | UNASSIGNED_206 [@id 206]
+  | UNASSIGNED_207 [@id 207]
+  | PXE_LINUX [@id 208]
+  | CONFIGURATION_FILE [@id 209]
+  | PATH_PREFIX [@id 210]
+  | REBOOT_TIME [@id 211]
+  | OPTION_6RD [@id 212]
+  | V4_ACCESS_DOMAIN [@id 213]
+  | UNASSIGNED_214 [@id 214]
+  | UNASSIGNED_215 [@id 215]
+  | UNASSIGNED_216 [@id 216]
+  | UNASSIGNED_217 [@id 217]
+  | UNASSIGNED_218 [@id 218]
+  | UNASSIGNED_219 [@id 219]
+  | SUBNET_ALLOCATION [@id 220]
+  | VIRTUAL_SUBNET_SELECTION [@id 221]
+  | UNASSIGNED_222 [@id 222]
+  | UNASSIGNED_223 [@id 223]
+  | RESERVED_224 [@id 224]
+  | RESERVED_225 [@id 225]
+  | RESERVED_226 [@id 226]
+  | RESERVED_227 [@id 227]
+  | RESERVED_228 [@id 228]
+  | RESERVED_229 [@id 229]
+  | RESERVED_230 [@id 230]
+  | RESERVED_231 [@id 231]
+  | RESERVED_232 [@id 232]
+  | RESERVED_233 [@id 233]
+  | RESERVED_234 [@id 234]
+  | RESERVED_235 [@id 235]
+  | RESERVED_236 [@id 236]
+  | RESERVED_237 [@id 237]
+  | RESERVED_238 [@id 238]
+  | RESERVED_239 [@id 239]
+  | RESERVED_240 [@id 240]
+  | RESERVED_241 [@id 241]
+  | RESERVED_242 [@id 242]
+  | RESERVED_243 [@id 243]
+  | RESERVED_244 [@id 244]
+  | RESERVED_245 [@id 245]
+  | RESERVED_246 [@id 246]
+  | RESERVED_247 [@id 247]
+  | RESERVED_248 [@id 248]
+  | RESERVED_249 [@id 249]
+  | RESERVED_250 [@id 250]
+  | RESERVED_251 [@id 251]
+  | WEB_PROXY_AUTO_DISC [@id 252]
+  | RESERVED_253 [@id 253]
+  | RESERVED_254 [@id 254]
+  | END [@id 255]
+[@@uint8_t][@@sexp]]
 
 let int_to_option_code_exn v = some_or_invalid int_to_option_code v
 
 type htype =
   | Ethernet_10mb
-  | Other with sexp
+  | Other [@@deriving sexp]
 
 type flags =
   | Broadcast
-  | Unicast with sexp
+  | Unicast [@@deriving sexp]
 
 type client_id =
   | Hwaddr of Macaddr.t
-  | Id of string with sexp
+  | Id of string [@@deriving sexp]
 
 type dhcp_option =
   | Pad                                     (* code 0 *)
@@ -495,7 +499,7 @@ type dhcp_option =
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Unassigned of option_code * string      (* code * string *)
-  with sexp
+  [@@deriving sexp]
 
 type pkt = {
   srcmac  : Macaddr.t;
@@ -519,7 +523,7 @@ type pkt = {
   sname   : string;
   file    : string;
   options : dhcp_option list;
-} with sexp
+} [@@deriving sexp]
 
 let client_port = 68
 let server_port = 67

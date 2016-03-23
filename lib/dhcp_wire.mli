@@ -546,7 +546,7 @@ type dhcp_option =
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Unassigned of option_code * string      (* code * string *)
-  with sexp
+  [@@deriving sexp]
 (** Not all options are currently implemented. *)
 
 (** Conversions of {! dhcp_option}. *)
