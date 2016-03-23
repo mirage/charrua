@@ -12,5 +12,5 @@ build: [
   ["sh" "build.sh"]
 ]
 depends: [
-  "ocamlfind" {build} "cstruct" "sexplib" "menhir" "ipaddr" "tcpip"
+  "ocamlfind" {build} "ppx_sexp_conv" "ppx_type_conv" "cstruct" "sexplib" "menhir" "ipaddr" "tcpip"
 ]

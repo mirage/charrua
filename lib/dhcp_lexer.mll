@@ -16,7 +16,7 @@
 
 {
 open Lexing
-open Parser
+open Dhcp_parser
 
 let choke lexbuf s =
   invalid_arg s

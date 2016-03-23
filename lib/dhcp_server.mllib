@@ -1,8 +1,8 @@
 Dhcp_wire
 Dhcp_server
 Dhcp_logger
-Parser
+Dhcp_parser
+Dhcp_lexer
 Util
 Lease
-Lexer
 Config

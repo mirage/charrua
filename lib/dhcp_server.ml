@@ -158,8 +158,8 @@ module Config = struct
     in
     let lex = Lexing.from_string configtxt in
     let ast =
-      try Parser.main Lexer.lex lex with
-      | Parser.Error -> choke lex "Parser Error"
+      try Dhcp_parser.main Dhcp_lexer.lex lex with
+      | Dhcp_parser.Error -> choke lex "Parser Error"
       | Invalid_argument e -> choke lex e
     in
     config_of_ast addr_tuple ast
