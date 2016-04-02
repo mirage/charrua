@@ -7,10 +7,18 @@ homepage: "https://github.com/haesbaert/charrua-core"
 bug-reports: "https://github.com/haesbaert/charrua-core/issues"
 license: "ISC"
 dev-repo: "https://github.com/haesbaert/charrua-core.git"
-available: [ocaml-version >= "4.01"]
+available: [ocaml-version >= "4.01" & opam-version >= "1.2"]
 build: [
   ["sh" "build.sh"]
 ]
 depends: [
-  "ocamlfind" {build} "ppx_sexp_conv" "ppx_type_conv" "cstruct" "sexplib" "menhir" "ipaddr" "tcpip"
+  "ocamlfind"
+  {build}
+  "ppx_sexp_conv"
+  "ppx_type_conv"
+  "cstruct"
+  "sexplib"
+  "menhir"
+  "ipaddr"
+  "tcpip"
 ]
