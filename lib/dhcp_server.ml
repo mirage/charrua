@@ -215,18 +215,6 @@ module Lease = struct
   let make_fixed mac addr ~now =
     make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
 
-  let remove lease db =
-    update_db
-      (Id_map.remove lease.client_id db.id_map)
-      (Addr_map.remove lease.addr db.addr_map)
-
-  let replace lease db =
-    (* First clear both maps *)
-    let clr_map = remove lease db in
-    update_db
-      (Id_map.add lease.client_id lease clr_map.id_map)
-      (Addr_map.add lease.addr lease clr_map.addr_map)
-
   let timeleft lease ~now =
     let left = (Int32.to_float lease.tm_end) -. now in
     if left < 0. then Int32.zero else (Int32.of_float left)
@@ -257,6 +245,26 @@ module Lease = struct
 
   let lease_of_addr addr db = Util.find_some @@ fun () ->
     Addr_map.find addr db.addr_map
+
+  let remove lease db =
+    update_db
+      (Id_map.remove lease.client_id db.id_map)
+      (Addr_map.remove lease.addr db.addr_map)
+
+  let replace lease db =
+    (* First clear both maps *)
+    let clr_map = match lease_of_addr lease.addr db with
+      | Some l -> remove l db
+      | None -> db
+    in
+    let clr_map = match lease_of_client_id lease.client_id clr_map with
+      | Some l -> remove l db
+      | None -> db
+    in
+    let clr_map = remove lease clr_map in
+    update_db
+      (Id_map.add lease.client_id lease clr_map.id_map)
+      (Addr_map.add lease.addr lease clr_map.addr_map)
 
   let addr_allocated addr db =
     Util.true_if_some @@ lease_of_addr addr db
