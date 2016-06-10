@@ -685,7 +685,8 @@ module Input = struct
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
         | Some reqip ->  (* check if the lease is actually his *)
-          let lease, fixed_lease = find_lease config client_id pkt.chaddr db ~now in
+          let lease, fixed_lease =
+            find_lease config client_id pkt.chaddr db ~now in
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
           | Some lease ->
@@ -781,7 +782,8 @@ module Input = struct
       else
         (match lease with
          | Some lease ->
-           if Lease.expired lease now && not (Lease.addr_available reqip db ~now) then
+           if Lease.expired lease now &&
+              not (Lease.addr_available reqip db ~now) then
              nak ~msg:"Lease has expired and address is taken" ()
            else if lease.Lease.addr <> reqip then
              nak ~msg:"Requested address is incorrect" ()
