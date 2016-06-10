@@ -138,7 +138,7 @@ module Input : sig
       sent back. [time] is a float representing time as in [Unix.time] or
       Mirage's [Clock.time]. *)
 
-  val collect_replies_test : Config.t -> Dhcp_wire.option_code list ->
+  val collect_replies_test : Dhcp_wire.dhcp_option list -> Dhcp_wire.option_code list ->
     Dhcp_wire.dhcp_option list
     (** Internal function exported for regression tests. Don't use this. *)
 

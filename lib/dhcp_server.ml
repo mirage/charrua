@@ -417,7 +417,7 @@ module Input = struct
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies (config : Config.t) preqs =
+  let collect_replies options preqs =
     (* Sort parameter requests to guarantee ordering. *)
     let preqs =
       List.sort
@@ -426,17 +426,17 @@ module Input = struct
     in
     let unassigned_options =
       List.filter (function Unassigned (_ ,_) -> true | _ -> false)
-        config.options
+        options
     in
     (* matches multiple options *)
     let m fn fnr =
-      match fn config.options with
+      match fn options with
       | [] -> None
       | l -> Some (fnr l)
     in
     (* matches the first single option *)
     let s fn fnr =
-      match fn config.options with
+      match fn options with
       | Some x -> Some (fnr x)
       | None -> None
     in
@@ -711,7 +711,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config preqs
+        | Some preqs -> collect_replies config.options preqs
         | None -> []
       in
       let pkt = make_reply config pkt
@@ -758,7 +758,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config preqs
+        | Some preqs -> collect_replies config.options preqs
         | None -> []
       in
       let reply = make_reply config pkt
@@ -884,7 +884,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config preqs
+        | Some preqs -> collect_replies config.options preqs
         | None -> []
       in
       let pkt = make_reply config pkt

@@ -140,7 +140,7 @@ let t_collect_replies () =
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1]
   in
   (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
-  let replies = Input.collect_replies_test config requests in
+  let replies = Input.collect_replies_test config.Config.options requests in
   assert ((List.length replies) = ((List.length requests) - 1));
   let () = match List.hd replies with
     | Subnet_mask _ -> ()
