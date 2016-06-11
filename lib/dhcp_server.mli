@@ -28,7 +28,7 @@ module Config : sig
     hostname : string;
     options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
-    hw_addr : Macaddr.t option;
+    hw_addr : Macaddr.t;
   }
   (** {! host} config section entry. *)
 

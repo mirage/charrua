@@ -179,5 +179,9 @@ host:
       | _ -> None)
       statements
   in
+  let hw_addr =
+    Util.some_or_f hw_addr
+                   (fun () -> choke "Missing hardware ethernet statement." )
+  in
   { Ast.hostname; options; fixed_addr; hw_addr }
 }

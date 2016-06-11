@@ -22,7 +22,7 @@ module Config = struct
     hostname : string;
     options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
-    hw_addr : Macaddr.t option;
+    hw_addr : Macaddr.t;
   } [@@deriving sexp]
 
   type t = {
@@ -333,10 +333,8 @@ module Input = struct
 
   let fixed_addr_of_mac config mac =
     Util.find_map
-      (fun host -> match host.hw_addr with
-         | Some hw_addr -> if hw_addr = mac then host.fixed_addr else None
-         | None         -> None)
-          config.hosts
+      (fun host -> if host.hw_addr = mac then host.fixed_addr else None)
+      config.hosts
 
   let find_lease config client_id mac db ~now =
     match (fixed_addr_of_mac config mac) with
