@@ -331,10 +331,18 @@ module Input = struct
     | Warning of string
     | Error of string
 
+  let host_of_mac config mac = Util.find_some @@
+    fun () -> List.find (fun host -> host.hw_addr = mac) config.hosts
+
   let fixed_addr_of_mac config mac =
-    Util.find_map
-      (fun host -> if host.hw_addr = mac then host.fixed_addr else None)
-      config.hosts
+    match host_of_mac config mac with
+    | Some host -> if host.hw_addr = mac then host.fixed_addr else None
+    | None -> None
+
+  let options_of_mac config mac =
+    match host_of_mac config mac with
+    | Some host -> host.options
+    | None -> []
 
   let find_lease config client_id mac db ~now =
     match (fixed_addr_of_mac config mac) with
@@ -415,7 +423,7 @@ module Input = struct
       true
 
   (* might be slow O(preqs * options) *)
-  let collect_replies options preqs =
+  let replies_of_options options preqs =
     (* Sort parameter requests to guarantee ordering. *)
     let preqs =
       List.sort
@@ -662,7 +670,12 @@ module Input = struct
     in
     Util.filter_map consider preqs
 
-  let collect_replies_test = collect_replies
+  let collect_replies config mac preqs =
+    match host_of_mac config mac with
+    | Some host -> replies_of_options (host.options @ config.options) preqs
+    | None -> replies_of_options config.options preqs
+
+  let replies_of_options_test = replies_of_options
 
   let input_decline_release config db pkt now =
     let open Util in
@@ -709,7 +722,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config.options preqs
+        | Some preqs -> collect_replies config pkt.chaddr preqs
         | None -> []
       in
       let pkt = make_reply config pkt
@@ -756,7 +769,7 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config.options preqs
+        | Some preqs -> collect_replies config pkt.chaddr preqs
         | None -> []
       in
       let reply = make_reply config pkt
@@ -882,7 +895,8 @@ module Input = struct
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config.options preqs
+        | Some preqs ->
+          collect_replies config pkt.chaddr preqs
         | None -> []
       in
       let pkt = make_reply config pkt
