@@ -752,7 +752,7 @@ type pkt = {
 
 (** Conversions for {! pkt}. *)
 
-val pkt_of_buf : Cstruct.t -> int -> [> `Error of string | `Ok of pkt ]
+val pkt_of_buf : Cstruct.t -> int -> (pkt, string) Result.result
 val buf_of_pkt : pkt -> Cstruct.t
 
 val pkt_of_sexp : Sexplib.Sexp.t -> pkt

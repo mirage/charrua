@@ -21,4 +21,6 @@ depends: [
   "menhir"
   "ipaddr"
   "tcpip"
+  "result"
+  "rresult"
 ]
