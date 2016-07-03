@@ -953,73 +953,52 @@ let buf_of_options sbuf options =
     set_uint8 ebuf 0 (option_code_to_int END); shift ebuf 1
 
 let pkt_of_buf buf len =
-  let wrap () =
-    let open Wire_structs in
-    let open Ipv4_wire in
-    let open Printf in
-    let min_len = sizeof_dhcp + sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
-    if len < min_len then
-      invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
-    (* Handle ethernet *)
-    let srcmac = Macaddr.of_bytes_exn (copy_ethernet_src buf) in
-    let dstmac = Macaddr.of_bytes_exn (copy_ethernet_dst buf) in
-    let () = if (get_ethernet_ethertype buf) <> 0x0800 then
-        invalid_arg (sprintf "packet is not ipv4: %d" (get_ethernet_ethertype buf));
-    in
-    let buf = Cstruct.shift buf sizeof_ethernet in
-    (* Handle IPv4 *)
-    let ihl = (get_ipv4_hlen_version buf land 0xf) * 4 in
-    let ipcsum = get_ipv4_csum buf in
-    let csum = Tcpip_checksum.ones_complement (Cstruct.sub buf 0 ihl) in
-    (* Some broken clients don't do ip checksum, accept if they send as zero *)
-    let () = if ipcsum <> 0 && csum <> 0 then
-        invalid_arg (sprintf "bad ip checksum: 0x%x" ipcsum)
-    in
-    let () = if (get_ipv4_proto buf) <> 17 then
-        invalid_arg (sprintf "packet is not udp: %d" (get_ipv4_proto buf));
-    in
-    let srcip = Ipaddr.V4.of_int32 (get_ipv4_src buf) in
-    let dstip = Ipaddr.V4.of_int32 (get_ipv4_dst buf) in
-    let buf = Cstruct.shift buf ihl in
-    (* Handle UDP *)
-    let srcport = get_udp_source_port buf in
-    let dstport = get_udp_dest_port buf in
-    let buf = Cstruct.shift buf sizeof_udp in
-    (* Get the DHCP stuff *)
-    let op = int_to_op_exn (get_dhcp_op buf) in
-    let htype = if (get_dhcp_htype buf) = 1 then Ethernet_10mb else Other in
-    let hlen = get_dhcp_hlen buf in
-    let hops = get_dhcp_hops buf in
-    let xid = get_dhcp_xid buf in
-    let secs = get_dhcp_secs buf in
-    let flags =
-      if ((get_dhcp_flags buf) land 0x8000) <> 0 then Broadcast else Unicast
-    in
-    let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr buf) in
-    let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf) in
-    let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf) in
-    let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf) in
-    let chaddr =
+  let open Rresult in
+  let open Printf in
+  let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp in
+  if len < min_len then
+    invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
+  (* Handle ethernet *)
+  Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+  match eth_header.ethertype with
+  | Ethif_wire.ARP | Ethif_wire.IPv6 -> invalid_arg "packet is not ipv4"
+  | Ethif_wire.IPv4 ->
+    Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
+    (* TODO: tcpip doesn't currently do checksum checking, so we lose some
+       functionality by making this change *)
+    match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.proto with
+    | Some `ICMP | Some `TCP | None -> invalid_arg "packet is not udp"
+    | Some `UDP ->
+      Udp_packet.Unmarshal.of_cstruct ipv4_payload >>= fun (udp_header, udp_payload) ->
+      let op = int_to_op_exn (get_dhcp_op udp_payload) in
+      let htype = if (get_dhcp_htype udp_payload) = 1 then Ethernet_10mb else Other in
+      let hlen = get_dhcp_hlen udp_payload in
+      let hops = get_dhcp_hops udp_payload in
+      let xid = get_dhcp_xid udp_payload in
+      let secs = get_dhcp_secs udp_payload in
+      let flags =
+        if ((get_dhcp_flags buf) land 0x8000) <> 0 then Broadcast else Unicast
+      in
+      let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr udp_payload) in
+      let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
+      let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr udp_payload) in
+      let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
+      let chaddr =
         if htype = Ethernet_10mb && hlen = 6 then
-          Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr buf) 0 6)
+          Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6)
         else
           invalid_arg "Not a mac address."
-    in
-    let sname = Util.cstruct_copy_normalized copy_dhcp_sname buf in
-    let file = Util.cstruct_copy_normalized copy_dhcp_file buf in
-    let options = options_of_buf buf len in
-    { srcmac; dstmac; srcip; dstip; srcport; dstport;
-      op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
-      siaddr; giaddr; chaddr; sname; file; options }
-  in
-  try
-    `Ok (wrap ())
-  with
-    Invalid_argument e -> `Error e
+      in
+      let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
+      let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
+      let options = options_of_buf udp_payload len in
+      Result.Ok { srcmac = eth_header.source; dstmac = eth_header.destination;
+        srcip = ipv4_header.src; dstip = ipv4_header.dst;
+        srcport = udp_header.src_port; dstport = udp_header.dst_port;
+        op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
+        siaddr; giaddr; chaddr; sname; file; options }
 
 let buf_of_pkt pkt =
-  let open Wire_structs in
-  let open Ipv4_wire in
   let dhcp = Cstruct.create 2048 in
   set_dhcp_op dhcp (op_to_int pkt.op);
   set_dhcp_htype dhcp
@@ -1057,60 +1036,43 @@ let buf_of_pkt pkt =
   in
   let dhcp = Cstruct.set_len dhcp ((Cstruct.len dhcp) - (Cstruct.len buf_end)) in
   (* Ethernet *)
-  let ethernet = Cstruct.create 14 in
-  set_ethernet_src (Macaddr.to_bytes pkt.srcmac) 0 ethernet;
-  set_ethernet_dst (Macaddr.to_bytes pkt.dstmac) 0 ethernet;
-  set_ethernet_ethertype ethernet 0x0800;
+  let ethernet = Ethif_packet.(Marshal.make_cstruct { source = pkt.srcmac;
+                                                      destination = pkt.dstmac;
+                                                      ethertype =
+                                                        Ethif_wire.IPv4; }) in
   (* IPv4 *)
-  let ip = Cstruct.create 20 in
-  set_ipv4_hlen_version ip 0x45;
-  set_ipv4_tos ip 0;
-  set_ipv4_len ip (20 + 8 + (Cstruct.len dhcp)); (* ipv4 + udp + dhcp *)
-  set_ipv4_id ip (Random.int 65535);
-  set_ipv4_off ip 0;
-  set_ipv4_ttl ip 255;
-  set_ipv4_proto ip 17; (* UDP *)
-  set_ipv4_src ip (Ipaddr.V4.to_int32 pkt.srcip);
-  set_ipv4_dst ip (Ipaddr.V4.to_int32 pkt.dstip);
-  set_ipv4_csum ip 0;
-  let csum = Tcpip_checksum.ones_complement (Cstruct.sub ip 0 sizeof_ipv4) in
-  set_ipv4_csum ip csum;
+  let pseudoheader = Ipv4_packet.Marshal.pseudoheader ~src:pkt.srcip ~dst:pkt.dstip ~proto:`UDP
+      (Udp_wire.sizeof_udp + Cstruct.len dhcp) in
   (* UDP *)
-  let udp = Cstruct.create 8 in
-  set_udp_source_port udp pkt.srcport;
-  set_udp_dest_port udp pkt.dstport;
-  set_udp_length udp ((Cstruct.len dhcp) + 8);
-  (* UDP checksum pseudo header *)
-  let pbuf = Cstruct.create 4 in
-  Cstruct.set_uint8 pbuf 0 0;
-  Cstruct.set_uint8 pbuf 1 17;
-  Cstruct.BE.set_uint16 pbuf 2 ((Cstruct.len udp) + (Cstruct.len dhcp));
-  let src_dst = Cstruct.sub ip 12 (2 * 4) in
-  set_udp_checksum udp 0;
-  let udp_csum = Tcpip_checksum.ones_complement_list (src_dst :: pbuf :: udp :: dhcp :: []) in
-  set_udp_checksum udp udp_csum;
+  let udp = Udp_packet.(Marshal.make_cstruct ~pseudoheader ~payload:dhcp
+                          { src_port = pkt.srcport; dst_port = pkt.dstport }) in
+  let ip = Ipv4_packet.(Marshal.make_cstruct ~payload:(Cstruct.concat [udp;dhcp])
+                                               { src = pkt.srcip; dst = pkt.dstip;
+                                               proto = (Marshal.protocol_to_int `UDP);
+                                               ttl = 255;
+                                               options = Cstruct.create 0; }) in
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
 let is_dhcp buf len =
-  let open Wire_structs in
-  match (parse_ethernet_frame buf) with
-  | Some (proto, destination, buf) ->
-    let ihl = (Ipv4_wire.get_ipv4_hlen_version buf land 0xf) * 4 in
-    let payload_len = Ipv4_wire.get_ipv4_len buf - ihl in
-    let hdr, data = Cstruct.split buf ihl in
-    if Cstruct.len data >= payload_len then
-      let data = Cstruct.sub data 0 payload_len in
-      let proto = Ipv4_wire.get_ipv4_proto buf in
-      match Ipv4_wire.int_to_protocol proto with
-      | Some `UDP  ->
-        let srcport = get_udp_source_port data in
-        let dstport = get_udp_dest_port data in
-        (dstport = server_port || dstport = client_port) &&
-        (srcport = server_port || srcport = client_port)
-      | _ -> false
-    else
-      false
-  | _ -> false
+  let open Rresult in
+  let aux buf =
+    Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    match eth_header.ethertype with
+    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Result.Ok false
+    | Ethif_wire.IPv4 ->
+      Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
+      (* TODO: tcpip doesn't currently do checksum checking, so we lose some
+         functionality by making this change *)
+      match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.proto with
+      | Some `ICMP | Some `TCP | None -> Result.Ok false
+      | Some `UDP ->
+        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>= fun (udp_header, udp_payload) ->
+        Result.Ok ((udp_header.dst_port = server_port || udp_header.dst_port = client_port) &&
+                   (udp_header.src_port = server_port || udp_header.src_port = client_port))
+  in
+  match aux buf with
+  | Result.Ok b -> b
+  | Result.Error _ -> false
 
 let find_option f options = Util.find_map f options
 
