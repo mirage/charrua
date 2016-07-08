@@ -35,6 +35,7 @@ let ip3_t = Ipaddr.V4.of_string_exn "192.168.1.3"
 let ip4_t = Ipaddr.V4.of_string_exn "192.168.1.4"
 let ip5_t = Ipaddr.V4.of_string_exn "192.168.1.5"
 let ip55_t = Ipaddr.V4.of_string_exn "192.168.1.55"
+let ip150_t = Ipaddr.V4.of_string_exn "192.168.1.150"
 let mac_t = Macaddr.of_string_exn "aa:aa:aa:aa:aa:aa"
 let mac2_t = Macaddr.of_string_exn "bb:bb:bb:bb:bb:bb"
 let mask_t = Ipaddr.V4.of_string_exn "255.255.255.0"
@@ -188,7 +189,6 @@ let t_host_options () =
   let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1; LOG_SERVERS]
   in
-  (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
   let replies = Dhcp_server.Input.collect_replies_test config mac_t requests in
   assert ((collect_routers replies) = [ip3_t; ip5_t; ip_t; ip2_t]);
   assert ((collect_dns_servers replies) = [ip4_t; ip_t]);
@@ -197,8 +197,17 @@ let t_host_options () =
   assert ((find_data_source replies) = None);
   assert ((find_max_message replies) = (Some 1400))
 
-let t_discover () =
-  let config = make_simple_config ~hosts:[]
+let t_discover fixed =
+  let open Dhcp_server.Config in
+  let host = {
+      hostname = "bubbles.trailer.park.boys";
+      options = [];
+      fixed_addr = Some ip150_t;
+      hw_addr = mac_t
+    }
+  in
+  let hosts = if fixed then [host] else [] in
+  let config = make_simple_config ~hosts:hosts
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
@@ -262,7 +271,10 @@ let t_discover () =
     assert (reply.ciaddr = Ipaddr.V4.any);
     assert (reply.yiaddr <> Ipaddr.V4.any);
     assert (reply.yiaddr = reply.dstip);
-    assert (Util.addr_in_range reply.yiaddr range_t);
+    if fixed then
+      assert (reply.yiaddr = ip150_t)
+    else
+      assert (Util.addr_in_range reply.yiaddr range_t);
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
@@ -281,6 +293,9 @@ let t_discover () =
     if verbose then
       printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
   | _ -> failwith "No reply"
+
+let t_discover_range () = t_discover false
+let t_discover_fixed () = t_discover true
 
 let t_bad_discover () =
   let config = make_simple_config ~hosts:[]
@@ -483,7 +498,7 @@ let t_request () =
 let run_test test =
   let f = fst test in
   let name = snd test in
-  printf "%s %-27s%!" (blue "%s" "Test") (yellow "%s" name);
+  printf "%s %-33s%!" (blue "%s" "Test") (yellow "%s" name);
   let () = try f () with
       exn -> printf "%s\n%!" (red "failed");
       raise exn
@@ -498,7 +513,8 @@ let all_tests = [
   (t_bad_junk_padding_config, "padding in opts");
   (t_collect_replies, "collect replies");
   (t_host_options, "host options");
-  (t_discover, "discover->offer");
+  (t_discover_range, "discover->offer");
+  (t_discover_fixed, "discover->offer fixed");
   (t_bad_discover, "wrong mac address");
   (t_request, "request->ack/nak");
 ]
