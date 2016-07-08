@@ -955,23 +955,31 @@ let buf_of_options sbuf options =
 let pkt_of_buf buf len =
   let open Rresult in
   let open Printf in
-  let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp in
+  let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
+                Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
+  in
   if len < min_len then
     invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
   (* Handle ethernet *)
   Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
-  match eth_header.ethertype with
+  match eth_header.Ethif_packet.ethertype with
   | Ethif_wire.ARP | Ethif_wire.IPv6 -> invalid_arg "packet is not ipv4"
   | Ethif_wire.IPv4 ->
-    Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
+    Ipv4_packet.Unmarshal.of_cstruct eth_payload
+    >>= fun (ipv4_header, ipv4_payload) ->
     (* TODO: tcpip doesn't currently do checksum checking, so we lose some
        functionality by making this change *)
-    match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.proto with
+    match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
     | Some `ICMP | Some `TCP | None -> invalid_arg "packet is not udp"
     | Some `UDP ->
-      Udp_packet.Unmarshal.of_cstruct ipv4_payload >>= fun (udp_header, udp_payload) ->
+      Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
+      fun (udp_header, udp_payload) ->
       let op = int_to_op_exn (get_dhcp_op udp_payload) in
-      let htype = if (get_dhcp_htype udp_payload) = 1 then Ethernet_10mb else Other in
+      let htype = if (get_dhcp_htype udp_payload) = 1 then
+          Ethernet_10mb
+        else
+          Other
+      in
       let hlen = get_dhcp_hlen udp_payload in
       let hops = get_dhcp_hops udp_payload in
       let xid = get_dhcp_xid udp_payload in
@@ -992,11 +1000,14 @@ let pkt_of_buf buf len =
       let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
       let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
       let options = options_of_buf udp_payload len in
-      Result.Ok { srcmac = eth_header.source; dstmac = eth_header.destination;
-        srcip = ipv4_header.src; dstip = ipv4_header.dst;
-        srcport = udp_header.src_port; dstport = udp_header.dst_port;
-        op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
-        siaddr; giaddr; chaddr; sname; file; options }
+      Result.Ok { srcmac = eth_header.Ethif_packet.source;
+                  dstmac = eth_header.Ethif_packet.destination;
+                  srcip = ipv4_header.Ipv4_packet.src;
+                  dstip = ipv4_header.Ipv4_packet.dst;
+                  srcport = udp_header.Udp_packet.src_port;
+                  dstport = udp_header.Udp_packet.dst_port;
+                  op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
+                  siaddr; giaddr; chaddr; sname; file; options }
 
 let buf_of_pkt pkt =
   let dhcp = Cstruct.create 2048 in
@@ -1036,39 +1047,49 @@ let buf_of_pkt pkt =
   in
   let dhcp = Cstruct.set_len dhcp ((Cstruct.len dhcp) - (Cstruct.len buf_end)) in
   (* Ethernet *)
-  let ethernet = Ethif_packet.(Marshal.make_cstruct { source = pkt.srcmac;
-                                                      destination = pkt.dstmac;
-                                                      ethertype =
-                                                        Ethif_wire.IPv4; }) in
+  let ethernet = Ethif_packet.(Marshal.make_cstruct
+                                 { source = pkt.srcmac;
+                                   destination = pkt.dstmac;
+                                   ethertype = Ethif_wire.IPv4; })
+  in
   (* IPv4 *)
-  let pseudoheader = Ipv4_packet.Marshal.pseudoheader ~src:pkt.srcip ~dst:pkt.dstip ~proto:`UDP
-      (Udp_wire.sizeof_udp + Cstruct.len dhcp) in
+  let pseudoheader = Ipv4_packet.Marshal.pseudoheader
+      ~src:pkt.srcip ~dst:pkt.dstip ~proto:`UDP
+      (Udp_wire.sizeof_udp + Cstruct.len dhcp)
+  in
   (* UDP *)
   let udp = Udp_packet.(Marshal.make_cstruct ~pseudoheader ~payload:dhcp
-                          { src_port = pkt.srcport; dst_port = pkt.dstport }) in
+                          { src_port = pkt.srcport;
+                            dst_port = pkt.dstport })
+  in
   let ip = Ipv4_packet.(Marshal.make_cstruct ~payload:(Cstruct.concat [udp;dhcp])
-                                               { src = pkt.srcip; dst = pkt.dstip;
-                                               proto = (Marshal.protocol_to_int `UDP);
-                                               ttl = 255;
-                                               options = Cstruct.create 0; }) in
+                          { src = pkt.srcip; dst = pkt.dstip;
+                            proto = (Marshal.protocol_to_int `UDP);
+                            ttl = 255;
+                            options = Cstruct.create 0; })
+  in
   Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
 
 let is_dhcp buf len =
   let open Rresult in
   let aux buf =
     Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
-    match eth_header.ethertype with
+    match eth_header.Ethif_packet.ethertype with
     | Ethif_wire.ARP | Ethif_wire.IPv6 -> Result.Ok false
     | Ethif_wire.IPv4 ->
       Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
       (* TODO: tcpip doesn't currently do checksum checking, so we lose some
          functionality by making this change *)
-      match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.proto with
+      match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Result.Ok false
       | Some `UDP ->
-        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>= fun (udp_header, udp_payload) ->
-        Result.Ok ((udp_header.dst_port = server_port || udp_header.dst_port = client_port) &&
-                   (udp_header.src_port = server_port || udp_header.src_port = client_port))
+        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
+        fun (udp_header, udp_payload) ->
+        Result.Ok ((udp_header.Udp_packet.dst_port = server_port ||
+                    udp_header.Udp_packet.dst_port = client_port)
+                   &&
+                   (udp_header.Udp_packet.src_port = server_port ||
+                    udp_header.Udp_packet.src_port = client_port))
   in
   match aux buf with
   | Result.Ok b -> b
