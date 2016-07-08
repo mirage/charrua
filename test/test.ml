@@ -32,6 +32,8 @@ let blue fmt   = colored_or_not ("\027[36m"^^fmt^^"\027[m") fmt
 let ip_t = Ipaddr.V4.of_string_exn "192.168.1.1"
 let ip2_t = Ipaddr.V4.of_string_exn "192.168.1.2"
 let ip3_t = Ipaddr.V4.of_string_exn "192.168.1.3"
+let ip4_t = Ipaddr.V4.of_string_exn "192.168.1.4"
+let ip5_t = Ipaddr.V4.of_string_exn "192.168.1.5"
 let ip55_t = Ipaddr.V4.of_string_exn "192.168.1.55"
 let mac_t = Macaddr.of_string_exn "aa:aa:aa:aa:aa:aa"
 let mac2_t = Macaddr.of_string_exn "bb:bb:bb:bb:bb:bb"
@@ -53,7 +55,6 @@ let make_simple_config =
     ~hostname:"Duder DHCP server!"
     ~default_lease_time:(60 * 60 * 1)
     ~max_lease_time:(60 * 60 * 10)
-    ~hosts:[]
     ~addr_tuple:(ip_t, mac_t)
     ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
     ~range:range_t
@@ -73,10 +74,10 @@ let assert_timers options =
   | Some x -> assert (x = Int32.of_int 2880)
 
 let t_simple_config () =
-  let config = make_simple_config ~options:[] in
+  let config = make_simple_config ~hosts:[] ~options:[] in
   assert ((List.length config.Config.options) = 1);
 
-  let config = make_simple_config ~options:[Routers [ip_t; ip2_t]; ] in
+  let config = make_simple_config ~hosts:[] ~options:[Routers [ip_t; ip2_t]; ] in
   assert ((List.length config.Config.options) = 2);
   match List.hd config.Config.options with
   | Subnet_mask _ -> ()
@@ -84,7 +85,7 @@ let t_simple_config () =
 
 let t_bad_options () =
   let ok = try
-      ignore @@ make_simple_config
+      ignore @@ make_simple_config ~hosts:[]
         ~options:[Renewal_t1 Int32.max_int];
       false
     with
@@ -93,7 +94,7 @@ let t_bad_options () =
   if not ok then
     failwith "user cannot request renewal via options";
   let ok = try
-      ignore @@ make_simple_config
+      ignore @@ make_simple_config ~hosts:[]
         ~options:[Rebinding_t2 Int32.max_int];
       false
     with
@@ -102,7 +103,7 @@ let t_bad_options () =
   if not ok then
     failwith "user cannot request rebinding via options";
   let ok = try
-      ignore @@ make_simple_config
+      ignore @@ make_simple_config ~hosts:[]
         ~options:[Ip_lease_time Int32.max_int];
       false
     with
@@ -114,7 +115,7 @@ let t_bad_options () =
 
 let t_bad_junk_padding_config () =
   let ok = try
-      ignore @@ make_simple_config ~options:[
+      ignore @@ make_simple_config ~hosts:[] ~options:[
         Subnet_mask mask_t;
         End; (* Should not allow end in configuration *)
         Pad; (* Should not allow pad in configuration *)
@@ -128,7 +129,7 @@ let t_bad_junk_padding_config () =
     failwith "can't insert padding and random numbers via options"
 
 let t_collect_replies () =
-  let config = make_simple_config
+  let config = make_simple_config ~hosts:[]
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "wololo";
@@ -140,7 +141,7 @@ let t_collect_replies () =
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1]
   in
   (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
-  let replies = Input.replies_of_options_test config.Config.options requests in
+  let replies = Dhcp_server.Input.collect_replies_test config mac_t requests in
   assert ((List.length replies) = ((List.length requests) - 1));
   let () = match List.hd replies with
     | Subnet_mask _ -> ()
@@ -151,10 +152,53 @@ let t_collect_replies () =
     | Url _ -> ()
     | _ -> failwith "Url expected to be last"
   in
-  assert ((collect_routers replies) = [ip_t; ip2_t])
+  assert ((collect_routers replies) = [ip_t; ip2_t]);
+  assert ((collect_dns_servers replies) = [ip_t]);
+  assert ((find_domain_name replies) = Some "wololo");
+  assert ((find_url replies) = Some "url");
+  assert ((collect_pop3_servers replies) = [ip_t; ip2_t]);
+  assert ((find_max_message replies) = Some 1200)
+
+let t_host_options () =
+  let open Dhcp_server.Config in
+  let host = {
+      hostname = "bubbles.trailer.park.boys";
+      options = [
+          Dns_servers [ip4_t];
+          Routers [ip3_t];
+          Dns_servers [];       (* Must be ignored *)
+          Max_message 1400;
+          Routers [ip5_t];
+          Log_servers [ip5_t];
+          Irc_servers [ip_t];   (* Won't ask must not be present *)
+          Data_source 3;        (* Won't ask must not be present *)
+        ];
+      fixed_addr = None;
+      hw_addr = mac_t
+    }
+  in
+  let config = make_simple_config ~hosts:[host]
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "wololo";
+                Url "url";
+                Pop3_servers [ip_t; ip2_t];
+                Max_message 1200];
+  in
+  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+                  POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1; LOG_SERVERS]
+  in
+  (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
+  let replies = Dhcp_server.Input.collect_replies_test config mac_t requests in
+  assert ((collect_routers replies) = [ip3_t; ip5_t; ip_t; ip2_t]);
+  assert ((collect_dns_servers replies) = [ip4_t; ip_t]);
+  assert ((collect_log_servers replies) = [ip5_t]);
+  assert ((collect_irc_servers replies) = []);
+  assert ((find_data_source replies) = None);
+  assert ((find_max_message replies) = (Some 1400))
 
 let t_discover () =
-  let config = make_simple_config
+  let config = make_simple_config ~hosts:[]
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
@@ -239,7 +283,7 @@ let t_discover () =
   | _ -> failwith "No reply"
 
 let t_bad_discover () =
-  let config = make_simple_config
+  let config = make_simple_config ~hosts:[]
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "The Dude";
@@ -286,7 +330,7 @@ let t_bad_discover () =
 
 let t_request () =
   let now = Unix.time () in
-  let config = make_simple_config
+  let config = make_simple_config ~hosts:[]
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
@@ -453,6 +497,7 @@ let all_tests = [
   (t_bad_options, "renewal_t in opts");
   (t_bad_junk_padding_config, "padding in opts");
   (t_collect_replies, "collect replies");
+  (t_host_options, "host options");
   (t_discover, "discover->offer");
   (t_bad_discover, "wrong mac address");
   (t_request, "request->ack/nak");

@@ -675,7 +675,7 @@ module Input = struct
     | Some host -> replies_of_options (host.options @ config.options) preqs
     | None -> replies_of_options config.options preqs
 
-  let replies_of_options_test = replies_of_options
+  let collect_replies_test = collect_replies
 
   let input_decline_release config db pkt now =
     let open Util in
