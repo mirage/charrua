@@ -15,7 +15,7 @@ server based on charrua-core.
 [mirage](https://github.com/mirage/mirage-skeleton/tree/master/dhcp) is a Mirage
 DHCP unikernel server based on charrua-core.
 
-You can browse the API for [charrua-core] at
+You can browse the API for [charrua-core](http://www.github.com/haesbaert/charrua-core) at
 http://haesbaert.github.io/charrua-core/api
 
 #### Features
@@ -36,3 +36,12 @@ southern South America.
 
 This project became one of the [Mirage Pioneer]
 (https://github.com/mirage/mirage-www/wiki/Pioneer-Projects) projects.
+
+The master branch depends on upcoming mirage 2.9 at this point, if you want to
+use it, you'll have to add the mirage development branch to opam:
+
+```
+opam remote add mirage-dev https://github.com/mirage/mirage-dev.git
+opam update
+opam upgrade
+```
