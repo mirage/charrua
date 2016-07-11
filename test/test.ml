@@ -469,123 +469,6 @@ let request_nak_pkt = {
   ]
 }
 
-let t_request () =
-  let now = Unix.time () in
-  let config = make_simple_config ~hosts:[]
-      ~options:[Routers [ip_t; ip2_t];
-                Dns_servers [ip_t];
-                Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
-                Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
-               ]
-  in
-  let request = {
-    srcmac = mac2_t;
-    dstmac = mac_t;
-    srcip = Ipaddr.V4.any;
-    dstip = Ipaddr.V4.broadcast;
-    srcport = client_port;
-    dstport = server_port;
-    op = BOOTREQUEST;
-    htype = Ethernet_10mb;
-    hlen = 6;
-    hops = 0;
-    xid = Int32.of_int 0xabacabb;
-    secs = 0;
-    flags = Broadcast;          (* Request a broadcast answer *)
-    ciaddr = Ipaddr.V4.any;
-    yiaddr = Ipaddr.V4.any;
-    siaddr = Ipaddr.V4.any;
-    giaddr = Ipaddr.V4.any;
-    chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
-    options = [
-      Message_type DHCPREQUEST;
-      Client_id (Id "W.Sobchak");
-      Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
-        POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
-      ];
-      Request_ip ip55_t;
-      Server_identifier ip_t;
-    ]
-  }
-  in
-  if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
-  let db =
-    match Input.input_pkt config (Lease.make_db ()) request now with
-    | Input.Reply (reply, db) ->
-      (* Check if our new lease is there *)
-      assert (db <> (Lease.make_db ()));
-      let () =
-        match Lease.lease_of_client_id (Id "W.Sobchak") db with
-        | None -> failwith "Lease not found";
-        | Some l ->
-          let open Dhcp_server.Lease in
-          assert (l.client_id = (Id "W.Sobchak"));
-          assert (not (expired l now));
-          assert (l.tm_start <= (Int32.of_float now));
-          assert (l.tm_end >= (Int32.of_float now));
-          assert ((Lease.timeleft l now) <= (Int32.of_int 3600));
-          assert ((Lease.timeleft l now) >= (Int32.of_int 3599));
-      in
-      assert (reply.srcmac = mac_t);
-      assert (reply.dstmac = Macaddr.broadcast);
-      assert (reply.srcip = ip_t);
-      assert (reply.dstip = Ipaddr.V4.broadcast);
-      assert (reply.srcport = server_port);
-      assert (reply.dstport = client_port);
-      assert (reply.op = BOOTREPLY);
-      assert (reply.htype = Ethernet_10mb);
-      assert (reply.hlen = 6);
-      assert (reply.hops = 0);
-      assert (reply.xid = Int32.of_int 0xabacabb);
-      assert (reply.secs = 0);
-      assert (reply.flags = Broadcast); (* Not required by RFC2131 section 4.1 *)
-      assert (reply.ciaddr = Ipaddr.V4.any);
-      assert (reply.yiaddr <> Ipaddr.V4.any);
-      assert (Util.addr_in_range reply.yiaddr range_t);
-      assert (reply.siaddr = ip_t);
-      assert (reply.giaddr = Ipaddr.V4.any);
-      assert (reply.sname = "Duder DHCP server!");
-      assert (reply.file = Bytes.empty);
-      (* 5 options are included regardless of parameter requests. *)
-      assert ((List.length reply.options) = (5 + 6));
-      let () = match List.hd reply.options with
-        | Message_type x -> assert (x = DHCPACK);
-        | _ -> failwith "First option is not Message_type"
-      in
-      assert_timers reply.options;
-      (* Server identifier must be there. *)
-      assert (List.exists (function Server_identifier _ -> true | _ -> false)
-          reply.options);
-      (* Check if both router options are present, and the order matches *)
-      let routers = collect_routers reply.options in
-      assert ((List.length routers) = 2);
-      assert ((List.hd routers) = ip_t);
-      if verbose then
-        printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply);
-      db
-    | _ -> failwith "No reply"
-  in
-
-  (* Build a second request from a different client, we should get a NAK. *)
-  let request = request_nak_pkt in
-  match Input.input_pkt config db request now with
-  | Input.Reply (reply, odb) ->
-    assert (db = odb);
-    assert ((List.length reply.options) = 4);
-    let () = match List.hd reply.options with
-      | Message_type x -> assert (x = DHCPNAK);
-      | _ -> failwith "First option is not Message_type"
-    in
-    if verbose then
-      printf "%s\n%s\n%!" (yellow "<<NAK>>") (pkt_to_string reply);
-  | _ -> failwith "No reply"
 
 let t_request_fixed () =
   let open Dhcp_server.Config in
@@ -705,6 +588,192 @@ let t_request_fixed () =
       printf "%s\n%s\n%!" (yellow "<<NAK>>") (pkt_to_string reply);
   | _ -> failwith "No reply"
 
+let t_request () =
+  let now = Unix.time () in
+  let config = make_simple_config ~hosts:[]
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "Shut up Donnie !";
+                Url "Fucking Quintana man, that creep can roll...";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
+  in
+  let request = {
+    srcmac = mac2_t;
+    dstmac = mac_t;
+    srcip = Ipaddr.V4.any;
+    dstip = Ipaddr.V4.broadcast;
+    srcport = client_port;
+    dstport = server_port;
+    op = BOOTREQUEST;
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = Int32.of_int 0xabacabb;
+    secs = 0;
+    flags = Broadcast;          (* Request a broadcast answer *)
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    siaddr = Ipaddr.V4.any;
+    giaddr = Ipaddr.V4.any;
+    chaddr = mac_t;
+    sname = Bytes.empty;
+    file = Bytes.empty;
+    options = [
+      Message_type DHCPREQUEST;
+      Client_id (Id "W.Sobchak");
+      Parameter_requests [
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
+        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+      ];
+      Request_ip ip55_t;
+      Server_identifier ip_t;
+    ]
+  }
+  in
+  if verbose then
+    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+  let db =
+    match Input.input_pkt config (Lease.make_db ()) request now with
+    | Input.Reply (reply, db) ->
+      (* Check if our new lease is there *)
+      assert (db <> (Lease.make_db ()));
+      let () =
+        match Lease.lease_of_client_id (Id "W.Sobchak") db with
+        | None -> failwith "Lease not found";
+        | Some l ->
+          let open Dhcp_server.Lease in
+          assert (l.client_id = (Id "W.Sobchak"));
+          assert (not (expired l now));
+          assert (l.tm_start <= (Int32.of_float now));
+          assert (l.tm_end >= (Int32.of_float now));
+          assert ((Lease.timeleft l now) <= (Int32.of_int 3600));
+          assert ((Lease.timeleft l now) >= (Int32.of_int 3599));
+      in
+      assert (reply.srcmac = mac_t);
+      assert (reply.dstmac = Macaddr.broadcast);
+      assert (reply.srcip = ip_t);
+      assert (reply.dstip = Ipaddr.V4.broadcast);
+      assert (reply.srcport = server_port);
+      assert (reply.dstport = client_port);
+      assert (reply.op = BOOTREPLY);
+      assert (reply.htype = Ethernet_10mb);
+      assert (reply.hlen = 6);
+      assert (reply.hops = 0);
+      assert (reply.xid = Int32.of_int 0xabacabb);
+      assert (reply.secs = 0);
+      assert (reply.flags = Broadcast); (* Not required by RFC2131 section 4.1 *)
+      assert (reply.ciaddr = Ipaddr.V4.any);
+      assert (reply.yiaddr <> Ipaddr.V4.any);
+      assert (Util.addr_in_range reply.yiaddr range_t);
+      assert (reply.siaddr = ip_t);
+      assert (reply.giaddr = Ipaddr.V4.any);
+      assert (reply.sname = "Duder DHCP server!");
+      assert (reply.file = Bytes.empty);
+      (* 5 options are included regardless of parameter requests. *)
+      assert ((List.length reply.options) = (5 + 6));
+      let () = match List.hd reply.options with
+        | Message_type x -> assert (x = DHCPACK);
+        | _ -> failwith "First option is not Message_type"
+      in
+      assert_timers reply.options;
+      (* Server identifier must be there. *)
+      assert (List.exists (function Server_identifier _ -> true | _ -> false)
+          reply.options);
+      (* Check if both router options are present, and the order matches *)
+      let routers = collect_routers reply.options in
+      assert ((List.length routers) = 2);
+      assert ((List.hd routers) = ip_t);
+      if verbose then
+        printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply);
+      db
+    | _ -> failwith "No reply"
+  in
+
+  (* Build a second request from a different client, we should get a NAK. *)
+  let request = request_nak_pkt in
+  match Input.input_pkt config db request now with
+  | Input.Reply (reply, odb) ->
+    assert (db = odb);
+    assert ((List.length reply.options) = 4);
+    let () = match List.hd reply.options with
+      | Message_type x -> assert (x = DHCPNAK);
+      | _ -> failwith "First option is not Message_type"
+    in
+    if verbose then
+      printf "%s\n%s\n%!" (yellow "<<NAK>>") (pkt_to_string reply);
+  | _ -> failwith "No reply"
+
+let t_request_no_range () =
+  let open Dhcp_server.Config in
+  let now = Unix.time () in
+  let config = Config.make
+      ~hostname:"Duder DHCP server!"
+      ~default_lease_time:(60 * 60 * 1)
+      ~max_lease_time:(60 * 60 * 10)
+      ~addr_tuple:(ip_t, mac_t)
+      ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
+      ~hosts:[]
+      ~range:None
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "Shut up Donnie !";
+                Url "Fucking Quintana man, that creep can roll...";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
+  in
+  let request = {
+    srcmac = mac2_t;
+    dstmac = mac_t;
+    srcip = Ipaddr.V4.any;
+    dstip = Ipaddr.V4.broadcast;
+    srcport = client_port;
+    dstport = server_port;
+    op = BOOTREQUEST;
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = Int32.of_int 0xabacabb;
+    secs = 0;
+    flags = Broadcast;          (* Request a broadcast answer *)
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    siaddr = Ipaddr.V4.any;
+    giaddr = Ipaddr.V4.any;
+    chaddr = mac_t;
+    sname = Bytes.empty;
+    file = Bytes.empty;
+    options = [
+      Message_type DHCPREQUEST;
+      Client_id (Id "W.Sobchak");
+      Parameter_requests [
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
+        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+      ];
+      Request_ip ip55_t;
+      Server_identifier ip_t;
+    ]
+  }
+  in
+  if verbose then
+    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+  match Input.input_pkt config (Lease.make_db ()) request now with
+  | Dhcp_server.Input.Reply (reply, db) ->
+    assert (db = (Lease.make_db ()));
+    assert ((List.length reply.options) = 4);
+    let () = match List.hd reply.options with
+      | Message_type x -> assert (x = DHCPNAK);
+      | _ -> failwith "First option is not Message_type"
+    in
+    let () = match find_message reply.options with
+      | None -> failwith "No nice message for NAK"
+      | Some m -> assert (m = "Requested address is not in subnet range")
+    in ()
+  | _ -> failwith "Unexpected reply"
 
 let run_test test =
   let f = fst test in
@@ -731,6 +800,7 @@ let all_tests = [
   (t_bad_discover, "wrong mac address");
   (t_request, "request->ack/nak");
   (t_request_fixed, "request->ack/nak fixed");
+  (t_request_no_range, "request->ack/nak no range");
 ]
 
 let _ =
