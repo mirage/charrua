@@ -784,8 +784,8 @@ module Input = struct
           ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      assert (lease.Lease.client_id = client_id);
       if not fixed_lease then
+        let () = assert (lease.Lease.client_id = client_id) in
         Reply (reply, Lease.replace lease db)
       else
         Reply (reply, db)
