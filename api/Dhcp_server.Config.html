@@ -46,7 +46,7 @@
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELThost.hw_addr">hw_addr</span>&nbsp;: <code class="type">Macaddr.t option</code>;</code></td>
+<code><span id="TYPEELThost.hw_addr">hw_addr</span>&nbsp;: <code class="type">Macaddr.t</code>;</code></td>
 
 </tr></table>
 }
@@ -112,7 +112,7 @@
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.range">range</span>&nbsp;: <code class="type">Ipaddr.V4.t * Ipaddr.V4.t</code>;</code></td>
+<code><span id="TYPEELTt.range">range</span>&nbsp;: <code class="type">(Ipaddr.V4.t * Ipaddr.V4.t) option</code>;</code></td>
 
 </tr>
 <tr>
@@ -140,4 +140,4 @@ Server configuration<br>
       section.<br>
 </div>
 
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">?hostname:string -><br>       ?default_lease_time:int -><br>       ?max_lease_time:int -><br>       ?hosts:<a href="Dhcp_server.Config.html#TYPEhost">host</a> list -><br>       addr_tuple:Ipaddr.V4.t * Macaddr.t -><br>       network:Ipaddr.V4.Prefix.t -><br>       range:Ipaddr.V4.t * Ipaddr.V4.t -><br>       options:<a href="Dhcp_wire.html#TYPEdhcp_option">Dhcp_wire.dhcp_option</a> list -> <a href="Dhcp_server.Config.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">?hostname:string -><br>       ?default_lease_time:int -><br>       ?max_lease_time:int -><br>       ?hosts:<a href="Dhcp_server.Config.html#TYPEhost">host</a> list -><br>       addr_tuple:Ipaddr.V4.t * Macaddr.t -><br>       network:Ipaddr.V4.Prefix.t -><br>       range:(Ipaddr.V4.t * Ipaddr.V4.t) option -><br>       options:<a href="Dhcp_wire.html#TYPEdhcp_option">Dhcp_wire.dhcp_option</a> list -> <a href="Dhcp_server.Config.html#TYPEt">t</a></code></pre></body></html>

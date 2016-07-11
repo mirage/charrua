@@ -55,6 +55,8 @@
 
 
 
+<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre>
 <pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre>
 <pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
 <pre><span id="VALmake_fixed"><span class="keyword">val</span> make_fixed</span> : <code class="type">Macaddr.t -> Ipaddr.V4.t -> now:float -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
@@ -74,6 +76,4 @@
 <pre><span id="VALlease_of_addr"><span class="keyword">val</span> lease_of_addr</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> <a href="Dhcp_server.Lease.html#TYPEt">t</a> option</code></pre>
 <pre><span id="VALaddr_allocated"><span class="keyword">val</span> addr_allocated</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> bool</code></pre>
 <pre><span id="VALaddr_available"><span class="keyword">val</span> addr_available</span> : <code class="type">Ipaddr.V4.t -> <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -> now:float -> bool</code></pre>
-<pre><span id="VALget_usable_addr"><span class="keyword">val</span> get_usable_addr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">Dhcp_wire.client_id</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -><br>       Ipaddr.V4.t * Ipaddr.V4.t -> now:float -> Ipaddr.V4.t option</code></pre>
-<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_server.Lease.html#TYPEt">t</a></code></pre>
-<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Dhcp_server.Lease.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre></body></html>
+<pre><span id="VALget_usable_addr"><span class="keyword">val</span> get_usable_addr</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">Dhcp_wire.client_id</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">database</a> -><br>       (Ipaddr.V4.t * Ipaddr.V4.t) option -> now:float -> Ipaddr.V4.t option</code></pre></body></html>

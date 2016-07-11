@@ -19,7 +19,6 @@
 <link title="DHCP Client identifier" rel="Section" href="#2_DHCPClientidentifier">
 <link title="DHCP options" rel="Section" href="#2_DHCPoptions">
 <link title="DHCP Packet " rel="Section" href="#2_DHCPPacket">
-<link title="DHCP Packet " rel="Section" href="#2_DHCPPacket">
 <title>Dhcp_wire</title>
 </head>
 <body>
@@ -3183,8 +3182,11 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 </tr></table>
 
 
-<br>
+
+<pre><span id="VALdhcp_option_of_sexp"><span class="keyword">val</span> dhcp_option_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a></code></pre>
+<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre><div class="info ">
 Not all options are currently implemented.<br>
+</div>
 <br>
 Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
 
@@ -3515,7 +3517,7 @@ Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_
 <br>
 Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pkt</code></a>.<br>
 
-<pre><span id="VALpkt_of_buf"><span class="keyword">val</span> pkt_of_buf</span> : <code class="type">Cstruct.t -> int -> [> `Error of string | `Ok of <a href="Dhcp_wire.html#TYPEpkt">pkt</a> ]</code></pre>
+<pre><span id="VALpkt_of_buf"><span class="keyword">val</span> pkt_of_buf</span> : <code class="type">Cstruct.t -> int -> (<a href="Dhcp_wire.html#TYPEpkt">pkt</a>, string) Result.result</code></pre>
 <pre><span id="VALbuf_of_pkt"><span class="keyword">val</span> buf_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Cstruct.t</code></pre>
 <pre><span id="VALpkt_of_sexp"><span class="keyword">val</span> pkt_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEpkt">pkt</a></code></pre>
 <pre><span id="VALsexp_of_pkt"><span class="keyword">val</span> sexp_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Sexplib.Sexp.t</code></pre>
@@ -3523,25 +3525,7 @@ Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pk
 <pre><span id="VALpkt_to_string"><span class="keyword">val</span> pkt_to_string</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> string</code></pre><br>
 Helpers.<br>
 
-<pre><span id="VALis_dhcp"><span class="keyword">val</span> is_dhcp</span> : <code class="type">Cstruct.t -> int -> bool</code></pre>
-<pre><span id="VALdhcp_option_of_sexp"><span class="keyword">val</span> dhcp_option_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a></code></pre>
-<pre><span id="VALsexp_of_dhcp_option"><span class="keyword">val</span> sexp_of_dhcp_option</span> : <code class="type"><a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> Sexplib.Sexp.t</code></pre><br>
-Not all options are currently implemented.<br>
-<br>
-Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
-<br>
-<code class="code">find_option f l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code">Some</code> value
-    on list <code class="code">l</code><br>
-<br>
-<code class="code">collect_options f l</code> collects all options where <code class="code">f</code> evaluates to <code class="code">Some</code>
-    value on list <code class="code">l</code>, this is useful for list options like <code class="code">Routers</code>, if
-    multiple list options are found, the resulting list is flattened.<br>
-<br>
-<h2 id="2_DHCPPacket">DHCP Packet </h2><br>
-<br>
-Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pkt</code></a>.<br>
-<br>
-Helpers.<br>
-<br>
+<pre><span id="VALis_dhcp"><span class="keyword">val</span> is_dhcp</span> : <code class="type">Cstruct.t -> int -> bool</code></pre><div class="info ">
 <code class="code">is_dhcp buf len</code> is true if <code class="code">buf</code> is a DHCP packet.<br>
+</div>
 </body></html>

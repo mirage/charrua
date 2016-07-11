@@ -418,7 +418,10 @@ Check the packet headers, true if the packet is destined for us.
 <tr><td><a href="Dhcp_wire.html#VALint_to_option_code_exn">int_to_option_code_exn</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALis_dhcp">is_dhcp</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<code class="code">is_dhcp buf len</code> is true if <code class="code">buf</code> is a DHCP packet.
+</div>
+</td></tr>
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Dhcp_server.Lease.html#VALlease_of_addr">lease_of_addr</a> [<a href="Dhcp_server.Lease.html">Dhcp_server.Lease</a>]</td>
 <td></td></tr>
@@ -480,7 +483,10 @@ DHCP server port <code class="code">67</code>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_client_id">sexp_of_client_id</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_dhcp_option">sexp_of_dhcp_option</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Not all options are currently implemented.
+</div>
+</td></tr>
 <tr><td><a href="Dhcp_wire.html#VALsexp_of_flags">sexp_of_flags</a> [<a href="Dhcp_wire.html">Dhcp_wire</a>]</td>
 <td></td></tr>
 <tr><td><a href="Dhcp_server.Config.html#VALsexp_of_host">sexp_of_host</a> [<a href="Dhcp_server.Config.html">Dhcp_server.Config</a>]</td>
