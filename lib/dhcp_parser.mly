@@ -150,7 +150,7 @@ subnet:
     (Util.find_map (function Max_lease_time t -> Some t | _ -> None)
         statements)
   in
-  { Ast.network; range; options; hosts; default_lease_time; max_lease_time }
+  { Ast.network; range = Some range; options; hosts; default_lease_time; max_lease_time }
 }
 
 hosts:

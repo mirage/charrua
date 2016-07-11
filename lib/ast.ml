@@ -23,7 +23,7 @@ type host = {
 
 type subnet = {
   network : Ipaddr.V4.Prefix.t;
-  range : Ipaddr.V4.t * Ipaddr.V4.t;
+  range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
   options : Dhcp_wire.dhcp_option list;
   hosts : host list;
   default_lease_time : int32 option;

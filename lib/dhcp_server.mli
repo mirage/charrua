@@ -43,7 +43,7 @@ module Config : sig
     ip_addr : Ipaddr.V4.t;
     mac_addr : Macaddr.t;
     network : Ipaddr.V4.Prefix.t;
-    range : Ipaddr.V4.t * Ipaddr.V4.t;
+    range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
     hosts : host list;
   }
   (** Server configuration *)
@@ -66,7 +66,7 @@ module Config : sig
     ?hosts:host list ->
     addr_tuple:Ipaddr.V4.t * Macaddr.t ->
     network:Ipaddr.V4.Prefix.t ->
-    range:Ipaddr.V4.t * Ipaddr.V4.t ->
+    range:(Ipaddr.V4.t * Ipaddr.V4.t) option ->
     options:Dhcp_wire.dhcp_option list -> t
 
 end
@@ -102,8 +102,8 @@ module Lease : sig
   val addr_allocated : Ipaddr.V4.t -> database -> bool
   val addr_available : Ipaddr.V4.t -> database -> now:float -> bool
   val get_usable_addr :
-    Dhcp_wire.client_id ->
-    database -> Ipaddr.V4.t * Ipaddr.V4.t -> now:float -> Ipaddr.V4.t option
+    Dhcp_wire.client_id -> database ->
+    (Ipaddr.V4.t * Ipaddr.V4.t) option -> now:float -> Ipaddr.V4.t option
 
 end
 

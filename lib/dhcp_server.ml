@@ -33,7 +33,7 @@ module Config = struct
     ip_addr : Ipaddr.V4.t;
     mac_addr : Macaddr.t;
     network : Ipaddr.V4.Prefix.t;
-    range : Ipaddr.V4.t * Ipaddr.V4.t;
+    range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
     hosts : host list;
   } [@@deriving sexp]
 
@@ -53,14 +53,17 @@ module Config = struct
                                          belong to subnet %s"
                            (Ipaddr.V4.to_string addr)
                            (Ipaddr.V4.Prefix.to_string config.network))
-          else if Util.addr_in_range addr config.range then
-            let low = fst config.range in
-            let high = snd config.range in
-            invalid_arg (Printf.sprintf "Fixed address %s must be \
-                                         outside of range %s:%s"
-                           (Ipaddr.V4.to_string addr)
-                           (Ipaddr.V4.to_string low)
-                           (Ipaddr.V4.to_string high)))
+          else match config.range with
+               | None -> ()
+               | Some range ->
+                  if Util.addr_in_range addr range then
+                    let low = fst range in
+                    let high = snd range in
+                    invalid_arg (Printf.sprintf "Fixed address %s must be \
+                                                 outside of range %s:%s"
+                                                (Ipaddr.V4.to_string addr)
+                                                (Ipaddr.V4.to_string low)
+                                                (Ipaddr.V4.to_string high)))
       config.hosts;
     config
 
@@ -279,6 +282,9 @@ module Lease = struct
  * address, if that fails, we try a linear search.
  *)
   let get_usable_addr id db range ~now =
+    match range with
+    | None -> None
+    | Some range ->
     let low_ip, high_ip = range in
     let low_32 = Ipaddr.V4.to_int32 low_ip in
     let high_32 = Ipaddr.V4.to_int32 high_ip in
@@ -353,7 +359,9 @@ module Input = struct
     match (fixed_addr_of_mac config mac) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
-    | None -> Util.addr_in_range addr config.range
+    | None -> (match config.range with
+      | None -> false
+      | Some range -> Util.addr_in_range addr range)
 
   let make_reply config reqpkt
       ~ciaddr ~yiaddr ~siaddr ~giaddr options =

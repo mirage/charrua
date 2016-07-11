@@ -58,7 +58,7 @@ let make_simple_config =
     ~max_lease_time:(60 * 60 * 10)
     ~addr_tuple:(ip_t, mac_t)
     ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
-    ~range:range_t
+    ~range:(Some range_t)
 
 (* Check if 3 lease timers are present and are what we expect. *)
 let assert_timers options =
@@ -112,7 +112,6 @@ let t_bad_options () =
   in
   if not ok then
     failwith "can't request ip lease time via options"
-  
 
 let t_bad_junk_padding_config () =
   let ok = try
@@ -197,26 +196,7 @@ let t_host_options () =
   assert ((find_data_source replies) = None);
   assert ((find_max_message replies) = (Some 1400))
 
-let t_discover fixed =
-  let open Dhcp_server.Config in
-  let host = {
-      hostname = "bubbles.trailer.park.boys";
-      options = [];
-      fixed_addr = Some ip150_t;
-      hw_addr = mac_t
-    }
-  in
-  let hosts = if fixed then [host] else [] in
-  let config = make_simple_config ~hosts:hosts
-      ~options:[Routers [ip_t; ip2_t];
-                Dns_servers [ip_t];
-                Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
-                Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
-               ]
-  in
-  let discover = {
+let discover_pkt = {
     srcmac = mac2_t;
     dstmac = mac_t;
     srcip = Ipaddr.V4.any;
@@ -247,10 +227,29 @@ let t_discover fixed =
       ]
     ]
   }
+
+let t_discover fixed =
+  let open Dhcp_server.Config in
+  let host = {
+      hostname = "bubbles.trailer.park.boys";
+      options = [];
+      fixed_addr = Some ip150_t;
+      hw_addr = mac_t
+    }
+  in
+  let hosts = if fixed then [host] else [] in
+  let config = make_simple_config ~hosts:hosts
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "Shut up Donnie !";
+                Url "Fucking Quintana man, that creep can roll...";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover);
-  match Input.input_pkt config (Lease.make_db ()) discover (Unix.time ()) with
+    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
   | Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
     assert (reply.srcmac = mac_t);
@@ -296,6 +295,99 @@ let t_discover fixed =
 
 let t_discover_range () = t_discover false
 let t_discover_fixed () = t_discover true
+
+let t_discover_no_range () =
+  let open Dhcp_server.Config in
+  let config = Config.make
+      ~hostname:"Duder DHCP server!"
+      ~default_lease_time:(60 * 60 * 1)
+      ~max_lease_time:(60 * 60 * 10)
+      ~addr_tuple:(ip_t, mac_t)
+      ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
+      ~hosts:[]
+      ~range:None
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "Shut up Donnie !";
+                Url "Fucking Quintana man, that creep can roll...";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
+  in
+  if verbose then
+    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
+  | Dhcp_server.Input.Warning s -> if s <> "No ips left to offer" then
+      failwith "expected string `'No ips left to offer`'"
+  | _ -> failwith "No reply"
+
+let t_discover_no_range_fixed () =
+  let open Dhcp_server.Config in
+  let host = {
+      hostname = "bubbles.trailer.park.boys";
+      options = [];
+      fixed_addr = Some ip150_t;
+      hw_addr = mac_t
+    }
+  in
+  let config = Config.make
+      ~hostname:"Duder DHCP server!"
+      ~default_lease_time:(60 * 60 * 1)
+      ~max_lease_time:(60 * 60 * 10)
+      ~addr_tuple:(ip_t, mac_t)
+      ~network:(Ipaddr.V4.Prefix.make 24 ip_t)
+      ~hosts:[host]
+      ~range:None
+      ~options:[Routers [ip_t; ip2_t];
+                Dns_servers [ip_t];
+                Domain_name "Shut up Donnie !";
+                Url "Fucking Quintana man, that creep can roll...";
+                Pop3_servers [ip_t; ip2_t];
+                Time_servers [ip_t];
+               ]
+  in
+    if verbose then
+    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
+  | Input.Reply (reply, db) ->
+    assert (db = (Lease.make_db ()));
+    assert (reply.srcmac = mac_t);
+    assert (reply.dstmac = mac2_t);
+    assert (reply.srcip = ip_t);
+    assert (reply.dstip <> ip_t);
+    assert (reply.dstip <> ip2_t);
+    assert (reply.dstip <> Ipaddr.V4.any);
+    assert (reply.srcport = server_port);
+    assert (reply.dstport = client_port);
+    assert (reply.op = BOOTREPLY);
+    assert (reply.htype = Ethernet_10mb);
+    assert (reply.hlen = 6);
+    assert (reply.hops = 0);
+    assert (reply.xid = Int32.of_int 0xabacabb);
+    assert (reply.secs = 0);
+    assert (reply.flags = Unicast);
+    assert (reply.ciaddr = Ipaddr.V4.any);
+    assert (reply.yiaddr <> Ipaddr.V4.any);
+    assert (reply.yiaddr = reply.dstip);
+    assert (reply.yiaddr = ip150_t);
+    assert (reply.siaddr = ip_t);
+    assert (reply.giaddr = Ipaddr.V4.any);
+    assert (reply.sname = "Duder DHCP server!");
+    assert (reply.file = Bytes.empty);
+    (* 5 options are included regardless of parameter requests. *)
+    assert ((List.length reply.options) = (5 + 6));
+    let () = match List.hd reply.options with
+      | Message_type x -> assert (x = DHCPOFFER);
+      | _ -> failwith "First option is not Message_type"
+    in
+    assert_timers reply.options;
+    (* Check if both router options are present, and the order matches *)
+    let routers = collect_routers reply.options in
+    assert ((List.length routers) = 2);
+    assert ((List.hd routers) = ip_t);
+    if verbose then
+      printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
+  | _ -> failwith "No reply"
 
 let t_bad_discover () =
   let config = make_simple_config ~hosts:[]
@@ -498,7 +590,7 @@ let t_request () =
 let run_test test =
   let f = fst test in
   let name = snd test in
-  printf "%s %-33s%!" (blue "%s" "Test") (yellow "%s" name);
+  printf "%s %-40s%!" (blue "%s" "Test") (yellow "%s" name);
   let () = try f () with
       exn -> printf "%s\n%!" (red "failed");
       raise exn
@@ -515,6 +607,8 @@ let all_tests = [
   (t_host_options, "host options");
   (t_discover_range, "discover->offer");
   (t_discover_fixed, "discover->offer fixed");
+  (t_discover_no_range, "discover->offer no range");
+  (t_discover_no_range_fixed, "discover->offer no range fixed");
   (t_bad_discover, "wrong mac address");
   (t_request, "request->ack/nak");
 ]
