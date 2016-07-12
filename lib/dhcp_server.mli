@@ -90,10 +90,12 @@ module Lease : sig
   val timeleft3 : t -> float -> float -> now:float -> int32 * int32 * int32
   val extend : t -> now:float -> t
   val expired : t -> now:float -> bool
+  val to_string : t -> string
 
   type database
 
   val make_db : unit -> database
+  val to_list : database -> t list
   val garbage_collect : database -> now:float -> database
   val remove : t -> database -> database
   val replace : t -> database -> database

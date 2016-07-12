@@ -640,6 +640,9 @@ let t_request () =
     | Input.Reply (reply, db) ->
       (* Check if our new lease is there *)
       assert (db <> (Lease.make_db ()));
+      assert ((List.length (Lease.to_list db)) = 1);
+      if verbose then
+        printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.to_list db)));
       let () =
         match Lease.lease_of_client_id (Id "W.Sobchak") db with
         | None -> failwith "Lease not found";

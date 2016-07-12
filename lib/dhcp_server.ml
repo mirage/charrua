@@ -198,6 +198,8 @@ module Lease = struct
     client_id  : Dhcp_wire.client_id;
   } [@@deriving sexp]
 
+  let to_string lease = Sexplib.Sexp.to_string_hum (sexp_of_t lease)
+
   (* Database, collection of leases *)
   type database = {
     id_map : t Id_map.t;
@@ -208,6 +210,8 @@ module Lease = struct
     { id_map; addr_map }
 
   let make_db () = update_db Id_map.empty Addr_map.empty
+
+  let to_list db = Id_map.fold (fun id lease l -> lease :: l) db.id_map []
 
   let make client_id addr ~duration ~now =
     let tm_start = Int32.of_float now in
