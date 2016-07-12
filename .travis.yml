@@ -1,8 +1,19 @@
 language: c
-install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh
-script: bash -ex .travis-opam.sh
-sudo: true
+sudo: false
+services:
+  - docker
+install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-docker.sh
+script: bash -ex ./.travis-docker.sh
 env:
-  - PACKAGE="charrua-core" OCAML_VERSION=4.01
-  - PACKAGE="charrua-core" OCAML_VERSION=latest
-  - PACKAGE="charrua-core" OCAML_VERSION=latest
+  global:
+  - PACKAGE="charrua-core.9999"
+  - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
+  matrix:
+  - DISTRO="debian-stable" OCAML_VERSION="4.02.3"
+  - DISTRO="debian-testing" OCAML_VERSION="4.03.0"
+  - DISTRO="ubuntu-14.04" OCAML_VERSION="4.02.3"
+  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.02.3"
+  - DISTRO="centos-7" OCAML_VERSION="4.02.3"
+  - DISTRO="centos-6" OCAML_VERSION="4.02.3"
+  - DISTRO="alpine-3.4" OCAML_VERSION="4.03.0"
+  - DISTRO="fedora-24" OCAML_VERSION="4.03.0"
