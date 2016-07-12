@@ -4,6 +4,8 @@
 Unix DHCP daemon based on
 [charrua-core](http://www.github.com/haesbaert/charrua-core).
 
+[![Build Status](https://travis-ci.org/haesbaert/charrua-unix.png)](https://travis-ci.org/haesbaert/charrua-unix)
+
 #### Features
 
 * Supports a stripped down ISC dhcpd.conf. A configuration sample can be found
