@@ -4,6 +4,8 @@ B _build/lib
 B _build/test
 PKG cmdliner
 PKG cstruct
+PKG cstruct.ppx
 PKG ipaddr
 PKG tcpip
-EXT nonrec
+PKG rresult
+PKG ppx_deriving
