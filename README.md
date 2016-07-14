@@ -39,7 +39,8 @@ This project became one of the [Mirage Pioneer]
 (https://github.com/mirage/mirage-www/wiki/Pioneer-Projects) projects.
 
 The master branch depends on upcoming mirage 2.9 at this point, if you want to
-use it, you'll have to add the mirage development branch to opam:
+use it, you'll have to add the mirage development branch to opam, it also
+requires opam version >= 1.2.2.
 
 ```
 opam remote add mirage-dev https://github.com/mirage/mirage-dev.git
