@@ -218,9 +218,8 @@ module Lease = struct
     let tm_end = Int32.add tm_start duration in
     { tm_start; tm_end; addr; client_id }
 
-  (* XXX defaults fixed leases to one hour, policy does not belong here. *)
-  let make_fixed mac addr ~now =
-    make (Dhcp_wire.Hwaddr mac) addr ~duration:(Int32.of_int (60 * 60)) ~now
+  let make_fixed mac addr ~duration ~now =
+    make (Dhcp_wire.Hwaddr mac) addr ~duration ~now
 
   let timeleft lease ~now =
     let left = (Int32.to_float lease.tm_end) -. now in
@@ -356,7 +355,7 @@ module Input = struct
 
   let find_lease config client_id mac db ~now =
     match (fixed_addr_of_mac config mac) with
-    | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~now), true
+    | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~duration:config.default_lease_time ~now), true
     | None -> Lease.lease_of_client_id client_id db, false
 
   let good_address config mac addr db =

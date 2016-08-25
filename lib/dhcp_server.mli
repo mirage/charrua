@@ -84,7 +84,7 @@ module Lease : sig
   val sexp_of_t : t -> Sexplib.Sexp.t
   val t_of_sexp : Sexplib.Sexp.t -> t
 
-  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> now:float -> t
+  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:float -> t
   val timeleft : t -> now:float -> int32
   val timeleft_exn : t -> now:float -> int32
   val timeleft3 : t -> float -> float -> now:float -> int32 * int32 * int32
