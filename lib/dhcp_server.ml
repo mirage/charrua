@@ -291,7 +291,7 @@ module Lease = struct
     let low_ip, high_ip = range in
     let low_32 = Ipaddr.V4.to_int32 low_ip in
     let high_32 = Ipaddr.V4.to_int32 high_ip in
-    if (Int32.compare low_32 high_32) >= 0 then
+    if (Int32.compare low_32 high_32) > 0 then
       invalid_arg "invalid range, must be (low * high)";
     let hint_ip =
       let v = match id with
