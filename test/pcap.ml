@@ -23,21 +23,21 @@ let verbose = (Array.length Sys.argv) = 2 && Sys.argv.(1) = "-v"
 
 [%%cstruct
 type pcap_header = {
-  magic_number:  uint32_t;   (* magic number *)
+  magic_number:  uint32_t;  (* magic number *)
   version_major: uint16_t;  (* major version number *)
   version_minor: uint16_t;  (* minor version number *)
-  thiszone:      uint32_t;       (* GMT to local correction *)
-  sigfigs:       uint32_t;        (* accuracy of timestamps *)
-  snaplen:       uint32_t;        (* max length of captured packets, in octets *)
-  network:       uint32_t;        (* data link type *)
+  thiszone:      uint32_t;  (* GMT to local correction *)
+  sigfigs:       uint32_t;  (* accuracy of timestamps *)
+  snaplen:       uint32_t;  (* max length of captured packets, in octets *)
+  network:       uint32_t;  (* data link type *)
 } [@@little_endian]]
 
 [%%cstruct
 type pcap_packet = {
-  ts_sec:  uint32_t;         (* timestamp seconds *)
-  ts_usec:  uint32_t;        (* timestamp microseconds *)
-  incl_len: uint32_t;       (* number of octets of packet saved in file *)
-  orig_len: uint32_t;       (* actual length of packet *)
+  ts_sec:  uint32_t;  (* timestamp seconds *)
+  ts_usec:  uint32_t; (* timestamp microseconds *)
+  incl_len: uint32_t; (* number of octets of packet saved in file *)
+  orig_len: uint32_t; (* actual length of packet *)
 } [@@little_endian]]
 
 let num_packets = ref 0
