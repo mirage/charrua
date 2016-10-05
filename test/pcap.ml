@@ -40,8 +40,6 @@ type pcap_packet = {
   orig_len: uint32_t; (* actual length of packet *)
 } [@@little_endian]]
 
-let num_packets = ref 0
-
 let test_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with
   | Result.Error e -> failwith e
