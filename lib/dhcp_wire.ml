@@ -958,19 +958,23 @@ let pkt_of_buf buf len =
   let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
                 Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
   in
-  if len < min_len then
-    invalid_arg (sprintf "packet is too small: %d < %d" len min_len);
+  let length_check = 
+    if len < min_len then
+      Result.Error (sprintf "packet is too small: %d < %d" len min_len)
+    else Result.Ok ()
+  in
+  length_check >>= fun () ->
   (* Handle ethernet *)
   Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
   match eth_header.Ethif_packet.ethertype with
-  | Ethif_wire.ARP | Ethif_wire.IPv6 -> invalid_arg "packet is not ipv4"
+  | Ethif_wire.ARP | Ethif_wire.IPv6 -> Result.Error "packet is not ipv4"
   | Ethif_wire.IPv4 ->
     Ipv4_packet.Unmarshal.of_cstruct eth_payload
     >>= fun (ipv4_header, ipv4_payload) ->
     (* TODO: tcpip doesn't currently do checksum checking, so we lose some
        functionality by making this change *)
     match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
-    | Some `ICMP | Some `TCP | None -> invalid_arg "packet is not udp"
+    | Some `ICMP | Some `TCP | None -> Result.Error "packet is not udp"
     | Some `UDP ->
       Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
       fun (udp_header, udp_payload) ->
@@ -991,12 +995,13 @@ let pkt_of_buf buf len =
       let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
       let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr udp_payload) in
       let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
-      let chaddr =
+      let check_chaddr =
         if htype = Ethernet_10mb && hlen = 6 then
-          Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6)
+          Result.Ok (Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6))
         else
-          invalid_arg "Not a mac address."
+          Result.Error "Not a mac address."
       in
+      check_chaddr >>= fun chaddr ->
       let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
       let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
       let options = options_of_buf udp_payload len in
