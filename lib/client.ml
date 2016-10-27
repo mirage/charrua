@@ -92,6 +92,7 @@ let input t buf =
     | Selecting _ | Requesting _ | Bound _ -> (t, None)
 
 let create ~mac =
+  let open Constants in
   Stdlibrandom.initialize ();
   let xid = Cstruct.BE.get_uint32 (Stdlibrandom.generate 4) 0 in
   let pkt = Dhcp_wire.({
@@ -102,9 +103,7 @@ let create ~mac =
     srcport = Dhcp_wire.client_port;
     dstport = Dhcp_wire.server_port;
     op = BOOTREQUEST;
-    htype = Ethernet_10mb;
-    hlen = 6 (* length of a mac address in bytes *) ;
-    hops = 0;
+    htype; hlen; hops; sname; file;
     xid;
     secs = 0;
     flags = Broadcast;
@@ -113,8 +112,6 @@ let create ~mac =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac;
-    sname = "";
-    file = "";
     options = Dhcp_wire.([
       Message_type DHCPDISCOVER;
       (* TODO: these should definitely be configurable *)
