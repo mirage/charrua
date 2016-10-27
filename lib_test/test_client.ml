@@ -32,13 +32,13 @@ let parseable buf =
   Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (Cstruct.len buf))
 
 let start_makes_dhcp () =
-  let (_s, buf) = Client.create ~mac:Defaults.client_mac in
+  let (_s, buf) = Client.create Defaults.client_mac in
   (* for now, any positive result is fine *)
   parseable buf
 
 let client_to_selecting () =
   let open Defaults in
-  let (s, buf) = Client.create ~mac:client_mac in
+  let (s, buf) = Client.create client_mac in
   let answer = Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) in
   Alcotest.(check (result pass reject)) "input succeeds" answer answer;
   (s, Rresult.R.get_ok answer)
@@ -122,7 +122,7 @@ let client_returns_lease () =
        Alcotest.(check (option pass)) "lease is held" (Some dhcpack) (Client.lease s)
 
 let resultless =
-  let c = Client.create ~mac:Defaults.client_mac in
+  let c = Client.create Defaults.client_mac in
   "no result for empty buffers", `Quick, (fun () -> no_result (fst c) (Cstruct.create 0) ())
 
 let random_buffer () =
@@ -130,33 +130,28 @@ let random_buffer () =
   Stdlibrandom.generate sz
 
 let rec random_init =
-  let c = Client.create ~mac:Defaults.client_mac in
+  let c = Client.create Defaults.client_mac in
   let buf = random_buffer () in
   "random buffer entry to INIT client", `Quick, (fun () -> no_result (fst c) buf ())
 
 let rec random_selecting =
   let open Defaults in
-  let (s, buf) = Client.create ~mac:client_mac in
-  let offer = Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) in
-  let offer = Rresult.R.get_ok offer in
-  let (s, _) = Client.input s (Dhcp_wire.buf_of_pkt offer) in
-  (* client should now be in SELECTING; feed it some random garbage *)
+  let (s, _) = client_to_selecting () in
+  let buf = random_buffer () in
   "random buffer entry to SELECTING client", `Quick, (fun () -> no_result s buf ())
 
 let rec random_requesting =
   let open Defaults in
-  let (s, buf) = Client.create ~mac:client_mac in
-  let dhcpdiscover = Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) in
-  let answer = Rresult.R.get_ok dhcpdiscover in
-  let (pkt, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db answer 0. in
+  let (s, dhcpdiscover) = client_to_selecting () in
+  let (pkt, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0. in
   let (s, dhcprequest) = Client.input s (Dhcp_wire.buf_of_pkt pkt) in
   Alcotest.(check (option pass)) "client is in REQUESTING" dhcprequest dhcprequest;
+  let buf = random_buffer () in
   "random buffer entry to REQUESTING client", `Quick, (no_result s buf)
 
 let rec random_bound =
   let open Defaults in
-  let (s, buf) = Client.create ~mac:client_mac in
-  let dhcpdiscover = Rresult.R.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) in
+  let (s, dhcpdiscover) = client_to_selecting () in
   let (pkt, db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0. in
   let (s, dhcprequest) = Client.input s (Dhcp_wire.buf_of_pkt pkt) in
   match dhcprequest with
@@ -165,6 +160,7 @@ let rec random_bound =
   let dhcprequest = Rresult.R.get_ok @@ Dhcp_wire.pkt_of_buf dhcprequest (Cstruct.len dhcprequest) in
   let (dhcpack, db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0. in
   let (s, response) = Client.input s (Dhcp_wire.buf_of_pkt dhcpack) in
+  let buf = random_buffer () in
   Alcotest.(check (option pass)) "client is in BOUND" response response;
     "random buffer entry to BOUND client", `Quick, (no_result s buf)
   
