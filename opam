@@ -22,6 +22,7 @@ depends: [
   "charrua-core" {>= "0.3"}
   "cstruct"
   "ipaddr"
+  "rresult"
   "mirage-stdlib-random"
 ]
 available: [ocaml-version >= "4.03"]
