@@ -91,11 +91,12 @@ let input t buf =
       respond_if t ~msgtype:DHCPACK incoming (fun () -> (Bound incoming , None))
     | Selecting _ | Requesting _ | Bound _ -> (t, None)
 
-let create ~mac =
+let create ?(requests = default_requests) mac =
   let open Constants in
   Stdlibrandom.initialize ();
   let xid = Cstruct.BE.get_uint32 (Stdlibrandom.generate 4) 0 in
   let pkt = Dhcp_wire.({
+    htype; hlen; hops; sname; file;
     srcmac = mac;
     dstmac = Macaddr.broadcast;
     srcip = Ipaddr.V4.any;
@@ -103,7 +104,6 @@ let create ~mac =
     srcport = Dhcp_wire.client_port;
     dstport = Dhcp_wire.server_port;
     op = BOOTREQUEST;
-    htype; hlen; hops; sname; file;
     xid;
     secs = 0;
     flags = Broadcast;
@@ -114,8 +114,7 @@ let create ~mac =
     chaddr = mac;
     options = Dhcp_wire.([
       Message_type DHCPDISCOVER;
-      (* TODO: these should definitely be configurable *)
-      Parameter_requests default_requests;
+      Parameter_requests requests;
     ]);
   }) in
   (Selecting pkt), (Dhcp_wire.buf_of_pkt pkt)

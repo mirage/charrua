@@ -4,8 +4,8 @@ type buffer = Cstruct.t
 
 val pp : Format.formatter -> t -> unit
 
-val create : mac:Macaddr.t -> (t * buffer)
-(** [create ~mac] returns a pair of [t, buffer].  [t] represents the current 
+val create : ?requests : Dhcp_wire.option_code list -> Macaddr.t -> (t * buffer)
+(** [create mac] returns a pair of [t, buffer].  [t] represents the current 
  * state of the client in the lease transaction, and [buffer] is the suggested
  * next packet the caller should take to progress toward accepting a lease. *)
 
