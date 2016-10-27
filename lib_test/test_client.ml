@@ -23,9 +23,20 @@ module Defaults = struct
   let empty_db = Dhcp_server.Lease.make_db ()
 end
 
-let no_result t buf () =
+let random_buffer () =
+  let sz = Cstruct.BE.get_uint16 (Stdlibrandom.generate 2) 0 in
+  Stdlibrandom.generate sz
+
+let rec no_result t n () =
+  if n <= 0 then ()
+  else begin
+  let buf = random_buffer () in
+  (* TODO: it would be better to randomize a valid DHCP message; currently
+   * we're fuzz testing the Dhcp_wire parser's ability to handle random garbage *)
   let res = Client.input t buf in
-  Alcotest.(check (option cstruct)) "no action" None (snd res)
+  Alcotest.(check (option cstruct)) "no action" None (snd res);
+  no_result t (n - 1) ()
+  end
 ;;
 
 let parseable buf = 
@@ -121,35 +132,23 @@ let client_returns_lease () =
     | s, None ->
        Alcotest.(check (option pass)) "lease is held" (Some dhcpack) (Client.lease s)
 
-let resultless =
-  let c = Client.create Defaults.client_mac in
-  "no result for empty buffers", `Quick, (fun () -> no_result (fst c) (Cstruct.create 0) ())
+let random_init n =
+  let (s, _) = Client.create Defaults.client_mac in
+  "random buffer entry to INIT client", `Quick, (no_result s n)
 
-let random_buffer () =
-  let sz = Cstruct.BE.get_uint16 (Stdlibrandom.generate 2) 0 in
-  Stdlibrandom.generate sz
-
-let rec random_init =
-  let c = Client.create Defaults.client_mac in
-  let buf = random_buffer () in
-  "random buffer entry to INIT client", `Quick, (fun () -> no_result (fst c) buf ())
-
-let rec random_selecting =
-  let open Defaults in
+let random_selecting n =
   let (s, _) = client_to_selecting () in
-  let buf = random_buffer () in
-  "random buffer entry to SELECTING client", `Quick, (fun () -> no_result s buf ())
+  "random buffer entry to SELECTING client", `Quick, (no_result s n)
 
-let rec random_requesting =
+let random_requesting n =
   let open Defaults in
   let (s, dhcpdiscover) = client_to_selecting () in
   let (pkt, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0. in
   let (s, dhcprequest) = Client.input s (Dhcp_wire.buf_of_pkt pkt) in
   Alcotest.(check (option pass)) "client is in REQUESTING" dhcprequest dhcprequest;
-  let buf = random_buffer () in
-  "random buffer entry to REQUESTING client", `Quick, (no_result s buf)
+  "random buffer entry to REQUESTING client", `Quick, (no_result s n)
 
-let rec random_bound =
+let random_bound n =
   let open Defaults in
   let (s, dhcpdiscover) = client_to_selecting () in
   let (pkt, db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0. in
@@ -160,18 +159,19 @@ let rec random_bound =
   let dhcprequest = Rresult.R.get_ok @@ Dhcp_wire.pkt_of_buf dhcprequest (Cstruct.len dhcprequest) in
   let (dhcpack, db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0. in
   let (s, response) = Client.input s (Dhcp_wire.buf_of_pkt dhcpack) in
-  let buf = random_buffer () in
   Alcotest.(check (option pass)) "client is in BOUND" response response;
-    "random buffer entry to BOUND client", `Quick, (no_result s buf)
+    "random buffer entry to BOUND client", `Quick, (no_result s n)
   
-let () = 
+let () =
+  let nfuzz = 100 in
   Alcotest.run "client tests" [
-    "fuzzes", [
-        resultless;
-        random_init;
-        random_selecting;
-        random_requesting;
-        random_bound;
+    (* these tests will programmatically put [Client.t] into a particular
+     * state, then throw random input at it the specified number of times. *)
+    "random input tests", [
+        random_init nfuzz;
+        random_selecting nfuzz;
+        random_requesting nfuzz;
+        random_bound nfuzz;
     ];
     "state progression", [
        "initializing state machine generates a dhcp packet", `Quick, start_makes_dhcp;
