@@ -9,12 +9,6 @@ val create : mac:Macaddr.t -> (t * buffer)
  * state of the client in the lease transaction, and [buffer] is the suggested
  * next packet the caller should take to progress toward accepting a lease. *)
 
-val renew : t -> (t * buffer) option
-(** [renew t] attempts to begin a renewal tranaction.
- * If [t] has successfully bound a previous lease, [renew t] will return a new
- * [Some (state, action)] usable to begin the renewal process.
- * If [t] has not yet successfully bound a lease, [renew t] returns [None]. *)
-
 val input : t -> buffer -> (t * buffer option)
 (** [input t buf] attempts to advance the state of [t]
  * with the contents of [buf].  If [buf] is valid input to the

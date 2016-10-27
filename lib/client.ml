@@ -91,8 +91,6 @@ let input t buf =
       respond_if t ~msgtype:DHCPACK incoming (fun () -> (Bound incoming , None))
     | Selecting _ | Requesting _ | Bound _ -> (t, None)
 
-let renew t = None
-
 let create ~mac =
   Stdlibrandom.initialize ();
   let xid = Cstruct.BE.get_uint32 (Stdlibrandom.generate 4) 0 in
