@@ -1,0 +1,8 @@
+true : bin_annot, safe_string, keep_locs
+true : warn(A-44-45)
+
+
+<lib> : include
+<lib_test> : include
+<lib/*> : package(charrua-core.wire, ipaddr, charrua-core, cstruct, rresult, mirage-stdlib-random)
+<lib_test/*> : package(alcotest, charrua-core.server, ipaddr, charrua-core, cstruct, rresult, mirage-stdlib-random)
