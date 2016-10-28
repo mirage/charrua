@@ -1,6 +1,6 @@
 description = "DHCP client using charrua-core DHCP library"
 version = "%%VERSION%%"
-requires = "ipaddr charrua-core charrua_core.wire cstruct rresult mirage-stdlib-random"
+requires = "ipaddr charrua-core charrua-core.wire cstruct rresult mirage-stdlib-random"
 archive(byte) = "dhcharrua-client.cma"
 archive(native) = "dhcharrua-client.cmxa"
 plugin(byte) = "dhcharrua-client.cma"
