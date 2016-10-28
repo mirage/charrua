@@ -24,5 +24,10 @@ depends: [
   "ipaddr"
   "rresult"
   "mirage-stdlib-random"
+  "duration"
+  "logs"
+]
+depopts: [
+  "mirage-types-lwt"
 ]
 available: [ocaml-version >= "4.03"]

@@ -1,7 +1,17 @@
 description = "DHCP client using charrua-core DHCP library"
-version = "%%VERSION%%"
+version = "%%VERSION_NUM%%"
 requires = "ipaddr charrua-core charrua-core.wire cstruct rresult mirage-stdlib-random"
 archive(byte) = "dhcharrua-client.cma"
 archive(native) = "dhcharrua-client.cmxa"
 plugin(byte) = "dhcharrua-client.cma"
 plugin(native) = "dhcharrua-client.cmxs"
+
+package "mirage" (
+  version = "%%VERSION_NUM%%"
+  description = "Mirage functor with connect for gaining an ipv4 configuration via dhcp."
+  requires = "dhcharrua-client ipaddr charrua-core charrua-core.wire cstruct rresult mirage-stdlib-random mirage-types.lwt duration lwt logs"
+  archive(byte) = "dhcharrua-client-mirage.cma"
+  archive(native) = "dhcharrua-client-mirage.cmxa"
+  plugin(byte) = "dhcharrua-client-mirage.cma"
+  plugin(native) = "dhcharrua-client-mirage.cmxs"
+)
