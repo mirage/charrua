@@ -91,10 +91,10 @@ let rec input config db link =
   Lwt_rawlink.read_packet link
   >>= fun buf ->
   let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
-    | `Error e -> Lwt_log.error e
+    | Error e -> Lwt_log.error e
       >>= fun () ->
       return db
-    | `Ok pkt ->
+    | Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
       match (input_pkt config db pkt (Unix.time ())) with
