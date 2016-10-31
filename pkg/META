@@ -9,7 +9,7 @@ plugin(native) = "charrua-client.cmxs"
 package "mirage" (
   version = "%%VERSION_NUM%%"
   description = "Mirage functor with connect for gaining an ipv4 configuration via dhcp."
-  requires = "charrua-client ipaddr charrua-core charrua-core.wire cstruct rresult mirage-stdlib-random mirage-types.lwt duration lwt logs"
+  requires = "charrua-client mirage-types.lwt duration lwt logs"
   archive(byte) = "charrua-client-mirage.cma"
   archive(native) = "charrua-client-mirage.cmxa"
   plugin(byte) = "charrua-client-mirage.cma"
