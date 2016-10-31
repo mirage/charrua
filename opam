@@ -1,10 +1,10 @@
 opam-version: "1.2"
-name:         "dhcharrua-client"
+name:         "charrua-client"
 maintainer:   ["Mindy Preston <mindy.preston@docker.com>"]
 authors   :   ["Mindy Preston <mindy.preston@docker.com>"]
-homepage:     "https://github.com/yomimono/dhcharrua-client"
-bug-reports:  "https://github.com/yomimono/dhcharrua-client/issues"
-dev-repo:     "https://github.com/yomimono/dhcharrua-client.git"
+homepage:     "https://github.com/yomimono/charrua-client"
+bug-reports:  "https://github.com/yomimono/charrua-client/issues"
+dev-repo:     "https://github.com/yomimono/charrua-client.git"
 tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
