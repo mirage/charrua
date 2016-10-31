@@ -8,7 +8,9 @@ dev-repo:     "https://github.com/yomimono/charrua-client.git"
 tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
-build: ["ocaml" "pkg/pkg.ml" "build"]
+build: ["ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%"
+  "--tests" "false"
+]
 build-test: [
   [ "ocaml" "pkg/pkg.ml" "build" "--tests" "true" ]
   [ "ocaml" "pkg/pkg.ml" "test" ]
