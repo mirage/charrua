@@ -8,8 +8,9 @@ val ipv4_config_of_lease : Dhcp_wire.pkt -> V1_LWT.ipv4_config option
  *  IPv4 configuration, [ipv4_config_of_lease pkt] returns [None]. *)
 
 module Make(Time : V1_LWT.TIME) (Network : V1_LWT.NETWORK) : sig
+  type t = V1_LWT.ipv4_config Lwt_stream.t
   val connect : ?requests:Dhcp_wire.option_code list
-    -> Network.t -> V1_LWT.ipv4_config Lwt.t
+    -> Network.t -> t Lwt.t
   (** [connect ?requests net] attempts to use [net] to obtain a valid
    *  DHCP lease containing the DHCP option codes listed in [request].
    *  If [request] is not specified, [connect] uses the default values

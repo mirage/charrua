@@ -22,6 +22,8 @@ module Log = (val Logs.src_log src : Logs.LOG)
 module Make(Time : V1_LWT.TIME) (Net : V1_LWT.NETWORK) = struct
   open Lwt.Infix
 
+  type t = V1_LWT.ipv4_config Lwt_stream.t
+
   let usable_config_of_lease = function
   | None -> None
   | Some lease -> ipv4_config_of_lease lease
