@@ -26,7 +26,7 @@ module Make(Time : V1_LWT.TIME) (Net : V1_LWT.NETWORK) = struct
   | None -> None
   | Some lease -> ipv4_config_of_lease lease
 
-  let connect ?(requests : Dhcp_wire.option_code list option) (net : Net.t) : V1_LWT.ipv4_config Lwt.t =
+  let connect ?(requests : Dhcp_wire.option_code list option) net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
     let sleep_interval = Duration.of_sec 5 in
@@ -39,13 +39,13 @@ module Make(Time : V1_LWT.TIME) (Net : V1_LWT.NETWORK) = struct
       Net.write net dhcpdiscover >|= Rresult.R.get_ok >>= fun () ->
       Time.sleep_ns sleep_interval >>= fun () ->
       match usable_config_of_lease (Dhcp_client.lease !c) with
-      | Some lease -> Lwt.return_unit
+      | Some lease -> Lwt.return (Some lease)
       | None ->
         let (client, dhcpdiscover) = Dhcp_client.create ?requests (Net.mac net) in
         c := client;
         Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
         Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
-        repeater dhcpdiscover
+        repeater dhcpdiscover 
     in
     let listen () =
       Net.listen net (fun buf ->
@@ -59,9 +59,11 @@ module Make(Time : V1_LWT.TIME) (Net : V1_LWT.NETWORK) = struct
           c := s; Lwt.return_unit
       ) >|= Rresult.R.get_ok
     in
-    Lwt.pick [ listen (); repeater dhcpdiscover; ] >>= fun () ->
-    match usable_config_of_lease (Dhcp_client.lease !c) with
-    | None -> Lwt.fail_with "Couldn't obtain a usable DHCP lease"
-    | Some lease -> Lwt.return lease
+    let get_lease () =
+      Lwt.pick [ (listen () >>= fun () -> Lwt.return None);
+               repeater dhcpdiscover; ]
+    in
+    let s = Lwt_stream.from get_lease in
+    Lwt.return s
 
 end
