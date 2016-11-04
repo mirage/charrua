@@ -7,4 +7,4 @@ true : package(ipaddr charrua-core cstruct rresult)
 <lib/mirage> : include
 <lib/*> : package(charrua-core.wire mirage-stdlib-random)
 <lib_test/*> : package(alcotest charrua-core.server mirage-stdlib-random)
-<lib/mirage/*>: package(mirage-types.lwt duration lwt logs tcpip.ipv4)
+<lib/mirage/*>: package(mirage-types.lwt duration lwt logs tcpip.ipv4 fmt)
