@@ -28,7 +28,8 @@ depends: [
   "mirage-stdlib-random"
   "duration"
   "logs"
-  "tcpip"
+  "tcpip" {>= "dev~mirage"}
+  "fmt"
 ]
 depopts: [
   "mirage-types-lwt"

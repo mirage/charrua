@@ -41,7 +41,11 @@ module Make(Time : V1_LWT.TIME) (Net : V1_LWT.NETWORK) = struct
       Net.write net dhcpdiscover >|= Rresult.R.get_ok >>= fun () ->
       Time.sleep_ns sleep_interval >>= fun () ->
       match usable_config_of_lease (Dhcp_client.lease !c) with
-      | Some lease -> Lwt.return (Some lease)
+      | Some lease ->
+        Log.info (fun f -> f "Lease obtained! IP %a network %a gateway %a"
+          Ipaddr.V4.pp_hum lease.address Ipaddr.V4.Prefix.pp_hum lease.network
+          (Fmt.option Ipaddr.V4.pp_hum) lease.gateway);
+          Lwt.return (Some lease)
       | None ->
         let (client, dhcpdiscover) = Dhcp_client.create ?requests (Net.mac net) in
         c := client;
