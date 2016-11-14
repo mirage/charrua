@@ -7,11 +7,7 @@ let ipv4_config_of_lease lease : V1_LWT.ipv4_config option =
   | None -> None
   | Some subnet ->
     let network = Ipaddr.V4.Prefix.of_netmask subnet address in
-    let valid_routers =
-    List.filter
-      (fun ip -> Ipaddr.V4.Prefix.mem ip network)
-      (Dhcp_wire.collect_routers lease.options)
-    in
+    let valid_routers = Dhcp_wire.collect_routers lease.options in
     match valid_routers with
     | [] -> Some (V1_LWT.{ address; network; gateway = None })
     | hd::_ -> Some (V1_LWT.{ address; network; gateway = (Some hd) })
