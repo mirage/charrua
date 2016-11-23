@@ -79,9 +79,15 @@ let respond_if t ~msgtype pkt f =
   | Some m when m = msgtype -> f ()
   | Some _ -> (t, None)
 
+(* this function should be replaced by a direct call to pkt_of_buf once
+ * that function is refactored not to throw exceptions on parse failures *)
+let safe_pkt_of_buf buf len =
+  try Dhcp_wire.pkt_of_buf buf len
+  with exn -> Error (Printexc.to_string exn)
+
 let input t buf =
   let open Dhcp_wire in
-  match pkt_of_buf buf (Cstruct.len buf) with
+  match safe_pkt_of_buf buf (Cstruct.len buf) with
   | Error _ -> (t, None)
   | Ok incoming ->
     match t with
