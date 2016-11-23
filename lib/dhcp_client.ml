@@ -79,9 +79,13 @@ let respond_if t ~msgtype pkt f =
   | Some m when m = msgtype -> f ()
   | Some _ -> (t, None)
 
+let safe_pkt_of_buf buf len =
+  try Dhcp_wire.pkt_of_buf buf len
+  with exn -> Error (Printexc.to_string exn)
+
 let input t buf =
   let open Dhcp_wire in
-  match pkt_of_buf buf (Cstruct.len buf) with
+  match safe_pkt_of_buf buf (Cstruct.len buf) with
   | Error _ -> (t, None)
   | Ok incoming ->
     match t with
