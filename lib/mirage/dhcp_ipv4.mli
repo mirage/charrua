@@ -15,7 +15,6 @@
  *)
 
 module Make (D: V1_LWT.DHCP_CLIENT) (E:V1_LWT.ETHIF) (A: V1_LWT.ARP) : sig
-  exception No_route_to_destination_address of Ipaddr.V4.t
   include V1_LWT.IPV4 with type ethif = E.t
   val connect : D.t -> ethif -> A.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
