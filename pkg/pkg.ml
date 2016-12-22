@@ -8,7 +8,7 @@ let mirage = Conf.with_pkg "mirage-types-lwt"
 let () =
   Pkg.describe "charrua-client" @@ fun c ->
   let mirage = Conf.value c mirage in
-  Ok [ Pkg.mllib "lib/charrua-client.mllib";
-       Pkg.test  "lib_test/test_client";
-       Pkg.mllib ~cond:mirage "lib/mirage/charrua-client-mirage.mllib";
+  Ok [ Pkg.mllib "src/charrua-client.mllib";
+       Pkg.test  "test/test_client";
+       Pkg.mllib ~cond:mirage "src/mirage/charrua-client-mirage.mllib";
   ]
