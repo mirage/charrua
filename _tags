@@ -2,9 +2,9 @@ true : bin_annot, safe_string, keep_locs
 true : warn(A-44-45)
 true : package(ipaddr charrua-core cstruct rresult)
 
-<lib> : include
-<lib_test> : include
-<lib/mirage> : include
-<lib/*> : package(charrua-core.wire mirage-stdlib-random)
-<lib_test/*> : package(alcotest charrua-core.server mirage-stdlib-random)
-<lib/mirage/*>: package(mirage-types.lwt duration lwt logs tcpip.ipv4 fmt)
+<src> : include
+<test> : include
+<src/mirage> : include
+<src/*> : package(charrua-core.wire mirage-stdlib-random)
+<test/*> : package(alcotest charrua-core.server mirage-stdlib-random)
+<src/mirage/*>: package(mirage-types-lwt duration lwt logs tcpip.ipv4 fmt)
