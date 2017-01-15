@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make (D: Mirage_types_lwt.DHCP_CLIENT) (E:Mirage_types_lwt.ETHIF) (A: Mirage_types_lwt.ARP) : sig
+module Make (D: Mirage_protocols_lwt.DHCP_CLIENT) (E:Mirage_types_lwt.ETHIF) (A: Mirage_types_lwt.ARP) : sig
   include Mirage_types_lwt.IPV4 with type ethif = E.t
   val connect : D.t -> ethif -> A.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
