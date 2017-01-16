@@ -1,4 +1,4 @@
-let ipv4_config_of_lease lease : Mirage_types_lwt.ipv4_config option =
+let ipv4_config_of_lease lease : Mirage_protocols_lwt.ipv4_config option =
   let open Dhcp_wire in
   (* ipv4_config expects a single IP address and the information
    * needed to construct a prefix.  It can optionally use one router. *)
@@ -9,8 +9,9 @@ let ipv4_config_of_lease lease : Mirage_types_lwt.ipv4_config option =
     let network = Ipaddr.V4.Prefix.of_netmask subnet address in
     let valid_routers = Dhcp_wire.collect_routers lease.options in
     match valid_routers with
-    | [] -> Some (Mirage_types_lwt.{ address; network; gateway = None })
-    | hd::_ -> Some (Mirage_types_lwt.{ address; network; gateway = (Some hd) })
+    | [] -> Some (Mirage_protocols_lwt.{ address; network; gateway = None })
+    | hd::_ ->
+      Some (Mirage_protocols_lwt.{ address; network; gateway = (Some hd) })
 
 let src = Logs.Src.create "dhcp_client"
 module Log = (val Logs.src_log src : Logs.LOG)
@@ -18,7 +19,7 @@ module Log = (val Logs.src_log src : Logs.LOG)
 module Make(Time : Mirage_types_lwt.TIME) (Net : Mirage_types_lwt.NETWORK) = struct
   open Lwt.Infix
 
-  type t = Mirage_types_lwt.ipv4_config Lwt_stream.t
+  type t = Mirage_protocols_lwt.ipv4_config Lwt_stream.t
 
   let usable_config_of_lease = function
   | None -> None

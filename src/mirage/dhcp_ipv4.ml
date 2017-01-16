@@ -1,5 +1,5 @@
 open Lwt.Infix
-open V1_LWT
+open Mirage_protocols_lwt
 
 module Make(Dhcp_client : DHCP_CLIENT) (Ethif : ETHIF)(Arp : ARP) = struct
   (* for now, just wrap a static ipv4 *)
