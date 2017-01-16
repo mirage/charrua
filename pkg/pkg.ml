@@ -3,7 +3,7 @@
 #require "topkg"
 open Topkg
 
-let mirage = Conf.with_pkg "mirage-types-lwt"
+let mirage = Conf.with_pkg ~default:false "mirage"
 
 let () =
   Pkg.describe "charrua-client" @@ fun c ->
