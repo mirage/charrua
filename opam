@@ -9,7 +9,7 @@ tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
 build: ["ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%"
-  "--tests" "false"
+  "--tests" "false" "--with-mirage" "%{mirage-types-lwt:installed}%"
 ]
 build-test: [
   [ "ocaml" "pkg/pkg.ml" "build" "--tests" "true" ]
