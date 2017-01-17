@@ -1,5 +1,5 @@
 PKG cstruct charrua-core charrua-core.wire
 PKG alcotest charrua-core.server rresult
-PKG mirage-stdlib-random
+PKG mirage-random
 S lib/*
 B _build/*

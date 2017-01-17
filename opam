@@ -25,7 +25,7 @@ depends: [
   "cstruct"
   "ipaddr"
   "rresult"
-  "mirage-stdlib-random"
+  "mirage-random"
   "duration"
   "logs"
   "tcpip" {>= "dev~mirage"}
