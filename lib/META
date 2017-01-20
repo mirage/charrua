@@ -1,7 +1,7 @@
 requires = "cstruct cstruct.ppx sexplib ipaddr result rresult"
 
 package "server" (
-  version = "0.1"
+  version = "0.4"
   description = "Charrua DHCP Server."
   requires = "io-page.unix cstruct.unix tcpip tcpip.ethif tcpip.ipv4 tcpip.udp"
   archive(byte) = "dhcp_server.cma"
@@ -12,7 +12,7 @@ package "server" (
 )
 
 package "wire" (
-  version = "0.1"
+  version = "0.4"
   description = "Charrua DHCP utilities."
   requires = "io-page.unix cstruct.unix tcpip tcpip.ethif tcpip.ipv4 tcpip.udp"
   archive(byte) = "dhcp_wire.cma"
