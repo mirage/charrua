@@ -955,64 +955,65 @@ let buf_of_options sbuf options =
 let pkt_of_buf buf len =
   let open Rresult in
   let open Printf in
-  let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
-                Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
+  let wrap () =
+    let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
+                  Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
+    in
+    let length_check =
+      if len < min_len then
+        Error (sprintf "packet is too small: %d < %d" len min_len)
+      else Ok ()
+    in
+    length_check >>= fun () ->
+    (* Handle ethernet *)
+    Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    match eth_header.Ethif_packet.ethertype with
+    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Error "packet is not ipv4"
+    | Ethif_wire.IPv4 ->
+      Ipv4_packet.Unmarshal.of_cstruct eth_payload
+      >>= fun (ipv4_header, ipv4_payload) ->
+      match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
+      | Some `ICMP | Some `TCP | None -> Error "packet is not udp"
+      | Some `UDP ->
+        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
+        fun (udp_header, udp_payload) ->
+        let op = int_to_op_exn (get_dhcp_op udp_payload) in
+        let htype = if (get_dhcp_htype udp_payload) = 1 then
+            Ethernet_10mb
+          else
+            Other
+        in
+        let hlen = get_dhcp_hlen udp_payload in
+        let hops = get_dhcp_hops udp_payload in
+        let xid = get_dhcp_xid udp_payload in
+        let secs = get_dhcp_secs udp_payload in
+        let flags =
+          if ((get_dhcp_flags buf) land 0x8000) <> 0 then Broadcast else Unicast
+        in
+        let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr udp_payload) in
+        let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
+        let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr udp_payload) in
+        let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
+        let check_chaddr =
+          if htype = Ethernet_10mb && hlen = 6 then
+            Ok (Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6))
+          else
+            Error "Not a mac address."
+        in
+        check_chaddr >>= fun chaddr ->
+        let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
+        let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
+        let options = options_of_buf udp_payload len in
+        Ok { srcmac = eth_header.Ethif_packet.source;
+                    dstmac = eth_header.Ethif_packet.destination;
+                    srcip = ipv4_header.Ipv4_packet.src;
+                    dstip = ipv4_header.Ipv4_packet.dst;
+                    srcport = udp_header.Udp_packet.src_port;
+                    dstport = udp_header.Udp_packet.dst_port;
+                    op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
+                    siaddr; giaddr; chaddr; sname; file; options }
   in
-  let length_check = 
-    if len < min_len then
-      Result.Error (sprintf "packet is too small: %d < %d" len min_len)
-    else Result.Ok ()
-  in
-  length_check >>= fun () ->
-  (* Handle ethernet *)
-  Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
-  match eth_header.Ethif_packet.ethertype with
-  | Ethif_wire.ARP | Ethif_wire.IPv6 -> Result.Error "packet is not ipv4"
-  | Ethif_wire.IPv4 ->
-    Ipv4_packet.Unmarshal.of_cstruct eth_payload
-    >>= fun (ipv4_header, ipv4_payload) ->
-    (* TODO: tcpip doesn't currently do checksum checking, so we lose some
-       functionality by making this change *)
-    match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
-    | Some `ICMP | Some `TCP | None -> Result.Error "packet is not udp"
-    | Some `UDP ->
-      Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
-      fun (udp_header, udp_payload) ->
-      let op = int_to_op_exn (get_dhcp_op udp_payload) in
-      let htype = if (get_dhcp_htype udp_payload) = 1 then
-          Ethernet_10mb
-        else
-          Other
-      in
-      let hlen = get_dhcp_hlen udp_payload in
-      let hops = get_dhcp_hops udp_payload in
-      let xid = get_dhcp_xid udp_payload in
-      let secs = get_dhcp_secs udp_payload in
-      let flags =
-        if ((get_dhcp_flags buf) land 0x8000) <> 0 then Broadcast else Unicast
-      in
-      let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr udp_payload) in
-      let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
-      let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr udp_payload) in
-      let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
-      let check_chaddr =
-        if htype = Ethernet_10mb && hlen = 6 then
-          Result.Ok (Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6))
-        else
-          Result.Error "Not a mac address."
-      in
-      check_chaddr >>= fun chaddr ->
-      let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
-      let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
-      let options = options_of_buf udp_payload len in
-      Result.Ok { srcmac = eth_header.Ethif_packet.source;
-                  dstmac = eth_header.Ethif_packet.destination;
-                  srcip = ipv4_header.Ipv4_packet.src;
-                  dstip = ipv4_header.Ipv4_packet.dst;
-                  srcport = udp_header.Udp_packet.src_port;
-                  dstport = udp_header.Udp_packet.dst_port;
-                  op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
-                  siaddr; giaddr; chaddr; sname; file; options }
+  try wrap () with | Invalid_argument e -> Result.Error e
 
 let buf_of_pkt pkt =
   let dhcp = Cstruct.create 2048 in
