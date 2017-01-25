@@ -28,7 +28,7 @@ depends: [
   "mirage-random" {>= "1.0.0"}
   "duration"
   "logs"
-  "tcpip" {>= "dev~mirage"}
+  "tcpip" {>= "3.0.0"}
   "fmt"
 ]
 depopts: [
