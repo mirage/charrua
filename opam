@@ -21,7 +21,7 @@ depends: [
   "ocamlfind" {build}
   "topkg"     {build}
   "alcotest"     {test}
-  "charrua-core" {>= "0.3"}
+  "charrua-core" {>= "0.4"}
   "cstruct"
   "ipaddr"
   "rresult"
