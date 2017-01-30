@@ -8,7 +8,8 @@ bug-reports: "https://github.com/mirage/charrua-core/issues"
 dev-repo: "https://github.com/mirage/charrua-core.git"
 doc: "https://mirage.github.io/charrua-core/api"
 
-available: [ocaml-version >= "4.01" & opam-version >= "1.2"]
+available: [ocaml-version >= "4.03" & opam-version >= "1.2"]
+
 build: [
   ["sh" "build.sh"]
 ]
@@ -22,6 +23,5 @@ depends: [
   "menhir"
   "ipaddr" {>= "2.5.0"}
   "tcpip" {>= "3.0.0"}
-  "result"
   "rresult"
 ]

@@ -42,14 +42,14 @@ type pcap_packet = {
 
 let test_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with
-  | Result.Error e -> failwith e
-  | Result.Ok pkt ->
+  | Error e -> failwith e
+  | Ok pkt ->
     if verbose then
       printf "DHCP: %s\n%!" (Dhcp_wire.pkt_to_string pkt);
     let buf = Dhcp_wire.buf_of_pkt pkt in
     match (Dhcp_wire.pkt_of_buf buf len) with
-    | Result.Error e -> failwith e
-    | Result.Ok pkt2 ->
+    | Error e -> failwith e
+    | Ok pkt2 ->
       if pkt2 <> pkt then begin
         printf "buffers differ !\n";
         printf "pcap buf:";

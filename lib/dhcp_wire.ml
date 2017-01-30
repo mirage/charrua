@@ -1013,7 +1013,7 @@ let pkt_of_buf buf len =
                     op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
                     siaddr; giaddr; chaddr; sname; file; options }
   in
-  try wrap () with | Invalid_argument e -> Result.Error e
+  try wrap () with | Invalid_argument e -> Error e
 
 let buf_of_pkt pkt =
   let dhcp = Cstruct.create 2048 in
@@ -1081,25 +1081,25 @@ let is_dhcp buf len =
   let aux buf =
     Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
     match eth_header.Ethif_packet.ethertype with
-    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Result.Ok false
+    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Ok false
     | Ethif_wire.IPv4 ->
       Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
       (* TODO: tcpip doesn't currently do checksum checking, so we lose some
          functionality by making this change *)
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
-      | Some `ICMP | Some `TCP | None -> Result.Ok false
+      | Some `ICMP | Some `TCP | None -> Ok false
       | Some `UDP ->
         Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
         fun (udp_header, udp_payload) ->
-        Result.Ok ((udp_header.Udp_packet.dst_port = server_port ||
-                    udp_header.Udp_packet.dst_port = client_port)
-                   &&
-                   (udp_header.Udp_packet.src_port = server_port ||
-                    udp_header.Udp_packet.src_port = client_port))
+        Ok ((udp_header.Udp_packet.dst_port = server_port ||
+             udp_header.Udp_packet.dst_port = client_port)
+            &&
+            (udp_header.Udp_packet.src_port = server_port ||
+             udp_header.Udp_packet.src_port = client_port))
   in
   match aux buf with
-  | Result.Ok b -> b
-  | Result.Error _ -> false
+  | Ok b -> b
+  | Error _ -> false
 
 let find_option f options = Util.find_map f options
 
