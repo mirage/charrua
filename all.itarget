@@ -1,6 +1,0 @@
-lib/dhcp_server.cma
-lib/dhcp_server.cmxa
-lib/dhcp_wire.cma
-lib/dhcp_wire.cmxa
-lib.docdir/index.html
-test/test.native
