@@ -18,7 +18,10 @@
 
 (** A DHCP server is composed of two sub-modules: {! Config} and {! Input}.  The
     former deals with building a suitable configuration for using with the
-    later. *)
+    later.
+
+   {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}}
+*)
 
 (** {2 DHCP Server Configuration } *)
 

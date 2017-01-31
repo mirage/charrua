@@ -1,8 +1,9 @@
-true: debug, bin_annot, strict_sequence
+true: color(always), bin_annot, strict_sequence, safe-string
+true: package(rresult cstruct ipaddr sexplib ppx_sexp_conv tcpip.ipv4)
+"lib": include
+
 true: use_menhir
-true: package(result), package(rresult)
-true: package(cstruct), package(cstruct.ppx)
-true: package(cstruct.unix), package(ipaddr)
-true: package(sexplib), package(ppx_type_conv), package(ppx_sexp_conv)
-true: package(tcpip), package(tcpip.udp), package(tcpip.ipv4), package(tcpip.ethif)
-<test/*.native>: package(io-page.unix)
+
+<lib/dhcp_wire.ml>: package(cstruct.ppx tcpip.ethif tcpip.udp)
+
+<test/*>: package(cstruct.ppx cstruct.unix io-page.unix)

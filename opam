@@ -2,24 +2,34 @@ opam-version: "1.2"
 name: "charrua-core"
 maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
-homepage: "https://github.com/haesbaert/charrua-core"
-bug-reports: "https://github.com/haesbaert/charrua-core/issues"
 license: "ISC"
-dev-repo: "https://github.com/haesbaert/charrua-core.git"
-available: [ocaml-version >= "4.01" & opam-version >= "1.2"]
+homepage: "https://github.com/mirage/charrua-core"
+bug-reports: "https://github.com/mirage/charrua-core/issues"
+dev-repo: "https://github.com/mirage/charrua-core.git"
+doc: "https://mirage.github.io/charrua-core/api"
+
+available: [ocaml-version >= "4.03" & opam-version >= "1.2"]
+
 build: [
-  ["sh" "build.sh"]
+  [ "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false" ]
 ]
+
+build-test: [
+  [ "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "true" ]
+  [ "ocaml" "pkg/pkg.ml" "test" ]
+]
+
 depends: [
-  "ocamlfind"
-  {build}
-  "ppx_sexp_conv"
-  "ppx_type_conv"
-  "cstruct" {>= "1.9"}
+  "ocamlfind"     {build}
+  "ocamlbuild"    {build}
+  "topkg"         {build}
+  "ppx_sexp_conv" {build}
+  "ppx_tools"     {build}
+  "menhir"        {build}
+  "cstruct"       {>= "1.9.0"}
   "sexplib"
-  "menhir"
-  "ipaddr" {>= "2.5.0"}
-  "tcpip" {>= "3.0.0"}
-  "result"
+  "ipaddr"        {>= "2.5.0"}
+  "tcpip"         {>= "3.0.0"}
   "rresult"
+  "io-page"       {test}
 ]

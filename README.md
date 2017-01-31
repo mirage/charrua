@@ -1,7 +1,7 @@
-### Charrua DHCP core library.
+## Charrua DHCP core library - a DHCP server and wire frame encoder and decoder
 
 [charrua-core](http://www.github.com/mirage/charrua-core) is an
-_ISC-licensed_ DHCP library implementation in ocaml.
+_ISC-licensed_ DHCP library implementation in OCaml.
 
 [![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://mirage.github.io/charrua-core/api)
 [![Build Status](https://travis-ci.org/mirage/charrua-core.png)](https://travis-ci.org/mirage/charrua-core)
