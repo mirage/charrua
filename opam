@@ -34,4 +34,8 @@ depends: [
 depopts: [
   "mirage-types-lwt"
 ]
+conflicts: [
+  "mirage-types-lwt" {<"3.0.0"}
+  "mirage-types" {<"3.0.0"}
+]
 available: [ocaml-version >= "4.03"]
