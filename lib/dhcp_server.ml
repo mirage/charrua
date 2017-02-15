@@ -68,7 +68,7 @@ module Config = struct
     config
 
   let make
-      ?(hostname = "Charrua DHCP Server")
+      ?(hostname = "charrua-dhcp-server")
       ?(default_lease_time = 60 * 60 * 2) (* 2 hours *)
       ?(max_lease_time = 60 * 60 * 24)    (* 24 hours *)
       ?(hosts = [])
@@ -140,7 +140,7 @@ module Config = struct
     in
     sanity_check {
       options;
-      hostname = "Charrua DHCP Server"; (* XXX Implement server-name option. *)
+      hostname = "charrua-dhcp-server"; (* XXX Implement server-name option. *)
       default_lease_time;
       max_lease_time;
       ip_addr;
