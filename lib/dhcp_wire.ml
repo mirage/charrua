@@ -758,7 +758,7 @@ let buf_of_options sbuf options =
   let put_coded_bool code v buf =
     put_coded_8 code (match v with true -> 1 | false -> 0) buf in
   let put_coded_bytes code v buf =
-    let len = (Bytes.length v) in
+    let len = (String.length v) in
     let buf = put_code code buf |> put_len len in
     blit_from_string v 0 buf 0 len;
     shift buf len
@@ -867,7 +867,7 @@ let buf_of_options sbuf options =
     | User_class uc -> put_coded_bytes 77 uc buf              (* code 77 *)
     | Directory_agent da -> put_coded_bytes 78 da buf         (* code 78 *)
     | Service_scope ss -> put_coded_bytes 79 ss buf           (* code 79 *)
-    | Rapid_commit -> put_coded_bytes 80 Bytes.empty buf      (* code 80 *)
+    | Rapid_commit -> put_coded_bytes 80 "" buf               (* code 80 *)
     | Client_fqdn dn -> put_coded_bytes 81 dn buf             (* code 81 *)
     | Relay_agent_information ai -> put_coded_bytes 82 ai buf (* code 82 *)
     | Isns i -> put_coded_bytes 83 i buf                      (* code 83 *)
@@ -996,7 +996,7 @@ let pkt_of_buf buf len =
         let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
         let check_chaddr =
           if htype = Ethernet_10mb && hlen = 6 then
-            Ok (Macaddr.of_bytes_exn (Bytes.sub (copy_dhcp_chaddr udp_payload) 0 6))
+            Ok (Macaddr.of_bytes_exn (String.sub (copy_dhcp_chaddr udp_payload) 0 6))
           else
             Error "Not a mac address."
         in
@@ -1033,9 +1033,9 @@ let buf_of_pkt pkt =
   set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
   set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
   set_dhcp_chaddr
-    (Util.bytes_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
-  set_dhcp_sname (Util.bytes_extend_if_le pkt.sname 64) 0 dhcp;
-  set_dhcp_file (Util.bytes_extend_if_le pkt.file 128) 0 dhcp;
+    (Util.string_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
+  set_dhcp_sname (Util.string_extend_if_le pkt.sname 64) 0 dhcp;
+  set_dhcp_file (Util.string_extend_if_le pkt.file 128) 0 dhcp;
   let options_start = Cstruct.shift dhcp sizeof_dhcp in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = (Cstruct.len dhcp) - (Cstruct.len options_end) in

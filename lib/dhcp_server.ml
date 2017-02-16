@@ -297,7 +297,7 @@ module Lease = struct
       let v = match id with
         | Dhcp_wire.Id s -> Int32.of_int 1805 (* XXX who cares *)
         | Dhcp_wire.Hwaddr hw ->
-          let s = Bytes.sub (Macaddr.to_bytes hw) 2 4 in
+          let s = String.sub (Macaddr.to_bytes hw) 2 4 in
           let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
           let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in
           let b2 = Int32.shift_left (Char.code s.[1] |> Int32.of_int) 16 in

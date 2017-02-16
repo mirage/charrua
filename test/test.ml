@@ -215,8 +215,8 @@ let discover_pkt = {
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPDISCOVER;
       Client_id (Id "W.Sobchak");
@@ -277,7 +277,7 @@ let t_discover fixed =
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
-    assert (reply.file = Bytes.empty);
+    assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
     assert ((List.length reply.options) = (5 + 6));
     let () = match List.hd reply.options with
@@ -373,7 +373,7 @@ let t_discover_no_range_fixed () =
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
-    assert (reply.file = Bytes.empty);
+    assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
     assert ((List.length reply.options) = (5 + 6));
     let () = match List.hd reply.options with
@@ -418,8 +418,8 @@ let t_bad_discover () =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPDISCOVER;
       Client_id (Id "W.Sobchak");
@@ -454,8 +454,8 @@ let request_nak_pkt = {
   siaddr = Ipaddr.V4.any;
   giaddr = Ipaddr.V4.any;
   chaddr = mac_t;
-  sname = Bytes.empty;
-  file = Bytes.empty;
+  sname = "";
+  file = "";
   options = [
     Message_type DHCPREQUEST;
     Client_id (Id "The Dude");
@@ -509,8 +509,8 @@ let t_request_fixed () =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPREQUEST;
       Client_id (Id "W.Sobchak");
@@ -554,7 +554,7 @@ let t_request_fixed () =
       assert (reply.siaddr = ip_t);
       assert (reply.giaddr = Ipaddr.V4.any);
       assert (reply.sname = "Duder DHCP server!");
-      assert (reply.file = Bytes.empty);
+      assert (reply.file = "");
       (* 5 options are included regardless of parameter requests. *)
       assert ((List.length reply.options) = (5 + 6));
       let () = match List.hd reply.options with
@@ -618,8 +618,8 @@ let t_request () =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPREQUEST;
       Client_id (Id "W.Sobchak");
@@ -674,7 +674,7 @@ let t_request () =
       assert (reply.siaddr = ip_t);
       assert (reply.giaddr = Ipaddr.V4.any);
       assert (reply.sname = "Duder DHCP server!");
-      assert (reply.file = Bytes.empty);
+      assert (reply.file = "");
       (* 5 options are included regardless of parameter requests. *)
       assert ((List.length reply.options) = (5 + 6));
       let () = match List.hd reply.options with
@@ -747,8 +747,8 @@ let t_request_no_range () =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPREQUEST;
       Client_id (Id "W.Sobchak");
@@ -823,8 +823,8 @@ let t_request_no_range_fixed () =
     siaddr = Ipaddr.V4.any;
     giaddr = Ipaddr.V4.any;
     chaddr = mac_t;
-    sname = Bytes.empty;
-    file = Bytes.empty;
+    sname = "";
+    file = "";
     options = [
       Message_type DHCPREQUEST;
       Client_id (Id "W.Sobchak");
@@ -868,7 +868,7 @@ let t_request_no_range_fixed () =
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
-    assert (reply.file = Bytes.empty);
+    assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
     assert ((List.length reply.options) = (5 + 6));
     let () = match List.hd reply.options with

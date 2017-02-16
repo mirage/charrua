@@ -36,20 +36,18 @@ let finalize f g =
     g ();
     raise exn
 
-let bytes_extend_if_le s m =
-  let n = Bytes.length s in
+let string_extend_if_le s m =
+  let n = String.length s in
   if n > m then
     invalid_arg ("string is too damn big: " ^ (string_of_int n));
-  let e = Bytes.extend s 0 (m - n) in
-  Bytes.fill e n (m - n) (Char.chr 0);
-  e
+  s ^ String.make (m - n) (Char.chr 0)
 
-let bytes_nul b =
-  let len = Bytes.length b in
+let string_nul b =
+  let len = String.length b in
   let rec loop i =
     if i = len then
       true
-    else if (Bytes.get b i) <> (Char.chr 0) then
+    else if (String.get b i) <> (Char.chr 0) then
       false
     else
       loop (succ i)
@@ -58,7 +56,7 @@ let bytes_nul b =
 
 let cstruct_copy_normalized f buf =
   let b = f buf in
-  if bytes_nul b then "" else b
+  if string_nul b then "" else b
 
 let some_or_default x d = match x with Some x -> x | None -> d
 let some_or_f x f = match x with Some x -> x | None -> f ()
