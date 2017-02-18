@@ -87,28 +87,28 @@ module Lease : sig
   val sexp_of_t : t -> Sexplib.Sexp.t
   val t_of_sexp : Sexplib.Sexp.t -> t
 
-  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:float -> t
-  val timeleft : t -> now:float -> int32
-  val timeleft_exn : t -> now:float -> int32
-  val timeleft3 : t -> float -> float -> now:float -> int32 * int32 * int32
-  val extend : t -> now:float -> t
-  val expired : t -> now:float -> bool
+  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
+  val timeleft : t -> now:int32 -> int32
+  val timeleft_exn : t -> now:int32 -> int32
+  val timeleft3 : t -> float -> float -> now:int32 -> int32 * int32 * int32
+  val extend : t -> now:int32 -> t
+  val expired : t -> now:int32 -> bool
   val to_string : t -> string
 
   type database
 
   val make_db : unit -> database
   val to_list : database -> t list
-  val garbage_collect : database -> now:float -> database
+  val garbage_collect : database -> now:int32 -> database
   val remove : t -> database -> database
   val replace : t -> database -> database
   val lease_of_client_id : Dhcp_wire.client_id -> database -> t option
   val lease_of_addr : Ipaddr.V4.t -> database -> t option
   val addr_allocated : Ipaddr.V4.t -> database -> bool
-  val addr_available : Ipaddr.V4.t -> database -> now:float -> bool
+  val addr_available : Ipaddr.V4.t -> database -> now:int32 -> bool
   val get_usable_addr :
     Dhcp_wire.client_id -> database ->
-    (Ipaddr.V4.t * Ipaddr.V4.t) option -> now:float -> Ipaddr.V4.t option
+    (Ipaddr.V4.t * Ipaddr.V4.t) option -> now:int32 -> Ipaddr.V4.t option
 
 end
 
@@ -136,12 +136,11 @@ module Input : sig
   val for_us : Config.t -> Dhcp_wire.pkt -> bool
   (** Check the packet headers, true if the packet is destined for us. *)
 
-  val input_pkt : Config.t -> Lease.database -> Dhcp_wire.pkt -> float -> result
+  val input_pkt : Config.t -> Lease.database -> Dhcp_wire.pkt -> int32 -> result
   (** [input_pkt config lease_db pkt time] Inputs packet [pkt], lease_db
       is the current lease database state, the resulting action should be
       performed by the caller, normally a [Reply] packet is returned and should be
-      sent back. [time] is a float representing time as in [Unix.time] or
-      Mirage's [Clock.time]. *)
+      sent back. [time] is a int32 representing time as monotonic seconds. *)
 
   val collect_replies_test : Config.t -> Macaddr.t ->
     Dhcp_wire.option_code list -> Dhcp_wire.dhcp_option list

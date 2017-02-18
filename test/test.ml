@@ -45,6 +45,8 @@ let range_t = (Ipaddr.V4.of_string_exn "192.168.1.50",
 open Dhcp_wire
 open Dhcp_server
 
+let now = Int32.one
+
 let t_option_codes () =
   (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
@@ -249,7 +251,7 @@ let t_discover fixed =
   in
   if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
-  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
     assert (reply.srcmac = mac_t);
@@ -316,7 +318,7 @@ let t_discover_no_range () =
   in
   if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
-  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Dhcp_server.Input.Warning s -> if s <> "No ips left to offer" then
       failwith "expected string `'No ips left to offer`'"
   | _ -> failwith "No reply"
@@ -348,7 +350,7 @@ let t_discover_no_range_fixed () =
   in
     if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
-  match Input.input_pkt config (Lease.make_db ()) discover_pkt (Unix.time ()) with
+  match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
     assert (reply.srcmac = mac_t);
@@ -431,7 +433,7 @@ let t_bad_discover () =
     ]
   }
   in
-  match Input.input_pkt config (Lease.make_db ()) bad_discover (Unix.time ()) with
+  match Input.input_pkt config (Lease.make_db ()) bad_discover now with
   | Input.Silence -> ()
   | _ -> failwith "This packet was not for us, should be Silence"
 
@@ -472,7 +474,6 @@ let request_nak_pkt = {
 
 let t_request_fixed () =
   let open Dhcp_server.Config in
-  let now = Unix.time () in
   let host = {
       hostname = "bubbles.trailer.park.boys";
       options = [];
@@ -589,7 +590,6 @@ let t_request_fixed () =
   | _ -> failwith "No reply"
 
 let t_request () =
-  let now = Unix.time () in
   let config = make_simple_config ~hosts:[]
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
@@ -650,8 +650,8 @@ let t_request () =
           let open Dhcp_server.Lease in
           assert (l.client_id = (Id "W.Sobchak"));
           assert (not (expired l now));
-          assert (l.tm_start <= (Int32.of_float now));
-          assert (l.tm_end >= (Int32.of_float now));
+          assert (l.tm_start <= now);
+          assert (l.tm_end >= now);
           assert ((Lease.timeleft l now) <= (Int32.of_int 3600));
           assert ((Lease.timeleft l now) >= (Int32.of_int 3599));
       in
@@ -711,7 +711,6 @@ let t_request () =
 
 let t_request_no_range () =
   let open Dhcp_server.Config in
-  let now = Unix.time () in
   let config = Config.make
       ~hostname:"Duder DHCP server!"
       ~default_lease_time:(60 * 60 * 1)
@@ -780,7 +779,6 @@ let t_request_no_range () =
 
 let t_request_no_range_fixed () =
   let open Dhcp_server.Config in
-  let now = Unix.time () in
   let host = {
       hostname = "bubbles.trailer.park.boys";
       options = [];

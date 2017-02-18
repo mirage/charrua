@@ -214,7 +214,7 @@ module Lease = struct
   let to_list db = Id_map.fold (fun id lease l -> lease :: l) db.id_map []
 
   let make client_id addr ~duration ~now =
-    let tm_start = Int32.of_float now in
+    let tm_start = now in
     let tm_end = Int32.add tm_start duration in
     { tm_start; tm_end; addr; client_id }
 
@@ -222,8 +222,8 @@ module Lease = struct
     make (Dhcp_wire.Hwaddr mac) addr ~duration ~now
 
   let timeleft lease ~now =
-    let left = (Int32.to_float lease.tm_end) -. now in
-    if left < 0. then Int32.zero else (Int32.of_float left)
+    let left = Int32.sub lease.tm_end now in
+    if left < Int32.zero then Int32.zero else left
 
   let timeleft_exn lease ~now =
     let left = timeleft lease ~now in
