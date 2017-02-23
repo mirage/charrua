@@ -8,7 +8,6 @@ PKG ipaddr
 PKG tuntap
 PKG rawlink
 PKG charrua-core
-PKG mirage-types
-PKG tcpip
+PKG mtime.os
 EXT lwt
 EXT nonrec

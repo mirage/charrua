@@ -1,7 +1,5 @@
 true: debug, bin_annot, strict_sequence
-true: use_menhir
 true: package(charrua-core.server)
 true: package(lwt.unix), ppopt(-lwt-debug)
-true: package(cstruct), package(cstruct.lwt), package(cstruct.unix)
-true: package(cmdliner), package(ipaddr), package(tuntap)
-true: package(rawlink)
+true: package(cstruct cstruct.lwt cstruct.unix)
+true: package(cmdliner ipaddr tuntap rawlink mtime.os)

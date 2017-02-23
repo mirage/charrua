@@ -97,7 +97,8 @@ let rec input config db link =
     | Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
-      match (input_pkt config db pkt (Unix.time ())) with
+      let now = Mtime.(elapsed () |> to_s) |> Int32.of_float in
+      match (input_pkt config db pkt now) with
       | Silence -> return db
       | Update db -> return db
       | Reply (reply, db) ->
