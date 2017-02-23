@@ -7,7 +7,7 @@ homepage: "https://github.com/haesbaert/charrua-unix"
 bug-reports: "https://github.com/haesbaert/charrua-unix/issues"
 license: "ISC"
 dev-repo: "https://github.com/haesbaert/charrua-unix.git"
-available: [ocaml-version >= "4.02" & opam-version >= "1.2"]
+available: [ocaml-version >= "4.03" & opam-version >= "1.2"]
 build: [
   ["sh" "build.sh"]
 ]
@@ -15,7 +15,7 @@ depends: [
   "ocamlfind"
   {build}
   "lwt"
-  "charrua-core" {> "0.4"}
+  "charrua-core" {= "0.4"}
   "cmdliner"
   "rawlink"
   "tuntap"
