@@ -7,7 +7,6 @@ script: bash -ex ./.travis-docker.sh
 env:
   global:
   - PACKAGE="charrua-core.9999"
-  - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
   matrix:
   - DISTRO="alpine-3.4" OCAML_VERSION="4.03.0"
   - DISTRO="alpine-3.4" OCAML_VERSION="4.04.0"
