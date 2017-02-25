@@ -4,7 +4,7 @@
 Unix DHCP daemon based on
 [charrua-core](http://www.github.com/haesbaert/charrua-core).
 
-[![Build Status](https://travis-ci.org/haesbaert/charrua-unix.png)](https://travis-ci.org/haesbaert/charrua-unix)
+[![Build Status](https://travis-ci.org/haesbaert/charrua-unix.svg)](https://travis-ci.org/haesbaert/charrua-unix)
 
 #### Features
 
