@@ -13,8 +13,8 @@ servers.
 [charrua-unix](http://www.github.com/haesbaert/charrua-unix) is a Unix DHCP
 server based on charrua-core.
 
-[mirage](https://github.com/mirage/mirage-skeleton/tree/master/dhcp) is a Mirage
-DHCP unikernel server based on charrua-core.
+[mirage](https://github.com/mirage/mirage-skeleton/tree/master/applications/dhcp)
+is a Mirage DHCP unikernel server based on charrua-core.
 
 You can browse the API for [charrua-core](http://www.github.com/mirage/charrua-core) at
 http://mirage.github.io/charrua-core/api
