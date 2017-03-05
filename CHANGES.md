@@ -29,9 +29,9 @@
 ## 0.2 (2015-11-10)
 
 * Custom exceptions removed, only Invalid_argument now
-* Improved mli documentation.
+* Improved mli documentation
 * Major rewrite
-* Support ocaml 4.01.
+* Support ocaml 4.01
 
 ## 0.1 (2015-10-09)
 
