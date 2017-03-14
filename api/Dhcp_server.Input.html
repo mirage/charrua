@@ -2,7 +2,8 @@
 <html>
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
-<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
 <link rel="previous" href="Dhcp_server.Lease.html">
 <link rel="Up" href="Dhcp_server.html">
@@ -18,7 +19,7 @@
 &nbsp;</div>
 <h1>Module <a href="type_Dhcp_server.Input.html">Dhcp_server.Input</a></h1>
 
-<pre><span class="keyword">module</span> Input: <code class="code">sig</code> <a href="Dhcp_server.Input.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span class="keyword">module</span> Input: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_server.Input.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
 <br>
 The logic for handling a DHCP input packet is pure, the module does not
       perform any IO, it only returns a possible reply packet or event to be
@@ -26,7 +27,7 @@ The logic for handling a DHCP input packet is pure, the module does not
 <p>
 
       A typical server main loop would do its own IO for receiving a packet,
-      then input with <a href="Dhcp_server.Input.html#VALinput_pkt"><code class="code">Dhcp_server.Input.input_pkt</code></a> and send out the resulting reply.<br>
+      then input with <a href="Dhcp_server.Input.html#VALinput_pkt"><code class="code"><span class="constructor">Dhcp_server</span>.<span class="constructor">Input</span>.input_pkt</code></a> and send out the resulting reply.<br>
 
 <pre><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type"></code>result</span> = </code></pre><table class="typetable">
 <tr>
@@ -90,12 +91,11 @@ The result of <code class="code">input_pkt</code>.<br>
 Check the packet headers, true if the packet is destined for us.<br>
 </div>
 
-<pre><span id="VALinput_pkt"><span class="keyword">val</span> input_pkt</span> : <code class="type"><a href="Dhcp_server.Config.html#TYPEt">Dhcp_server.Config.t</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">Dhcp_server.Lease.database</a> -><br>       <a href="Dhcp_wire.html#TYPEpkt">Dhcp_wire.pkt</a> -> float -> <a href="Dhcp_server.Input.html#TYPEresult">result</a></code></pre><div class="info ">
-<code class="code">input_pkt config lease_db pkt time</code> Inputs packet <code class="code">pkt</code>, lease_db
+<pre><span id="VALinput_pkt"><span class="keyword">val</span> input_pkt</span> : <code class="type"><a href="Dhcp_server.Config.html#TYPEt">Dhcp_server.Config.t</a> -><br>       <a href="Dhcp_server.Lease.html#TYPEdatabase">Dhcp_server.Lease.database</a> -><br>       <a href="Dhcp_wire.html#TYPEpkt">Dhcp_wire.pkt</a> -> int32 -> <a href="Dhcp_server.Input.html#TYPEresult">result</a></code></pre><div class="info ">
+<code class="code">input_pkt&nbsp;config&nbsp;lease_db&nbsp;pkt&nbsp;time</code> Inputs packet <code class="code">pkt</code>, lease_db
       is the current lease database state, the resulting action should be
-      performed by the caller, normally a <code class="code">Reply</code> packet is returned and should be
-      sent back. <code class="code">time</code> is a float representing time as in <code class="code">Unix.time</code> or
-      Mirage's <code class="code">Clock.time</code>.<br>
+      performed by the caller, normally a <code class="code"><span class="constructor">Reply</span></code> packet is returned and should be
+      sent back. <code class="code">time</code> is a int32 representing time as monotonic seconds.<br>
 </div>
 
 <pre><span id="VALcollect_replies_test"><span class="keyword">val</span> collect_replies_test</span> : <code class="type"><a href="Dhcp_server.Config.html#TYPEt">Dhcp_server.Config.t</a> -><br>       Macaddr.t -> <a href="Dhcp_wire.html#TYPEoption_code">Dhcp_wire.option_code</a> list -> <a href="Dhcp_wire.html#TYPEdhcp_option">Dhcp_wire.dhcp_option</a> list</code></pre><div class="info ">

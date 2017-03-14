@@ -2,7 +2,8 @@
 <html>
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
-<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
 <link rel="next" href="Dhcp_server.html">
 <link rel="Up" href="index.html">
@@ -27,7 +28,7 @@
 </div>
 <h1>Module <a href="type_Dhcp_wire.html">Dhcp_wire</a></h1>
 
-<pre><span class="keyword">module</span> Dhcp_wire: <code class="code">sig</code> <a href="Dhcp_wire.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Dhcp_wire: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_wire.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
 <h1 id="1_DHCPwireparsers">DHCP wire parsers</h1><br>
 </div>
 <hr width="100%">
@@ -62,11 +63,11 @@ DHCP server port <code class="code">67</code><br>
 
 
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEop"><code class="code">Dhcp_wire.op</code></a>s.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEop"><code class="code"><span class="constructor">Dhcp_wire</span>.op</code></a>s.<br>
 
 <pre><span id="VALint_to_op"><span class="keyword">val</span> int_to_op</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEop">op</a> option</code></pre>
 <pre><span id="VALint_to_op_exn"><span class="keyword">val</span> int_to_op_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEop">op</a></code></pre><div class="info ">
-<b>Raises</b> <code>Invalid_argument</code> if <code class="code">v &lt; 0 || v &gt; 255</code><br>
+<b>Raises</b> <code>Invalid_argument</code> if <code class="code">v&nbsp;&lt;&nbsp;0&nbsp;<span class="keywordsign">||</span>&nbsp;v&nbsp;&gt;&nbsp;255</code><br>
 </div>
 
 <pre><span id="VALop_to_int"><span class="keyword">val</span> op_to_int</span> : <code class="type"><a href="Dhcp_wire.html#TYPEop">op</a> -> int</code></pre>
@@ -185,12 +186,12 @@ Conversions of <a href="Dhcp_wire.html#TYPEop"><code class="code">Dhcp_wire.op</
 
 
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code">Dhcp_wire.msgtype</code></a>s.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code"><span class="constructor">Dhcp_wire</span>.msgtype</code></a>s.<br>
 
 <pre><span id="VALmsgtype_to_int"><span class="keyword">val</span> msgtype_to_int</span> : <code class="type"><a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> -> int</code></pre>
 <pre><span id="VALint_to_msgtype"><span class="keyword">val</span> int_to_msgtype</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> option</code></pre>
 <pre><span id="VALint_to_msgtype_exn"><span class="keyword">val</span> int_to_msgtype_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a></code></pre><div class="info ">
-<b>Raises</b> <code>Invalid_argument</code> if not a valid <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code">Dhcp_wire.msgtype</code></a> value<br>
+<b>Raises</b> <code>Invalid_argument</code> if not a valid <a href="Dhcp_wire.html#TYPEmsgtype"><code class="code"><span class="constructor">Dhcp_wire</span>.msgtype</code></a> value<br>
 </div>
 
 <pre><span id="VALstring_to_msgtype"><span class="keyword">val</span> string_to_msgtype</span> : <code class="type">string -> <a href="Dhcp_wire.html#TYPEmsgtype">msgtype</a> option</code></pre>
@@ -1999,7 +2000,7 @@ The type of a dhcp option code, these are all the values according to
 
 
 <br>
-Conversions of DHCP <a href="Dhcp_wire.html#TYPEoption_code"><code class="code">Dhcp_wire.option_code</code></a>s.<br>
+Conversions of DHCP <a href="Dhcp_wire.html#TYPEoption_code"><code class="code"><span class="constructor">Dhcp_wire</span>.option_code</code></a>s.<br>
 
 <pre><span id="VALint_to_option_code"><span class="keyword">val</span> int_to_option_code</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a> option</code></pre>
 <pre><span id="VALint_to_option_code_exn"><span class="keyword">val</span> int_to_option_code_exn</span> : <code class="type">int -> <a href="Dhcp_wire.html#TYPEoption_code">option_code</a></code></pre>
@@ -2028,7 +2029,7 @@ Conversions of DHCP <a href="Dhcp_wire.html#TYPEoption_code"><code class="code">
 
 
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEhtype"><code class="code">Dhcp_wire.htype</code></a>.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEhtype"><code class="code"><span class="constructor">Dhcp_wire</span>.htype</code></a>.<br>
 
 <pre><span id="VALhtype_of_sexp"><span class="keyword">val</span> htype_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEhtype">htype</a></code></pre>
 <pre><span id="VALsexp_of_htype"><span class="keyword">val</span> sexp_of_htype</span> : <code class="type"><a href="Dhcp_wire.html#TYPEhtype">htype</a> -> Sexplib.Sexp.t</code></pre><br>
@@ -2052,7 +2053,7 @@ Conversions of <a href="Dhcp_wire.html#TYPEhtype"><code class="code">Dhcp_wire.h
 
 
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEflags"><code class="code">Dhcp_wire.flags</code></a>.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEflags"><code class="code"><span class="constructor">Dhcp_wire</span>.flags</code></a>.<br>
 
 <pre><span id="VALflags_of_sexp"><span class="keyword">val</span> flags_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEflags">flags</a></code></pre>
 <pre><span id="VALsexp_of_flags"><span class="keyword">val</span> sexp_of_flags</span> : <code class="type"><a href="Dhcp_wire.html#TYPEflags">flags</a> -> Sexplib.Sexp.t</code></pre><br>
@@ -2072,15 +2073,15 @@ Conversions of <a href="Dhcp_wire.html#TYPEflags"><code class="code">Dhcp_wire.f
 <td align="left" valign="top" >
 <code><span id="TYPEELTclient_id.Id"><span class="constructor">Id</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
-A client_id is usually a mac address from a <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>,
-    but it can also be an opaque string. See <a href="Dhcp_wire.html#VALclient_id_of_pkt"><code class="code">Dhcp_wire.client_id_of_pkt</code></a>.<br>
+A client_id is usually a mac address from a <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code"><span class="constructor">Dhcp_wire</span>.dhcp_option</code></a>,
+    but it can also be an opaque string. See <a href="Dhcp_wire.html#VALclient_id_of_pkt"><code class="code"><span class="constructor">Dhcp_wire</span>.client_id_of_pkt</code></a>.<br>
 </div>
 </td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 
 
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wire.client_id</code></a>.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code"><span class="constructor">Dhcp_wire</span>.client_id</code></a>.<br>
 
 <pre><span id="VALclient_id_of_sexp"><span class="keyword">val</span> client_id_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEclient_id">client_id</a></code></pre>
 <pre><span id="VALsexp_of_client_id"><span class="keyword">val</span> sexp_of_client_id</span> : <code class="type"><a href="Dhcp_wire.html#TYPEclient_id">client_id</a> -> Sexplib.Sexp.t</code></pre>
@@ -3188,18 +3189,18 @@ Conversions of <a href="Dhcp_wire.html#TYPEclient_id"><code class="code">Dhcp_wi
 Not all options are currently implemented.<br>
 </div>
 <br>
-Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_wire.dhcp_option</code></a>.<br>
+Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code"><span class="constructor">Dhcp_wire</span>.dhcp_option</code></a>.<br>
 
 <pre><span id="VALbuf_of_options"><span class="keyword">val</span> buf_of_options</span> : <code class="type">Cstruct.t -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> Cstruct.t</code></pre>
 <pre><span id="VALoptions_of_buf"><span class="keyword">val</span> options_of_buf</span> : <code class="type">Cstruct.t -> int -> <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list</code></pre>
 <pre><span id="VALfind_option"><span class="keyword">val</span> find_option</span> : <code class="type">(<a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> -> 'b option) -><br>       <a href="Dhcp_wire.html#TYPEdhcp_option">dhcp_option</a> list -> 'b option</code></pre><div class="info ">
-<code class="code">find_option f l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code">Some</code> value
+<code class="code">find_option&nbsp;f&nbsp;l</code> finds the first option where <code class="code">f</code> evaluates to <code class="code"><span class="constructor">Some</span></code> value
     on list <code class="code">l</code><br>
 </div>
 
 <pre><span id="VALcollect_options"><span class="keyword">val</span> collect_options</span> : <code class="type">('a -> 'b list option) -> 'a list -> 'b list</code></pre><div class="info ">
-<code class="code">collect_options f l</code> collects all options where <code class="code">f</code> evaluates to <code class="code">Some</code>
-    value on list <code class="code">l</code>, this is useful for list options like <code class="code">Routers</code>, if
+<code class="code">collect_options&nbsp;f&nbsp;l</code> collects all options where <code class="code">f</code> evaluates to <code class="code"><span class="constructor">Some</span></code>
+    value on list <code class="code">l</code>, this is useful for list options like <code class="code"><span class="constructor">Routers</span></code>, if
     multiple list options are found, the resulting list is flattened.<br>
 </div>
 
@@ -3515,9 +3516,9 @@ Conversions of <a href="Dhcp_wire.html#TYPEdhcp_option"><code class="code">Dhcp_
 
 
 <br>
-Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pkt</code></a>.<br>
+Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code"><span class="constructor">Dhcp_wire</span>.pkt</code></a>.<br>
 
-<pre><span id="VALpkt_of_buf"><span class="keyword">val</span> pkt_of_buf</span> : <code class="type">Cstruct.t -> int -> (<a href="Dhcp_wire.html#TYPEpkt">pkt</a>, string) Result.result</code></pre>
+<pre><span id="VALpkt_of_buf"><span class="keyword">val</span> pkt_of_buf</span> : <code class="type">Cstruct.t -> int -> (<a href="Dhcp_wire.html#TYPEpkt">pkt</a>, string) Pervasives.result</code></pre>
 <pre><span id="VALbuf_of_pkt"><span class="keyword">val</span> buf_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Cstruct.t</code></pre>
 <pre><span id="VALpkt_of_sexp"><span class="keyword">val</span> pkt_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Dhcp_wire.html#TYPEpkt">pkt</a></code></pre>
 <pre><span id="VALsexp_of_pkt"><span class="keyword">val</span> sexp_of_pkt</span> : <code class="type"><a href="Dhcp_wire.html#TYPEpkt">pkt</a> -> Sexplib.Sexp.t</code></pre>
@@ -3526,6 +3527,6 @@ Conversions for <a href="Dhcp_wire.html#TYPEpkt"><code class="code">Dhcp_wire.pk
 Helpers.<br>
 
 <pre><span id="VALis_dhcp"><span class="keyword">val</span> is_dhcp</span> : <code class="type">Cstruct.t -> int -> bool</code></pre><div class="info ">
-<code class="code">is_dhcp buf len</code> is true if <code class="code">buf</code> is a DHCP packet.<br>
+<code class="code">is_dhcp&nbsp;buf&nbsp;len</code> is true if <code class="code">buf</code> is a DHCP packet.<br>
 </div>
 </body></html>

@@ -2,7 +2,8 @@
 <html>
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
-<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
 <link rel="previous" href="Dhcp_wire.html">
 <link rel="Up" href="index.html">
@@ -21,21 +22,24 @@
 &nbsp;</div>
 <h1>Module <a href="type_Dhcp_server.html">Dhcp_server</a></h1>
 
-<pre><span class="keyword">module</span> Dhcp_server: <code class="code">sig</code> <a href="Dhcp_server.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Dhcp_server: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_server.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
 <h1 id="1_DHCPServer">DHCP Server </h1><br>
 </div>
 <hr width="100%">
 <br>
-A DHCP server is composed of two sub-modules: <a href="Dhcp_server.Config.html"><code class="code">Dhcp_server.Config</code></a> and <a href="Dhcp_server.Input.html"><code class="code">Dhcp_server.Input</code></a>.  The
+A DHCP server is composed of two sub-modules: <a href="Dhcp_server.Config.html"><code class="code"><span class="constructor">Dhcp_server</span>.<span class="constructor">Config</span></code></a> and <a href="Dhcp_server.Input.html"><code class="code"><span class="constructor">Dhcp_server</span>.<span class="constructor">Input</span></code></a>.  The
     former deals with building a suitable configuration for using with the
-    later.<br>
+    later.
+<p>
+
+   <em>730f86e - <a href="https://github.com/mirage/charrua-core ">homepage</a></em><br>
 <br>
 <h2 id="2_DHCPServerConfiguration">DHCP Server Configuration </h2><br>
 
-<pre><span class="keyword">module</span> <a href="Dhcp_server.Config.html">Config</a>: <code class="code">sig</code> <a href="Dhcp_server.Config.html">..</a> <code class="code">end</code></pre><br>
+<pre><span class="keyword">module</span> <a href="Dhcp_server.Config.html">Config</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_server.Config.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br>
 <h2 id="2_DHCPLeasesbindings">DHCP Leases (bindings) </h2><br>
 
-<pre><span class="keyword">module</span> <a href="Dhcp_server.Lease.html">Lease</a>: <code class="code">sig</code> <a href="Dhcp_server.Lease.html">..</a> <code class="code">end</code></pre><br>
+<pre><span class="keyword">module</span> <a href="Dhcp_server.Lease.html">Lease</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_server.Lease.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br>
 <h2 id="2_DHCPInputPacketLogic">DHCP Input Packet Logic </h2><br>
 
-<pre><span class="keyword">module</span> <a href="Dhcp_server.Input.html">Input</a>: <code class="code">sig</code> <a href="Dhcp_server.Input.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span class="keyword">module</span> <a href="Dhcp_server.Input.html">Input</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Dhcp_server.Input.html">..</a> <code class="code"><span class="keyword">end</span></code></pre></body></html>
