@@ -1068,7 +1068,7 @@ let buf_of_pkt pkt =
                           { src_port = pkt.srcport;
                             dst_port = pkt.dstport })
   in
-  let ip = Ipv4_packet.(Marshal.make_cstruct ~payload:(Cstruct.concat [udp;dhcp])
+  let ip = Ipv4_packet.(Marshal.make_cstruct ~payload_len:(Cstruct.lenv [udp;dhcp])
                           { src = pkt.srcip; dst = pkt.dstip;
                             proto = (Marshal.protocol_to_int `UDP);
                             ttl = 255;

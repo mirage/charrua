@@ -1,7 +1,8 @@
-## 0.5 (??)
+## 0.5 (2017-03-14)
 
 * Topkg support added
 * Time type on input_pkt changed to int32
+* Bump tcpip support to version 3.1.0
 
 ## 0.4 (2017-01-21)
 
