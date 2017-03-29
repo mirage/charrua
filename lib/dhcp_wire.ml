@@ -881,7 +881,7 @@ let buf_of_options sbuf options =
     | Nds_tree_name nn -> put_coded_bytes 86 nn buf           (* code 86 *)
     | Nds_context nc -> put_coded_bytes 87 nc buf             (* code 87 *)
     | Bcmcs_controller_domain_name_list l -> put_coded_bytes 88 l buf (* code 88 *)
-    | Bcmcs_controller_ipv4_addrs l -> put_coded_ip_list 98 l buf (* code 89 *)
+    | Bcmcs_controller_ipv4_addrs l -> put_coded_ip_list 89 l buf (* code 89 *)
     | Authentication a -> put_coded_bytes 90 a buf            (* code 90 *)
     | Client_last_transaction_time t -> put_coded_32 91 t buf (* code 91 *)
     | Associated_ips l -> put_coded_ip_list 92 l buf          (* code 92 *)
