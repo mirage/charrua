@@ -773,16 +773,22 @@ let buf_of_options sbuf options =
     blit_from_string s 0 buf 0 len;
     shift buf len
   in
-  let make_listf f len code l buf =
+  let make_listf ?(min_len=1) f len code l buf =
+    if (List.length l) < min_len then invalid_arg "Invalid option" else
     let buf = put_code code buf |> put_len (len * (List.length l)) in
     List.fold_left f buf l
   in
-  let put_coded_8_list = make_listf (fun buf x -> put_8 x buf) 1 in
-  let put_coded_16_list = make_listf (fun buf x -> put_16 x buf) 2 in
+  let put_coded_8_list ?min_len =
+    make_listf ?min_len (fun buf x -> put_8 x buf) 1 in
+  let put_coded_16_list ?min_len =
+    make_listf ?min_len (fun buf x -> put_16 x buf) 2 in
   (* let put_coded_32_list = make_listf (fun buf x -> put_32 x buf) 4 in *)
-  let put_coded_ip_list = make_listf (fun buf x -> put_ip x buf) 4 in
-  let put_coded_prefix_list = make_listf (fun buf x -> put_prefix x buf) 8 in
-  let put_coded_ip_tuple_list = make_listf (fun buf x -> put_ip_tuple x buf) 8 in
+  let put_coded_ip_list ?min_len =
+    make_listf ?min_len (fun buf x -> put_ip x buf) 4 in
+  let put_coded_prefix_list ?min_len =
+    make_listf ?min_len (fun buf x -> put_prefix x buf) 8 in
+  let put_coded_ip_tuple_list ?min_len =
+    make_listf ?min_len (fun buf x -> put_ip_tuple x buf) 8 in
   let buf_of_option buf option =
     match option with
     | Pad -> buf (* we don't pad *)                           (* code 0 *)
@@ -855,7 +861,7 @@ let buf_of_options sbuf options =
     | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf    (* code 65 *)
     | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf      (* code 66 *)
     | Bootfile_name bn -> put_coded_bytes 67 bn buf           (* code 67 *)
-    | Mobile_ip_home_agent ips -> put_coded_ip_list 68 ips buf(* code 68 *)
+    | Mobile_ip_home_agent ips -> put_coded_ip_list ~min_len:0 68 ips buf (* code 68 *)
     | Smtp_servers ips -> put_coded_ip_list 69 ips buf        (* code 69 *)
     | Pop3_servers ips -> put_coded_ip_list 70 ips buf        (* code 70 *)
     | Nntp_servers ips -> put_coded_ip_list 71 ips buf        (* code 71 *)
