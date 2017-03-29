@@ -848,7 +848,7 @@ let buf_of_options sbuf options =
     | Server_identifier si -> put_coded_ip 54 si buf          (* code 54 *)
     | Parameter_requests pr ->
       put_coded_8_list 55
-        (List.map option_code_to_int pr) buf  (* code 55 *)
+        (List.map option_code_to_int pr) buf                  (* code 55 *)
     | Message m -> put_coded_bytes 56 m buf                   (* code 56 *)
     | Max_message mm -> put_coded_16 57 mm buf                (* code 57 *)
     | Renewal_t1 rt -> put_coded_32 58 rt buf                 (* code 58 *)
