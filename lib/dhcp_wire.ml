@@ -945,7 +945,7 @@ let buf_of_options sbuf options =
     | End -> buf (* discard, we add ourselves *)              (* code 255 *)
   in
   match options with
-  | [] -> sbuf
+  | [] -> invalid_arg "Invalid options"
   | _ ->
     let () = BE.set_uint32 sbuf 0 0x63825363l in       (* put cookie *)
     let sbuf = shift sbuf 4 in
