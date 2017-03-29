@@ -546,13 +546,13 @@ let options_of_buf buf buf_len =
       let take op = collect (Cstruct.shift body len) (op :: options) in
       let get_8 () = if len <> 1 then invalid_arg bad_len else
           Cstruct.get_uint8 body 0 in
-      let get_8_list () =
+      let get_8_list ?(min_len=1) () =
         let rec loop offset octets =
           if offset = len then octets else
             let octet = Cstruct.get_uint8 body offset in
             loop (succ offset) (octet :: octets)
         in
-        if len <= 0 then invalid_arg bad_len else
+        if len < min_len then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
       let get_bool () = match (get_8 ()) with
@@ -562,13 +562,13 @@ let options_of_buf buf buf_len =
       in
       let get_16 () = if len <> 2 then invalid_arg bad_len else
           Cstruct.BE.get_uint16 body 0 in
-      let get_16_list () =
+      let get_16_list ?(min_len=2) () =
         let rec loop offset shorts =
           if offset = len then shorts else
             let short = Cstruct.BE.get_uint16 body offset in
             loop ((succ offset) * 2) (short :: shorts)
         in
-        if ((len mod 2) <> 0) || len <= 0 then invalid_arg bad_len else
+        if ((len mod 2) <> 0) || len < 2 then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
       let get_32 () = if len <> 4 then invalid_arg bad_len else
@@ -597,8 +597,8 @@ let options_of_buf buf buf_len =
         loop (get_ip_list ~min_len:8 ()) []
       in
       (* Get a list of ip pairs *)
-      let get_prefix_list () =
-        if ((len mod 8) <> 0) || len <= 0 then
+      let get_prefix_list ?(min_len=8) () =
+        if ((len mod 8) <> 0) || len < min_len then
           invalid_arg bad_len
         else
           List.map (function
