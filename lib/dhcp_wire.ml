@@ -994,7 +994,7 @@ let pkt_of_buf buf len =
         let xid = get_dhcp_xid udp_payload in
         let secs = get_dhcp_secs udp_payload in
         let flags =
-          if ((get_dhcp_flags buf) land 0x8000) <> 0 then Broadcast else Unicast
+          if ((get_dhcp_flags udp_payload) land 0x8000) <> 0 then Broadcast else Unicast
         in
         let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr udp_payload) in
         let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
