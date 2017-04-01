@@ -1155,7 +1155,7 @@ let buf_of_pkt pkt =
                             ttl = 255;
                             options = Cstruct.create 0; })
   in
-  Cstruct.concat (ethernet :: ip :: udp :: dhcp :: [])
+  Cstruct.concat [ ethernet; ip; udp; dhcp ]
 
 let is_dhcp buf len =
   let open Rresult in
