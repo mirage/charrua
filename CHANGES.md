@@ -4,6 +4,7 @@
 * Dhcp_wire.options_of_buf now enforces minimun length on all cases.
 * Fixed option code for Bcmcs_controller_ipv4_addr.
 * **CRITICAL** Fixed a bug where dhcp_flags was read from the wrong offset.
+This bug was present in versions 0.4 and 0.5.
 
 ## 0.5 (2017-03-14)
 
