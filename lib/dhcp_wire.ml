@@ -728,6 +728,8 @@ let options_of_buf buf buf_len =
       | 117 -> take (Name_service_search (get_string ()))
       | 118 -> take (Subnet_selection (get_ip ()))
       | 119->  take (Domain_search (get_string ()))
+      | 120 -> take (Sip_servers (get_string ()))
+      | 121 -> take (Classless_static_route (get_string ()))
       | 122 -> take (Ccc (get_string ()))
       | 123 -> take (Geoconf (get_string ()))
       | 124 -> take (Vi_vendor_class (get_string ()))
