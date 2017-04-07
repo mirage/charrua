@@ -566,7 +566,7 @@ let options_of_buf buf buf_len =
         let rec loop offset shorts =
           if offset = len then shorts else
             let short = Cstruct.BE.get_uint16 body offset in
-            loop ((succ offset) * 2) (short :: shorts)
+            loop (offset + 2) (short :: shorts)
         in
         if ((len mod 2) <> 0) || len < 2 then invalid_arg bad_len else
           List.rev (loop 0 [])
@@ -577,7 +577,7 @@ let options_of_buf buf buf_len =
         let rec loop offset longs =
           if offset = len then longs else
             let long = Cstruct.BE.get_uint32 body offset in
-            loop ((succ offset) * 4) (long :: longs)
+            loop (offset + 4) (long :: longs)
         in
         if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
           List.rev (loop 0 [])
