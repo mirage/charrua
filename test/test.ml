@@ -53,6 +53,46 @@ let t_option_codes () =
     ignore (int_to_option_code_exn i)
   done
 
+let t_long_lists () =
+  let pkt = {
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = 0xabad1deal;
+    chaddr = mac_t;
+    srcport = client_port;
+    dstport = server_port;
+    srcmac = mac_t;
+    dstmac = Macaddr.broadcast;
+    srcip = Ipaddr.V4.any;
+    dstip = Ipaddr.V4.broadcast;
+    op = BOOTREQUEST;
+    secs = 0;
+    flags = Broadcast;
+    siaddr = Ipaddr.V4.any;
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    giaddr = Ipaddr.V4.any;
+    sname = "";
+    file = "";
+    options = [
+      Message_type DHCPREQUEST;
+      Dns_servers [
+         Ipaddr.V4.of_string_exn "1.2.3.4";
+         Ipaddr.V4.of_string_exn "2.3.4.5";
+         Ipaddr.V4.of_string_exn "3.4.5.6";
+         Ipaddr.V4.of_string_exn "4.5.6.7";
+         Ipaddr.V4.of_string_exn "5.6.7.8";
+         Ipaddr.V4.of_string_exn "6.7.8.9";
+         Ipaddr.V4.of_string_exn "220.220.220.220";
+      ]
+    ]
+  } in
+  let serialized = buf_of_pkt pkt in
+  match pkt_of_buf serialized (Cstruct.len serialized) with
+  | Error e -> failwith e
+  | Ok deserialized -> assert (pkt = deserialized)
+
 let make_simple_config =
   Config.make
     ~hostname:"Duder DHCP server!"
@@ -897,6 +937,7 @@ let run_test test =
 
 let all_tests = [
   (t_option_codes, "option codes");
+  (t_long_lists, "long lists of options serialize/deserialize ok");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
   (t_bad_options, "renewal_t in opts");
