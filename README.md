@@ -6,7 +6,7 @@ _ISC-licensed_ DHCP library implementation in OCaml.
 [![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://mirage.github.io/charrua-core/api)
 [![Build Status](https://travis-ci.org/mirage/charrua-core.svg)](https://travis-ci.org/mirage/charrua-core)
 
-It provides basically two modules, a `Dhcp` responsible for parsing and
+It provides basically two modules, a `Dhcp_wire` responsible for parsing and
 constructing DHCP messages and a `Dhcp_server` module used for constructing DHCP
 servers.
 
