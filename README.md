@@ -35,8 +35,8 @@ http://mirage.github.io/charrua-core/api
 The name `charrua` is a reference to the, now extinct, semi-nomadic people of
 southern South America.
 
-This project became one of the [Mirage Pioneer]
-(https://github.com/mirage/mirage-www/wiki/Pioneer-Projects) projects.
+This project became one of the [Mirage Pioneer](https://github.com/mirage/mirage-www/wiki/Pioneer-Projects)
+projects.
 
 The master branch depends on upcoming mirage 2.9 at this point, if you want to
 use it, you'll have to add the mirage development branch to opam, it also
