@@ -937,7 +937,7 @@ let run_test test =
 
 let all_tests = [
   (t_option_codes, "option codes");
-  (t_long_lists, "long lists of options serialize/deserialize ok");
+  (t_long_lists, "long options lists");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
   (t_bad_options, "renewal_t in opts");
