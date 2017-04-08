@@ -993,7 +993,7 @@ let buf_of_options sbuf options =
     | Pxe_135 p -> put_coded_bytes 135 p buf                  (* code 135 *)
     | Pana_agent pa -> put_coded_bytes 136 pa buf             (* code 136 *)
     | V4_lost v -> put_coded_bytes 137 v buf                  (* code 137 *)
-    | Capwap_ac_v4 c -> put_coded_bytes 137 c buf             (* code 138 *)
+    | Capwap_ac_v4 c -> put_coded_bytes 138 c buf             (* code 138 *)
     | Ipv4_address_mos m -> put_coded_bytes 139 m buf         (* code 139 *)
     | Ipv4_fqdn_mos m -> put_coded_bytes 140 m buf            (* code 140 *)
     | Sip_ua_domains d -> put_coded_bytes 141 d buf           (* code 141 *)
