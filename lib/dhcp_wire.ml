@@ -588,9 +588,9 @@ let options_of_buf buf buf_len =
       let get_ip_list ?(min_len=4) () =
         List.map Ipaddr.V4.of_int32 (get_32_list ~min_len:min_len ())
       in
-      let get_ip_tuple_list () =
-        let loop ips tuples = match ips with
-          | ip1 :: ip2 :: tl -> (ip1, ip2) :: tuples
+      let get_ip_tuple_list l =
+        let rec loop ips tuples = match ips with
+          | ip1 :: ip2 :: tl -> loop tl ((ip1, ip2) :: tuples)
           | ip :: [] -> invalid_arg bad_len
           | [] -> List.rev tuples
         in
