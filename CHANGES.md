@@ -1,9 +1,11 @@
+## 0.8 (????-??-??)
+
 ## 0.7 (2017-14-04)
 
 * Fixed a bug where only the first tuple from an option list would be parsed
 * Fixed parsing of long option lists
 * Fixed parsing for options 120 and 121
-* Updated copyrights.
+* Updated copyrights
 
 ## 0.6 (2017-04-01)
 
