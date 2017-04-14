@@ -71,8 +71,8 @@ let cons_if_some v tl = match v with Some v -> v :: tl | None -> tl
 let cons_if_some_f v fnr tl = match v with Some x -> fnr x :: tl | None -> tl
 
 let addr_in_range addr range =
-  let (low_ip, high_ip) = range in
-  let low_32 = (Ipaddr.V4.to_int32 low_ip) in
+  let low_ip, high_ip = range in
+  let low_32 = Ipaddr.V4.to_int32 low_ip in
   let high_32 = Ipaddr.V4.to_int32 high_ip in
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
