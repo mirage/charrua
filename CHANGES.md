@@ -53,4 +53,4 @@ This bug was present in versions 0.4 and 0.5
 
 ## 0.1 (2015-10-09)
 
-* initial release
+* Initial release
