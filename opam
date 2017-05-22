@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "charrua-unix"
-version: "0.5"
+version: "0.7"
 maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 homepage: "https://github.com/haesbaert/charrua-unix"
@@ -19,5 +19,5 @@ depends: [
   "cmdliner"
   "rawlink"
   "tuntap"
-  "mtime"
+  "mtime" {>="1.0.0"}
 ]
