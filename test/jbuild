@@ -1,0 +1,10 @@
+(executables
+ ((names (test))
+  (preprocess (pps (ppx_cstruct)))
+  (libraries (cstruct-unix io-page.unix charrua-core.server))))
+
+(alias
+ ((name    runtest)
+  (deps    (test.exe dhcp.pcap dhcp2.pcap))
+  (action  (run ${<}))))
+

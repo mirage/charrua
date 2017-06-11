@@ -1,5 +1,7 @@
 ## 0.8 (????-??-??)
 
+* Port to Jbuilder.
+
 ## 0.7 (2017-14-04)
 
 * Fixed a bug where only the first tuple from an option list would be parsed
