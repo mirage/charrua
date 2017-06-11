@@ -20,11 +20,9 @@ build-test: [
 ]
 
 depends: [
-  "ocamlfind"     {build}
-  "ocamlbuild"    {build}
-  "topkg"         {build}
+  "jbuilder" {build & >="1.0+beta7"}
   "ppx_sexp_conv" {build}
-  "ppx_tools"     {build}
+  "ppx_cstruct"   {build}
   "menhir"        {build}
   "cstruct"       {>= "3.0.1"}
   "sexplib"
@@ -32,4 +30,5 @@ depends: [
   "tcpip"         {>= "3.1.0"}
   "rresult"
   "io-page"       {test}
+  "cstruct-unix"  {test}
 ]
