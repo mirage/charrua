@@ -119,7 +119,7 @@ let parse file =
   if verbose then
     printf "%s had %d packets\n\n%!" file num_packets
 
-let testfiles = ["test/dhcp.pcap"; "test/dhcp2.pcap" ]
+let testfiles = ["dhcp.pcap"; "dhcp2.pcap" ]
 
 let t_pcap () =
   List.iter parse testfiles

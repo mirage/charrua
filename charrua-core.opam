@@ -11,25 +11,24 @@ doc: "https://mirage.github.io/charrua-core/api"
 available: [ocaml-version >= "4.03" & opam-version >= "1.2"]
 
 build: [
-  [ "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false" ]
+  ["jbuilder" "subst" "-p" name "--name" name] {pinned}
+  ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 
 build-test: [
-  [ "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "true" ]
-  [ "ocaml" "pkg/pkg.ml" "test" ]
+  ["jbuilder" "runtest" "-p" name "-j" jobs]
 ]
 
 depends: [
-  "ocamlfind"     {build}
-  "ocamlbuild"    {build}
-  "topkg"         {build}
+  "jbuilder" {build & >="1.0+beta7"}
   "ppx_sexp_conv" {build}
-  "ppx_tools"     {build}
+  "ppx_cstruct"   {build}
   "menhir"        {build}
-  "cstruct"       {>= "1.9.0"}
+  "cstruct"       {>= "3.0.1"}
   "sexplib"
   "ipaddr"        {>= "2.5.0"}
   "tcpip"         {>= "3.1.0"}
   "rresult"
   "io-page"       {test}
+  "cstruct-unix"  {test}
 ]
