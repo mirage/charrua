@@ -6,7 +6,7 @@ install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/ma
 script: bash -ex ./.travis-docker.sh
 env:
   global:
-  - PACKAGE="charrua-core.9999"
+  - PACKAGE="charrua-core"
   - TESTS=true
   matrix:
   - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0"
