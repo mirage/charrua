@@ -1,28 +1,28 @@
 opam-version: "1.2"
 name:         "charrua-client"
-maintainer:   ["Mindy Preston <mindy.preston@docker.com>"]
-authors   :   ["Mindy Preston <mindy.preston@docker.com>"]
-homepage:     "https://github.com/yomimono/charrua-client"
-bug-reports:  "https://github.com/yomimono/charrua-client/issues"
-dev-repo:     "https://github.com/yomimono/charrua-client.git"
+maintainer:   ["Mindy Preston"]
+authors   :   ["Mindy Preston"]
+homepage:     "https://github.com/mirage/charrua-core"
+bug-reports:  "https://github.com/mirage/charrua-core/issues"
+dev-repo:     "https://github.com/mirage/charrua-core.git"
 tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
-build: ["ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%"
-  "--tests" "false" "--with-mirage" "%{mirage-types-lwt:installed}%"
+build: [
+  [ "jbuilder" "subst" ] {pinned}
+  [ "jbuilder" "build" "-p" name "-j" jobs ]
 ]
+
 build-test: [
-  [ "ocaml" "pkg/pkg.ml" "build" "--tests" "true" ]
-  [ "ocaml" "pkg/pkg.ml" "test" ]
+  [ "jbuilder" "runtest" "-p" name "-j" jobs ]
 ]
 
 depends: [
-  "ocamlbuild" {build}
-  "ocamlfind" {build}
-  "topkg"     {build}
+  "jbuilder" {>="1.0+beta9"}
+  "ounit" {test}
   "alcotest"     {test}
   "charrua-core" {>= "0.4"}
-  "cstruct"
+  "cstruct" {>="3.0.2"}
   "ipaddr"
   "rresult"
   "mirage-random" {>= "1.0.0"}
@@ -30,12 +30,6 @@ depends: [
   "logs"
   "tcpip" {>= "3.0.0"}
   "fmt"
+  "mirage-types-lwt" {>="3.0.0"}
 ]
-depopts: [
-  "mirage-types-lwt"
-]
-conflicts: [
-  "mirage-types-lwt" {<"3.0.0"}
-  "mirage-types" {<"3.0.0"}
-]
-available: [ocaml-version >= "4.03"]
+available: [ocaml-version >= "4.03.0"]

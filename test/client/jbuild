@@ -5,5 +5,6 @@
 
 (alias
  ((name    runtest)
+  (package charrua-client)
   (deps    (test_client.exe))
   (action  (run ${<}))))
