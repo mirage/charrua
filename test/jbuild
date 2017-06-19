@@ -1,3 +1,4 @@
+(jbuild_version 1)
 (executables
  ((names (test))
   (preprocess (pps (ppx_cstruct)))
@@ -5,6 +6,6 @@
 
 (alias
  ((name    runtest)
+  (package charrua-core)
   (deps    (test.exe dhcp.pcap dhcp2.pcap))
   (action  (run ${<}))))
-

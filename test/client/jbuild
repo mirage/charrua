@@ -1,0 +1,10 @@
+(jbuild_version 1)
+(executables
+ ((names (test_client))
+  (libraries (cstruct-unix alcotest charrua-client charrua-core.server))))
+
+(alias
+ ((name    runtest)
+  (package charrua-client)
+  (deps    (test_client.exe))
+  (action  (run ${<}))))

@@ -29,6 +29,6 @@ depends: [
   "ipaddr"        {>= "2.5.0"}
   "tcpip"         {>= "3.1.0"}
   "rresult"
-  "io-page"       {test}
+  "io-page-unix"  {test}
   "cstruct-unix"  {test}
 ]

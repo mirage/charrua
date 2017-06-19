@@ -1,0 +1,13 @@
+S .
+S src
+B _build/src
+PKG cmdliner
+PKG lwt
+PKG cstruct
+PKG ipaddr
+PKG tuntap
+PKG rawlink
+PKG charrua-core
+PKG mtime.os
+EXT lwt
+EXT nonrec

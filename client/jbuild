@@ -1,0 +1,6 @@
+(jbuild_version 1)
+(library
+ ((name        dhcp_client)
+  (public_name charrua-client)
+  (libraries   (charrua-core.wire))
+))
