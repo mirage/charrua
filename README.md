@@ -19,6 +19,14 @@ is a Mirage DHCP unikernel server based on charrua-core.
 You can browse the API for [charrua-core](http://www.github.com/mirage/charrua-core) at
 http://mirage.github.io/charrua-core/api
 
+### Charrua-client
+
+charrua-client is a DHCP client powered by [charrua-core](https://github.com/haesbaert/charrua-core).
+
+The base library exposes a simple state machine for acquiring a DHCP lease.
+
+An optional sublibrary, `charrua-client.mirage`, exposes an additional functor for use with the [MirageOS library operating system](https://github.com/mirage/mirage).
+
 #### Features
 
 * Dhcp_server supports a stripped down ISC dhcpd.conf, so you can probably just

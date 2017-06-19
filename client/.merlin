@@ -1,5 +1,38 @@
-PKG cstruct charrua-core charrua-core.wire
-PKG alcotest charrua-core.server rresult
+B ../_build/default/client
+B ../_build/default/lib
+FLG -w -40
+PKG bigarray
+PKG bytes
+PKG cstruct
+PKG duration
+PKG fmt
+PKG io-page
+PKG ipaddr
+PKG logs
+PKG lwt
+PKG mirage-clock
+PKG mirage-device
+PKG mirage-flow
+PKG mirage-net
+PKG mirage-net-lwt
+PKG mirage-profile
+PKG mirage-protocols
+PKG mirage-protocols-lwt
 PKG mirage-random
-S lib/*
-B _build/*
+PKG mirage-time
+PKG mirage-time-lwt
+PKG ocplib-endian
+PKG ocplib-endian.bigstring
+PKG randomconv
+PKG result
+PKG rresult
+PKG sexplib
+PKG sexplib.0
+PKG tcpip
+PKG tcpip.ethif
+PKG tcpip.ipv4
+PKG tcpip.tcp
+PKG tcpip.udp
+PKG uchar
+PKG unix
+S ../lib

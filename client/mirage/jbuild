@@ -1,0 +1,6 @@
+(jbuild_version 1)
+(library
+ ((name        dhcp_client_mirage)
+  (public_name charrua-client.mirage)
+  (libraries   (charrua-client mirage-types-lwt))
+  (wrapped false)))
