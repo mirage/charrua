@@ -8,8 +8,8 @@ env:
   global:
   - PACKAGE="charrua-core"
   - TESTS=true
-  - PINS="charrua-client:."
-  - DEPOPTS="charrua-client"
+  - PINS="charrua-client:. charrua-unix:."
+  - DEPOPTS="charrua-client charrua-unix"
   matrix:
   - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0"
   - DISTRO="centos-6" OCAML_VERSION="4.04.1"
