@@ -13,7 +13,7 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
               ?(requests : Dhcp_wire.option_code list option) net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
-    let sleep_interval = Duration.of_sec 3 in
+    let sleep_interval = Duration.of_sec 4 in
 
     let (client, dhcpdiscover) = Dhcp_client.create ?with_xid ?requests (Net.mac net) in
     let c = ref client in
