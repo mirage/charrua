@@ -5,7 +5,6 @@ type state  = | Selecting of Dhcp_wire.pkt (* dhcpdiscover sent *)
 type t = {
   srcmac : Macaddr.t;
   request_options : Dhcp_wire.option_code list;
-  xid : Cstruct.uint32;
   state  : state;
 }
 
@@ -128,7 +127,7 @@ let create ?with_xid ?requests srcmac =
       Parameter_requests requests;
     ];
   } in
-  {srcmac; xid; request_options = requests; state = Selecting pkt},
+  {srcmac; request_options = requests; state = Selecting pkt},
     Dhcp_wire.buf_of_pkt pkt
 
 let input t buf =
@@ -152,7 +151,7 @@ let input t buf =
     | Some DHCPACK, Renewing _
     | Some DHCPACK, Requesting _ -> `New_lease ({t with state = Bound incoming}, incoming)
     | Some DHCPNAK, Requesting _ | Some DHCPNAK, Renewing _ ->
-      `Response (create ~with_xid:t.xid ~requests:t.request_options t.srcmac)
+      `Response (create ~with_xid:(xid t) ~requests:t.request_options t.srcmac)
     | Some DHCPACK, Selecting _ (* too soon *)
     | Some DHCPACK, Bound _ -> (* too late *)
       `Noop
