@@ -22,6 +22,7 @@ depends: [
   "ounit" {test}
   "alcotest"     {test}
   "charrua-core" {>= "0.4"}
+  "charrua-client-lwt"
   "charrua-client"
   "cstruct" {>="3.0.2"}
   "ipaddr"
