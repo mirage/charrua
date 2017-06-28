@@ -8,7 +8,8 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
 
   type t = lease Lwt_stream.t
 
-  let connect ?(with_xid)
+  let connect ?(renew = true)
+              ?(with_xid)
               ?(requests : Dhcp_wire.option_code list option) net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
@@ -17,7 +18,7 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
     let (client, dhcpdiscover) = Dhcp_client.create ?with_xid ?requests (Net.mac net) in
     let c = ref client in
 
-    let rec renew c t =
+    let rec do_renew c t =
       Time.sleep_ns @@ Duration.of_sec t >>= fun () ->
       match Dhcp_client.renew c with
       | `Noop -> Log.debug (fun f -> f "Can't renew this lease; won't try");  Lwt.return_unit
@@ -28,7 +29,7 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
             Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
             Lwt.return_unit
           | Ok () ->
-            renew c t (* ideally t would come from the new lease... *)
+            do_renew c t (* ideally t would come from the new lease... *)
     in
     let rec get_lease push dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
@@ -38,11 +39,14 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
         Lwt.return_unit
       | Ok () ->
         Time.sleep_ns sleep_interval >>= fun () ->
-        let (client, dhcpdiscover) = Dhcp_client.create ?requests (Net.mac net) in
-        c := client;
-        Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
-        Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
-        get_lease push dhcpdiscover
+        match Dhcp_client.lease !c with
+        | Some lease -> Lwt.return_unit
+        | None ->
+          let (client, dhcpdiscover) = Dhcp_client.create ?requests (Net.mac net) in
+          c := client;
+          Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
+          Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
+          get_lease push dhcpdiscover
     in
     let listen push () =
       Net.listen net (fun buf ->
@@ -68,8 +72,13 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
           (Fmt.list Ipaddr.V4.pp_hum) (collect_routers l.options));
           push @@ Some l;
           c := s;
-          Time.sleep_ns @@ Duration.of_sec 1800 >>= fun () ->
-          renew !c 1800
+          match renew with
+          | true ->
+            Time.sleep_ns @@ Duration.of_sec 1800 >>= fun () ->
+            do_renew !c 1800
+          | false ->
+            push None;
+            Lwt.return_unit
       )
     in
     let lease_wrapper (push : Dhcp_wire.pkt option -> unit) () =
@@ -77,7 +86,7 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
         (listen push () >|= function
           | Error _ | Ok () -> push None (* if canceled, the stream should end *)
         );
-        get_lease push dhcpdiscover; (* will terminate once a lease is obtained *)
+        get_lease push dhcpdiscover;
       ]
     in
     let (s, push) = Lwt_stream.create () in

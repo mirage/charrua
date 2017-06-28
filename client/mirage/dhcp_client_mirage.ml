@@ -27,7 +27,7 @@ module Make(Time : Mirage_types_lwt.TIME) (Net : Mirage_types_lwt.NETWORK) = str
 
   let connect ?(requests : Dhcp_wire.option_code list option) net =
     let module Lwt_client = Dhcp_client_lwt.Make(Time)(Net) in
-    Lwt_client.connect ?requests net >>= fun lease_stream ->
+    Lwt_client.connect ~renew:false ?requests net >>= fun lease_stream ->
     Lwt.return @@ Lwt_stream.filter_map config_of_lease lease_stream
 
 end
