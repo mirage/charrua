@@ -42,9 +42,8 @@ let keep_trying () =
     let module Client = Dhcp_client_lwt.Make(No_time)(No_net) in
     let net = No_net.connect ~mac:(Macaddr.of_string_exn "c0:ff:ee:c0:ff:ee") () in
     let test =
-      Client.connect net >>= fun lease_stream ->
-      Lwt_stream.get lease_stream >|= function
-      | Some _ -> Alcotest.fail "got a lease from a nonfunction network somehow"
+      Client.connect net >>= Lwt_stream.get >|= function
+      | Some _ -> Alcotest.fail "got a lease from a nonfunctioning network somehow"
       | None -> ()
     in
     Lwt.pick [
