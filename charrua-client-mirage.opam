@@ -9,13 +9,11 @@ tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
 build: [
-  [ "jbuilder" "subst" ] {pinned}
-  [ "jbuilder" "build" "-p" name "-j" jobs ]
+  ["jbuilder" "subst" "-n" name] {pinned}
+  ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 
-build-test: [
-  [ "jbuilder" "runtest" "-p" name "-j" jobs ]
-]
+build-test: ["jbuilder" "runtest" "-p" name "-j" jobs]
 
 depends: [
   "jbuilder" {>="1.0+beta9"}
