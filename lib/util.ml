@@ -70,6 +70,8 @@ let cons_if p v tl = if p then v :: tl else tl
 let cons_if_some v tl = match v with Some v -> v :: tl | None -> tl
 let cons_if_some_f v fnr tl = match v with Some x -> fnr x :: tl | None -> tl
 
+let guard p e = if p then Result.Ok () else Result.Error e
+
 let addr_in_range addr range =
   let low_ip, high_ip = range in
   let low_32 = Ipaddr.V4.to_int32 low_ip in
