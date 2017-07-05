@@ -9,7 +9,9 @@ _ISC-licensed_ DHCP library implementation in OCaml.
 It provides three packages:
 
 - charrua-core: a library that handles wire traffic parsing and a server implementation
-- charrua-client: a client library, with a portable version and one using the MirageOS interfaces
+- charrua-client: a library for handling DHCP client state and messages
+- charrua-client-lwt: a DHCP client library with timeouts and network read/write
+- charrua-client-mirage: a MirageOS-compatible set of interfaces to charrua-client-lwt
 - charrua-unix: a Unix DHCP server implementation
 
 ### Charrua-core
@@ -44,9 +46,14 @@ southern South America.
 
 charrua-client is a DHCP client powered by [charrua-core](https://github.com/haesbaert/charrua-core).
 
-The base library exposes a simple state machine for acquiring a DHCP lease.
+The base library exposes a simple state machine in `Dhcp_client`
+for use in acquiring a DHCP lease.
 
-A sublibrary, `charrua-client.mirage`, exposes an additional functor for use
+`charrua-client-lwt` extends `charrua-client` with a functor `Dhcp_client_lwt`,
+using the provided modules for timing and networking logic,
+for convenient use by a program which might wish to implement a full client.
+
+`charrua-client-mirage` exposes an additional `Dhcp_client_mirage` for direct use
 with the [MirageOS library operating system](https://github.com/mirage/mirage).
 
 ### Charrua-unix Server

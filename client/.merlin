@@ -1,6 +1,6 @@
 B ../_build/default/client
 B ../_build/default/lib
-FLG -w -40
+FLG -open Dhcp_client__ -w -40 -open Dhcp_client_lwt__ -w -40
 PKG bigarray
 PKG bytes
 PKG cstruct

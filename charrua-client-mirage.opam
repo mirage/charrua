@@ -1,5 +1,5 @@
 opam-version: "1.2"
-name:         "charrua-client"
+name:         "charrua-client-mirage"
 maintainer:   ["Mindy Preston"]
 authors   :   ["Mindy Preston"]
 homepage:     "https://github.com/mirage/charrua-core"
@@ -9,7 +9,7 @@ tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
 build: [
-  [ "jbuilder" "subst" "-n" name ] {pinned}
+  [ "jbuilder" "subst" ] {pinned}
   [ "jbuilder" "build" "-p" name "-j" jobs ]
 ]
 
@@ -21,8 +21,18 @@ depends: [
   "jbuilder" {>="1.0+beta9"}
   "ounit" {test}
   "alcotest"     {test}
-  "charrua-core" {>= "0.8"}
+  "charrua-core" {>= "0.4"}
+  "charrua-client-lwt"
+  "charrua-client"
   "cstruct" {>="3.0.2"}
   "ipaddr"
+  "rresult"
+  "mirage-random" {>= "1.0.0"}
+  "duration"
+  "logs"
+  "tcpip" {>= "3.0.0"}
+  "fmt"
+  "lwt"
+  "mirage-types-lwt" {>="3.0.0"}
 ]
 available: [ocaml-version >= "4.03.0"]
