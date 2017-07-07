@@ -1043,12 +1043,9 @@ let pkt_of_buf buf len =
     let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
-    let length_check =
-      if len < min_len then
-        Error (sprintf "packet is too small: %d < %d" len min_len)
-      else Ok ()
-    in
-    length_check >>= fun () ->
+    Util.guard (len >= min_len)
+      (sprintf "packet is too small: %d < %d" len min_len)
+    >>= fun () ->
     (* Handle ethernet *)
     Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
     match eth_header.Ethif_packet.ethertype with
@@ -1059,6 +1056,11 @@ let pkt_of_buf buf len =
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Error "packet is not udp"
       | Some `UDP ->
+        Util.guard
+          (Ipv4_packet.Unmarshal.verify_transport_checksum
+             ~proto:`UDP ~ipv4_header ~transport_packet:ipv4_payload)
+          "bad udp checksum"
+        >>= fun () ->
         Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
         fun (udp_header, udp_payload) ->
         let op = int_to_op_exn (get_dhcp_op udp_payload) in

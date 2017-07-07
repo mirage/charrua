@@ -43,6 +43,8 @@ let mask_t = Ipaddr.V4.of_string_exn "255.255.255.0"
 let range_t = (Ipaddr.V4.of_string_exn "192.168.1.50",
                Ipaddr.V4.of_string_exn "192.168.1.100")
 
+let assert_error x = assert (Rresult.R.is_error x)
+
 open Dhcp_wire
 open Dhcp_server
 
@@ -52,6 +54,42 @@ let t_option_codes () =
   (* Make sure parameters 0-255 are there. *)
   for i = 0 to 255 do
     ignore (int_to_option_code_exn i)
+  done
+
+let t_csum () =
+  let pkt = {
+    htype = Ethernet_10mb;
+    hlen = 6;
+    hops = 0;
+    xid = 0xabad1deal;
+    chaddr = mac_t;
+    srcport = client_port;
+    dstport = server_port;
+    srcmac = mac_t;
+    dstmac = Macaddr.broadcast;
+    srcip = Ipaddr.V4.any;
+    dstip = Ipaddr.V4.broadcast;
+    op = BOOTREQUEST;
+    secs = 0;
+    flags = Broadcast;
+    siaddr = Ipaddr.V4.any;
+    ciaddr = Ipaddr.V4.any;
+    yiaddr = Ipaddr.V4.any;
+    giaddr = Ipaddr.V4.any;
+    sname = "";
+    file = "";
+    options = [ Message_type DHCPREQUEST ]
+  } in
+  (* Corrupt every byte of the packet and assert that csum fails *)
+  let buf = buf_of_pkt pkt in
+  (* Skip ethernet + upper ip header *)
+  for off = (14 + 12) to pred (Cstruct.len buf) do
+    let evilbyte = Cstruct.get_uint8 buf off in
+    (* Corrupt payload *)
+    Cstruct.set_uint8 buf off (succ evilbyte);
+    assert_error (pkt_of_buf buf (Cstruct.len buf));
+    (* Put back *)
+    Cstruct.set_uint8 buf off evilbyte;
   done
 
 let t_long_lists () =
@@ -938,6 +976,7 @@ let run_test test =
 
 let all_tests = [
   (t_option_codes, "option codes");
+  (t_csum, "checksum");
   (t_long_lists, "long options lists");
   (Pcap.t_pcap, "pcap");
   (t_simple_config, "simple config");
