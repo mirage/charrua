@@ -1,11 +1,12 @@
 (jbuild_version 1)
+
 (executable
  ((name test_client_lwt)
-  (libraries (cstruct-unix alcotest charrua-client-lwt charrua-core.server lwt.unix mirage-random)))
-)
+  (libraries (cstruct-unix alcotest charrua-client-lwt charrua-core.server
+              lwt.unix mirage-random))))
 
 (alias
  ((name    runtest)
-  (package charrua-client)
+  (package charrua-client-lwt)
   (deps    (test_client_lwt.exe))
   (action  (run ${<}))))
