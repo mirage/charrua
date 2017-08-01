@@ -3,7 +3,7 @@
 (executable
  ((name test_client_lwt)
   (libraries (cstruct-unix alcotest charrua-client-lwt charrua-core.server
-              lwt.unix mirage-random))))
+              lwt.unix mirage-random tcpip.unix))))
 
 (alias
  ((name    runtest)
