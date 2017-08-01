@@ -2,7 +2,7 @@
 
 (executables
  ((names (test_client))
-  (libraries (cstruct-unix alcotest charrua-client charrua-core.server))))
+  (libraries (cstruct-unix alcotest charrua-client charrua-core.server tcpip.unix))))
 
 (alias
  ((name    runtest)
