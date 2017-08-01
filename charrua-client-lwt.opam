@@ -26,6 +26,7 @@ depends: [
   "rresult"
   "mirage-random" {>= "1.0.0"}
   "duration"
+  "mirage-time-lwt"
   "logs"
   "tcpip" {>= "3.0.0"}
   "fmt"
