@@ -6,15 +6,17 @@ install: wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/ma
 script: bash -ex ./.travis-docker.sh
 env:
   global:
-  - PACKAGE="charrua-core"
   - TESTS=true
-  - PINS="charrua-client:. charrua-unix:. charrua-client:. charrua-client-lwt:. charrua-client-mirage:."
+  - PINS="charrua-core.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
   matrix:
-  - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0"
-  - DISTRO="centos-6" OCAML_VERSION="4.04.1"
-  - DISTRO="centos-7" OCAML_VERSION="4.04.0"
-  - DISTRO="debian-stable" OCAML_VERSION="4.04.1"
-  - DISTRO="fedora-25" OCAML_VERSION="4.03.0"
-  - DISTRO="ubuntu-14.04" OCAML_VERSION="4.03.0"
-  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.03.0"
-  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.04.1"
+  - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0" PACKAGE="charrua-client"
+  - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0" PACKAGE="charrua-client-lwt"
+  - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0" PACKAGE="charrua-client-mirage"
+  - DISTRO="alpine-3.5" OCAML_VERSION="4.03.0" PACKAGE="charrua-unix"
+  - DISTRO="centos-6" OCAML_VERSION="4.04.1" PACKAGE="charrua-unix"
+  - DISTRO="centos-7" OCAML_VERSION="4.04.0" PACKAGE="charrua-unix"
+  - DISTRO="debian-stable" OCAML_VERSION="4.04.1" PACKAGE="charrua-unix"
+  - DISTRO="fedora-25" OCAML_VERSION="4.03.0" PACKAGE="charrua-unix"
+  - DISTRO="ubuntu-14.04" OCAML_VERSION="4.03.0" PACKAGE="charrua-unix"
+  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.03.0" PACKAGE="charrua-unix"
+  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.04.1" PACKAGE="charrua-unix"
