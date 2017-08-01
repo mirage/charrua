@@ -90,10 +90,6 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
       ]
     in
     let (s, push) = Lwt_stream.create () in
-    let hook = function
-      | e -> raise e
-    in
-    Lwt.async_exception_hook := hook;
     Lwt.async (fun () -> lease_wrapper push ());
     Lwt.return s
 end
