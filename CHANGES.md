@@ -1,3 +1,11 @@
+v0.9 2017-08-02
+---------------
+
+* core: re-implement UDP checksum on input (#63 @haesbaert)
+* client: implement renewal logic (breaking API change) (#60 @yomimono)
+* client: split mirage sublibrary into lwt sublibrary (timing logic) and mirage sublibrary (shims for MirageOS APIs) (#60 @yomimono)
+* numerous test and build bugfixes (#68 #64 #61 @samoht, #67 #66 #65 @djs55)
+
 v0.8 2017-06-12
 ---------------
 

@@ -14,7 +14,7 @@ build: [
 depends: [
   "jbuilder" {build & >="1.0+beta9"}
   "lwt" {>="3.0.0"}
-  "charrua-core" {>= "0.5"}
+  "charrua-core" {>= "0.9"}
   "cstruct-unix"
   "cmdliner"
   "rawlink"

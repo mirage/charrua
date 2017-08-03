@@ -21,7 +21,7 @@ depends: [
   "jbuilder" {>="1.0+beta9"}
   "ounit" {test}
   "alcotest"     {test}
-  "charrua-core" {>= "0.8"}
+  "charrua-core" {>= "0.9"}
   "cstruct" {>="3.0.2"}
   "ipaddr"
 ]
