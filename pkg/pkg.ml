@@ -1,2 +1,7 @@
 #use "topfind"
-#require "topkg-jbuilder.auto"
+#require "topkg-jbuilder"
+
+open Topkg
+
+let () =
+  Topkg_jbuilder.describe ~name:"charrua-core" ()
