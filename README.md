@@ -1,10 +1,10 @@
 ## Charrua DHCP - a DHCP client, server and wire frame encoder and decoder
 
 
-[![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://mirage.github.io/charrua-dhcp/api)
-[![Build Status](https://travis-ci.org/mirage/charrua-core.svg)](https://travis-ci.org/mirage/charrua-dhcp)
+[![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://mirage.github.io/charrua-core/api)
+[![Build Status](https://travis-ci.org/mirage/charrua-core.svg)](https://travis-ci.org/mirage/charrua-core)
 
-[charrua](http://www.github.com/mirage/charrua-dhcp) is an
+[charrua](http://www.github.com/mirage/charrua-core) is an
 _ISC-licensed_ DHCP library implementation in OCaml.
 It provides five packages:
 
@@ -59,7 +59,7 @@ with the [MirageOS library operating system](https://github.com/mirage/mirage).
 ### Charrua-unix Server
 
 charrua-unix is an _ISC-licensed_ Unix DHCP daemon based on
-[charrua-dhcp](http://www.github.com/mirage/charrua-dhcp).
+[charrua-core](http://www.github.com/mirage/charrua-core).
 
 #### Features
 
