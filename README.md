@@ -6,7 +6,7 @@
 
 [charrua](http://www.github.com/mirage/charrua-dhcp) is an
 _ISC-licensed_ DHCP library implementation in OCaml.
-It provides three packages:
+It provides five packages:
 
 - charrua-core: a library that handles wire traffic parsing and a server implementation
 - charrua-client: a library for handling DHCP client state and messages
