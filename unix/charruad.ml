@@ -64,7 +64,7 @@ let read_file f =
   let buf = Bytes.create n in
   really_input ic buf 0 n;
   close_in ic;
-  buf
+  Bytes.to_string buf
 
 let go_daemon () =
   Lwt_daemon.daemonize ~syslog:false ()
