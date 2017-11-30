@@ -20,12 +20,29 @@ module Constants = struct
   let file = ""
 end
 
+(* This are the options that Windows 10 uses in the PRL implement RFC7844.
+   They are ordered by code number.
+   TODO: There should be a variable in the configuration where the user
+   specifies to use the Anonymity Profiles, and ignore any other option that
+   would modify this static PRL.
+   This PRL could be also reverted to the minimal one and be used only when
+   using Anonymity Profiles.
+*)
 let default_requests =
   Dhcp_wire.([
     SUBNET_MASK;
     ROUTERS;
     DNS_SERVERS;
-    SERVER_IDENTIFIER;
+    DOMAIN_NAME;
+    PERFORM_ROUTER_DISC;
+    STATIC_ROUTES;
+    VENDOR_SPECIFIC;
+    NETBIOS_NAME_SERVERS;
+    NETBIOS_NODE;
+    NETBIOS_SCOPE;
+    CLASSLESS_STATIC_ROUTE;
+    RESERVED_249;
+    WEB_PROXY_AUTO_DISC;
   ])
 
 let pp fmt p =
