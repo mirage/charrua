@@ -141,6 +141,7 @@ let create ?with_xid ?requests srcmac =
     chaddr = srcmac;
     options = [
       Message_type DHCPDISCOVER;
+      Client_id (Hwaddr srcmac);
       Parameter_requests requests;
     ];
   } in
