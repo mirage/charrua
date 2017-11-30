@@ -23,18 +23,18 @@ servers.
 You can browse the API for [charrua-core](http://www.github.com/mirage/charrua-core) at
 http://mirage.github.io/charrua-core/api
 
-[mirage](https://github.com/mirage/mirage-skeleton/tree/master/applications/dhcp)
-is a Mirage DHCP unikernel server based on charrua-core.
+[dhcp](https://github.com/mirage/mirage-skeleton/tree/master/applications/dhcp)
+is a Mirage DHCP unikernel server based on charrua-core, included as a part of the MirageOS unikernel example and starting-point repository.
 
 #### Features
 
 * `Dhcp_server` supports a stripped down ISC dhcpd.conf, so you can probably just
-  use your old `dhcpd.conf`, it also supports manual configuration building in
+  use your old `dhcpd.conf`. It also supports manual configuration building in
   OCaml.
-* Logic/sequencing is agnostic of IO and platform, so it can run on Unix as a
-  process, as a Mirage unikernel or anything else.
 * `Dhcp_wire` provides marshalling and unmarshalling utilities for DHCP, it is the
   base for `Dhcp_server`.
+* Logic/sequencing is agnostic of IO and platform, so it can run on Unix as a
+  process, as a Mirage unikernel or anything else.
 * All DHCP options are supported at the time of this writing.
 * Code is purely applicative.
 * It's in OCaml, so it's pretty cool.
@@ -65,7 +65,7 @@ charrua-unix is an _ISC-licensed_ Unix DHCP daemon based on
 
 * Supports a stripped down ISC dhcpd.conf. A configuration sample can be found
 [here](https://github.com/haesbaert/charrua-core/blob/master/sample/dhcpd.conf)
-* Priviledge dropping, the daemon doesn't run as root.
+* Privilege dropping: the daemon doesn't run as root.
 * Almost purely-functional code.
 * Support for multiple interfaces/subnets.
 
