@@ -1,7 +1,22 @@
+(* a variant type representing the current [state] of the client transaction.
+   Represented states differ from the diagram presented in RFC2131 in the
+   following ways:
+   The earliest state is `Selecting`.  There is no representation of INIT-REBOOT,
+   REBOOTING, or INIT.  Calls to `create` will generate a client in state
+   `Selecting` with the corresponding `DHCPDISCOVER` recorded, and that packet
+   is exposed to the caller of `create`, who is responsible for sending it.
+   There is no REBINDING state.  Clients which do not re-enter the `Bound` state
+   from `Renewing` do not halt their network and re-enter the `Selecting` state.
+   *)
 type state  = | Selecting of Dhcp_wire.pkt (* dhcpdiscover sent *)
               | Requesting of (Dhcp_wire.pkt * Dhcp_wire.pkt) (* dhcpoffer input * dhcprequest sent *)
               | Bound of Dhcp_wire.pkt (* dhcpack received *)
               | Renewing of (Dhcp_wire.pkt * Dhcp_wire.pkt) (* dhcpack received, dhcprequest sent *)
+
+(* `srcmac` will be used as the source of Ethernet frames,
+   as well as the client identifier whenever one is required (e.g. padded with
+   0x00 in the `chaddr` field of the BOOTP message).
+   `request_options` will be sent in DHCPDISCOVER and DHCPREQUEST packets. *)
 type t = {
   srcmac : Macaddr.t;
   request_options : Dhcp_wire.option_code list;
@@ -10,7 +25,8 @@ type t = {
 
 type buffer = Cstruct.t
 
-(* some fields are constant *)
+(* constant fields are represented here for convenience.
+   This module can then be locally opened where required *)
 module Constants = struct
   open Dhcp_wire
   let htype = Ethernet_10mb
@@ -28,6 +44,9 @@ end
    This PRL could be also reverted to the minimal one and be used only when
    using Anonymity Profiles.
 *)
+(* if the caller of `Dhcp_client.create` has not requested their own list of
+   Dhcp_wire.option_code , provide a default one with the minimum set of things
+   usually required for a working network connection in MirageOS. *)
 let default_requests =
   Dhcp_wire.([
     SUBNET_MASK;
@@ -45,6 +64,7 @@ let default_requests =
     WEB_PROXY_AUTO_DISC;
   ])
 
+(* a pretty-printer for the client, useful for debugging and logging. *)
 let pp fmt p =
   let pr = Dhcp_wire.pkt_to_string in
   let pp_state fmt = function
@@ -57,10 +77,15 @@ let pp fmt p =
   in
   Format.fprintf fmt "%s: %a" (Macaddr.to_string p.srcmac) pp_state p.state
 
+(* the lease function lets callers know whether the abstract (to them) lease
+   object carries a usable network configuration. *)
 let lease {state; _} = match state with
   | Bound dhcpack | Renewing (dhcpack, _) -> Some dhcpack
   | Requesting _ | Selecting _ -> None
 
+(* a convenience function for retrieving the most recently used transaction id.
+   I don't know why this is needed or useful for anyone; it should probaby be
+   removed. *)
 let xid {state; _} =
   let open Dhcp_wire in
   match state with
@@ -69,6 +94,8 @@ let xid {state; _} =
   | Bound a -> a.xid
   | Renewing (_i, o) -> o.xid
 
+(* given a set of information, assemble a DHCPREQUEST packet from the Constants
+   module and other constants defined in Dhcp_wire. *)
 let make_request ?(ciaddr = Ipaddr.V4.any) ~xid ~chaddr ~srcmac ~siaddr ~options () =
   let open Dhcp_wire in
   Constants.({
@@ -96,6 +123,7 @@ let make_request ?(ciaddr = Ipaddr.V4.any) ~xid ~chaddr ~srcmac ~siaddr ~options
     giaddr = Ipaddr.V4.any;
   })
 
+(* respond to an incoming DHCPOFFER. *)
 let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options =
   let open Dhcp_wire in
   (* TODO: make sure the offer contains everything we expect before we accept it *)
@@ -111,6 +139,9 @@ let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options =
   in
   make_request ~xid ~chaddr ~srcmac:t.srcmac ~siaddr:server_ip ~options:options ()
 
+(* make a new DHCP client. allow the user to request a specific xid, any
+   requests, and the MAC address to use as the source for Ethernet messages and
+   the chaddr in the fixed-length part of the message *)
 let create ?with_xid ?requests srcmac =
   let open Constants in
   let open Dhcp_wire in
@@ -148,15 +179,27 @@ let create ?with_xid ?requests srcmac =
   {srcmac; request_options = requests; state = Selecting pkt},
     Dhcp_wire.buf_of_pkt pkt
 
+(* for a DHCP client, figure out whether an incoming packet should modify the
+   state, and if a response message is warranted, generate it.
+   Defined transitions are:
+   Selecting -> DHCPOFFER -> Requesting
+   Requesting -> DHCPACK -> Bound
+   Requesting -> DHCPNAK -> Selecting
+   Renewing -> DHCPACK -> Bound
+   Renewing -> DHCPNAK -> Selecting
+   *)
 let input t buf =
   let open Dhcp_wire in
   match pkt_of_buf buf (Cstruct.len buf) with
   | Error _ -> `Noop
   | Ok incoming ->
+    (* RFC2131 4.4.1: respond only to messages for our xid *)
     if compare incoming.xid (xid t) = 0 then begin
     match find_message_type incoming.options, t.state with
     | None, _ -> `Noop
     | Some DHCPOFFER, Selecting dhcpdiscover ->
+        (* "the mechanism used to select one DHCPOFFER [is] implementation
+           dependent" (RFC2131) so just take the first one *)
         let dhcprequest = offer t ~server_ip:incoming.siaddr
                           ~request_ip:incoming.yiaddr
                           ~offer_options:incoming.options
@@ -187,6 +230,7 @@ let input t buf =
     | Some DHCPFORCERENEW, _ -> `Noop (* unsupported *)
     end else `Noop
 
+(* try to renew the lease, probably because some time has elapsed. *)
 let renew t = match t.state with
   | Selecting _ | Requesting _ -> `Noop
   | Renewing (_lease, request) -> `Response (t, Dhcp_wire.buf_of_pkt request)
