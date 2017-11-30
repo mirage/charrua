@@ -320,7 +320,7 @@ type option_code =
   | RESERVED_246 [@id 246]
   | RESERVED_247 [@id 247]
   | RESERVED_248 [@id 248]
-  | RESERVED_249 [@id 249]
+  | PRIVATE_CLASSLESS_STATIC_ROUTE [@id 249]
   | RESERVED_250 [@id 250]
   | RESERVED_251 [@id 251]
   | WEB_PROXY_AUTO_DISC [@id 252]
@@ -497,6 +497,7 @@ type dhcp_option =
   | V4_access_domain of string              (* code 213 *) (* XXX current, better parsing *)
   | Subnet_allocation of int                (* code 220 *)
   | Virtual_subnet_selection of string      (* code 221 *)
+  | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Unassigned of option_code * string      (* code * string *)
@@ -1024,6 +1025,7 @@ let buf_of_options sbuf options =
     | V4_access_domain s -> put_coded_bytes 213 s buf         (* code 213 *) (* XXX current, better parsing *)
     | Subnet_allocation b -> put_coded_8 220 b buf            (* code 220 *) (* octet *)
     | Virtual_subnet_selection s -> put_coded_bytes 221 s buf (* code 221 *)
+    | Private_classless_static_route r -> put_coded_bytes 249 r buf(* code 249 *) (* XXX current, use better type *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf(* code 252 *)
     | Unassigned (code, s) -> put_coded_bytes (option_code_to_int code) s buf (* unassigned *)
     | End -> buf (* discard, we add ourselves *)              (* code 255 *)
@@ -1515,3 +1517,5 @@ let find_unassigned code =
   find_option (function Unassigned (c, s) when c = code -> Some (c, s) | _ -> None)
 let collect_unassigned code =
   collect_options (function Unassigned (c, s) when c = code -> Some [(c, s)] | _ -> None)
+let find_private_classless_static_route =
+  find_option (function Private_classless_static_route x -> Some x | _ -> None)

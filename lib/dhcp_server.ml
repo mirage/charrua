@@ -647,6 +647,8 @@ module Input = struct
         s find_virtual_subnet_selection (fun x -> Virtual_subnet_selection x)
       | WEB_PROXY_AUTO_DISC ->
         s find_web_proxy_auto_disc (fun x -> Web_proxy_auto_disc x)
+      | PRIVATE_CLASSLESS_STATIC_ROUTE ->
+        s find_private_classless_static_route (fun x -> Private_classless_static_route x)
       | UNASSIGNED_84  | UNASSIGNED_96  | UNASSIGNED_102 | UNASSIGNED_103
       | UNASSIGNED_104 | UNASSIGNED_105 | UNASSIGNED_106 | UNASSIGNED_107
       | UNASSIGNED_108 | UNASSIGNED_109 | UNASSIGNED_110 | UNASSIGNED_111
@@ -671,8 +673,7 @@ module Input = struct
       | RESERVED_237   | RESERVED_238   | RESERVED_239   | RESERVED_240
       | RESERVED_241   | RESERVED_242   | RESERVED_243   | RESERVED_244
       | RESERVED_245   | RESERVED_246   | RESERVED_247   | RESERVED_248
-      | RESERVED_249   | RESERVED_250   | RESERVED_251   | RESERVED_253
-      | RESERVED_254
+      | RESERVED_250   | RESERVED_251   | RESERVED_253   | RESERVED_254
       as code ->
         find_option
           (function Unassigned (c, s) as u when c = code -> Some u | _ -> None)
