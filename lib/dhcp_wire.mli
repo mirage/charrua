@@ -327,7 +327,7 @@ type option_code =
   | RESERVED_246
   | RESERVED_247
   | RESERVED_248
-  | RESERVED_249
+  | PRIVATE_CLASSLESS_STATIC_ROUTE
   | RESERVED_250
   | RESERVED_251
   | WEB_PROXY_AUTO_DISC
@@ -543,6 +543,7 @@ type dhcp_option =
   | V4_access_domain of string              (* code 213 *) (* XXX current, better parsing *)
   | Subnet_allocation of int                (* code 220 *)
   | Virtual_subnet_selection of string      (* code 221 *)
+  | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Unassigned of option_code * string      (* code * string *)
@@ -669,6 +670,7 @@ val find_perform_router_disc : dhcp_option list -> bool option
 val find_pmtu_ageing_timo : dhcp_option list -> int32 option
 val find_pmtu_plateau_table : dhcp_option list -> int list option
 val collect_pop3_servers : dhcp_option list -> Ipaddr.V4.t list
+val find_private_classless_static_route : dhcp_option list -> string option
 val find_pxe_128 : dhcp_option list -> string option
 val find_pxe_129 : dhcp_option list -> string option
 val find_pxe_130 : dhcp_option list -> string option
