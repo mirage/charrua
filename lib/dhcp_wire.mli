@@ -75,7 +75,7 @@ val msgtype_to_string : msgtype -> string
 val sexp_of_msgtype : msgtype -> Sexplib.Sexp.t
 val msgtype_of_sexp : Sexplib.Sexp.t -> msgtype
 
-(** {2 DHCP option codes} *)
+(** {2 DHCP option codes (names only, for use in parameter requests)} *)
 
 type option_code =
   | PAD
@@ -334,7 +334,7 @@ type option_code =
   | RESERVED_253
   | RESERVED_254
   | END
-(** The type of a dhcp option code, these are all the values according to
+(** The type of a dhcp parameter request, these are all the values according to
     {{:https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml}iana}
 *) 
 
@@ -726,7 +726,7 @@ val find_web_proxy_auto_disc : dhcp_option list -> string option
 val find_unassigned : option_code -> dhcp_option list -> (option_code * string) option
 val collect_unassigned : option_code -> dhcp_option list -> (option_code * string) list
 
-(** {2 DHCP Packet } *)
+(** {2 DHCP Packet - fixed-length fields, plus a variable-length list of options} *)
 
 type pkt = {
   srcmac : Macaddr.t;
@@ -766,4 +766,5 @@ val pkt_to_string : pkt -> string
 (** Helpers. *)
 
 val is_dhcp : Cstruct.t -> int -> bool
-(** [is_dhcp buf len] is true if [buf] is a DHCP packet. *)
+(** [is_dhcp buf len] is true if [buf] is an Ethernet frame containing an IPv4
+    header, UDP header, and DHCP packet. *)
