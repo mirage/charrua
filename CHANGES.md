@@ -1,3 +1,14 @@
+v0.10 2018-06-04
+----------------
+
+* core, client: many comments added (#78, by @yomimono and @juga0)
+* client: add "anonymity profiles" by asking for common sets of options, to reduce the ease of profiling users by the set of DHCP requests sent (#76, by @juga0)
+* core: add documentation and RFCs for specs we support (@juga0)
+* unix: add support for 4.06.0 via Bytes.to_string in charruad.ml (@haesbaert)
+* unix: note dependency on tuntap >= 1.2.0 (#75, by @hannesm)
+* unix: depend on, and build against, rawlink v0.7 (@yomimono)
+* build: various fixes (#71, #72 by @yomimono and @hannesm)
+
 v0.9 2017-08-02
 ---------------
 
