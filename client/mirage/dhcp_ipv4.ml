@@ -1,11 +1,10 @@
 open Lwt.Infix
 open Mirage_protocols_lwt
 
-module Make(Dhcp_client : DHCP_CLIENT) (Ethif : ETHIF)(Arp : ARP) = struct
+module Make(Dhcp_client : DHCP_CLIENT) (R : Mirage_random.C) (C : Mirage_clock.MCLOCK) (Ethif : ETHIF)(Arp : ARP) = struct
   (* for now, just wrap a static ipv4 *)
-  module I = Static_ipv4.Make(Ethif)(Arp)
-  include I
-  let connect dhcp ethif arp =
+  include Static_ipv4.Make(R)(C)(Ethif)(Arp)
+  let connect dhcp clock ethif arp =
     Lwt_stream.last_new dhcp >>= fun (config : ipv4_config) ->
-    I.connect ~ip:config.address ~network:config.network ~gateway:config.gateway ethif arp
+    connect ~ip:config.address ~network:config.network ~gateway:config.gateway clock ethif arp
 end

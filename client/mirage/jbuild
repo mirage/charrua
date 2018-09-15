@@ -2,5 +2,5 @@
 (library
  ((name        dhcp_client_mirage)
   (public_name charrua-client-mirage)
-  (libraries   (charrua-client-lwt mirage-types-lwt))
+  (libraries   (charrua-client-lwt mirage-types-lwt mirage-protocols-lwt mirage-clock mirage-random))
   (wrapped false)))
