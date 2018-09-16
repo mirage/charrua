@@ -1,0 +1,3 @@
+{2 Library charrua-client}
+The entry point of this library is the module:
+{!module-Dhcp_client}.

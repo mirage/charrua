@@ -1,0 +1,6 @@
+{2 Library charrua-core.server}
+This library exposes the following toplevel modules:
+{!modules:Ast Dhcp_lexer Dhcp_parser Dhcp_server}
+{2 Library charrua-core.wire}
+This library exposes the following toplevel modules:
+{!modules:Dhcp_wire Util}
