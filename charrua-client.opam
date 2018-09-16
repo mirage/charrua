@@ -19,9 +19,9 @@ build-test: [
 
 depends: [
   "jbuilder" {build & >= "1.0+beta9"}
-  "ounit" {test}
   "alcotest"     {test}
-  "charrua-core" {>= "0.9"}
+  "cstruct-unix" {test}
+  "charrua-core" {>= "0.10"}
   "cstruct" {>="3.0.2"}
   "ipaddr"
 ]
