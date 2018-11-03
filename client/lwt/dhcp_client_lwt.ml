@@ -1,7 +1,7 @@
 let src = Logs.Src.create "dhcp_client_lwt"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
+module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
   open Lwt.Infix
 
   type lease = Dhcp_wire.pkt
@@ -9,13 +9,17 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
   type t = lease Lwt_stream.t
 
   let connect ?(renew = true)
-              ?(with_xid)
+              ?xid
               ?(requests : Dhcp_wire.option_code list option) net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
     let sleep_interval = Duration.of_sec 4 in
 
-    let (client, dhcpdiscover) = Dhcp_client.create ?with_xid ?requests (Net.mac net) in
+    let xid = match xid with
+      | None -> Cstruct.BE.get_uint32 (Random.generate 4) 0
+      | Some xid -> xid
+    in
+    let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
     let c = ref client in
 
     let rec do_renew c t =
@@ -42,7 +46,8 @@ module Make(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
         match Dhcp_client.lease !c with
         | Some lease -> Lwt.return_unit
         | None ->
-          let (client, dhcpdiscover) = Dhcp_client.create ?requests (Net.mac net) in
+          let xid = Cstruct.BE.get_uint32 (Random.generate 4) 0 in
+          let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
           c := client;
           Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
           Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);

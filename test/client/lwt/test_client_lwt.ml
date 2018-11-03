@@ -2,6 +2,12 @@ open Lwt.Infix
 
 (* additional tests for time- and network-dependent code *)
 
+module No_random = struct
+  type buffer = Cstruct.t
+  type g
+  let generate ?g n = Cstruct.create n
+end
+
 module No_time = struct
   type 'a io = 'a Lwt.t
   let sleep_ns n = Format.printf "Ignoring request to wait %f seconds\n" @@ Duration.to_f n;
@@ -39,7 +45,7 @@ end
 
 let keep_trying () =
   Lwt_main.run @@ (
-    let module Client = Dhcp_client_lwt.Make(No_time)(No_net) in
+    let module Client = Dhcp_client_lwt.Make(No_random)(No_time)(No_net) in
     let net = No_net.connect ~mac:(Macaddr.of_string_exn "c0:ff:ee:c0:ff:ee") () in
     let test =
       Client.connect net >>= Lwt_stream.get >|= function

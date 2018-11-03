@@ -19,14 +19,14 @@ let config_of_lease lease : Mirage_protocols_lwt.ipv4_config option =
     | hd::_ ->
       Some Mirage_protocols_lwt.{ address; network; gateway = (Some hd) }
 
-module Make(Time : Mirage_types_lwt.TIME) (Net : Mirage_types_lwt.NETWORK) = struct
+module Make(Random : Mirage_random.C)(Time : Mirage_types_lwt.TIME) (Net : Mirage_types_lwt.NETWORK) = struct
   open Lwt.Infix
   open Mirage_protocols_lwt
 
   type t = ipv4_config Lwt_stream.t
 
   let connect ?(requests : Dhcp_wire.option_code list option) net =
-    let module Lwt_client = Dhcp_client_lwt.Make(Time)(Net) in
+    let module Lwt_client = Dhcp_client_lwt.Make(Random)(Time)(Net) in
     Lwt_client.connect ~renew:false ?requests net >>= fun lease_stream ->
     Lwt.return @@ Lwt_stream.filter_map config_of_lease lease_stream
 

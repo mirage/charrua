@@ -21,6 +21,7 @@ depends: [
   "jbuilder" {build & >= "1.0+beta9"}
   "alcotest"     {test}
   "cstruct-unix" {test}
+  "mirage-random-test" {test}
   "charrua-core" {>= "0.10"}
   "cstruct" {>="3.0.2"}
   "ipaddr"

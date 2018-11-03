@@ -142,13 +142,9 @@ let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options =
 (* make a new DHCP client. allow the user to request a specific xid, any
    requests, and the MAC address to use as the source for Ethernet messages and
    the chaddr in the fixed-length part of the message *)
-let create ?with_xid ?requests srcmac =
+let create ?requests xid srcmac =
   let open Constants in
   let open Dhcp_wire in
-  let xid = match with_xid with
-  | None -> Stdlibrandom.initialize (); Cstruct.BE.get_uint32 (Stdlibrandom.generate 4) 0
-  | Some xid -> xid
-  in
   let requests = match requests with
   | None | Some [] -> default_requests
   | Some requests -> requests
@@ -212,7 +208,7 @@ let input t buf =
     | Some DHCPACK, Renewing _
     | Some DHCPACK, Requesting _ -> `New_lease ({t with state = Bound incoming}, incoming)
     | Some DHCPNAK, Requesting _ | Some DHCPNAK, Renewing _ ->
-      `Response (create ~with_xid:(xid t) ~requests:t.request_options t.srcmac)
+      `Response (create ~requests:t.request_options (xid t) t.srcmac)
     | Some DHCPACK, Selecting _ (* too soon *)
     | Some DHCPACK, Bound _ -> (* too late *)
       `Noop

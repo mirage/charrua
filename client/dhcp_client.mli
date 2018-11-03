@@ -4,11 +4,11 @@ type buffer = Cstruct.t
 
 val pp : Format.formatter -> t -> unit
 
-val create : ?with_xid : Cstruct.uint32 -> ?requests : Dhcp_wire.option_code list -> Macaddr.t -> (t * buffer)
-(** [create mac] returns a pair of [t, buffer].  [t] represents the current 
+val create : ?requests : Dhcp_wire.option_code list -> Cstruct.uint32 -> Macaddr.t -> (t * buffer)
+(** [create xid mac] returns a pair of [t, buffer].  [t] represents the current
  * state of the client in the lease transaction, and [buffer] is the suggested
  * next packet the caller should take to progress toward accepting a lease.
- * The optional argument [with_xid] allows the caller to specify a transaction ID
+ * The argument [xid] allows the caller to specify a transaction ID
  * to use for the lease attempt.
  * [requests] is a list of option codes which the client should ask for in its
  * attempt to get a DHCP lease.  If [requests] is not given, we'll make an educated
