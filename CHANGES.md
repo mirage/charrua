@@ -1,13 +1,20 @@
+### master
+
+* unix: require lwt_log explicitly
+
 ### v0.10 2018-09-16
 
 * charrua-unix: safe-string support (@haesbaert)
-* Behave like a windows 10 (default requested options) (#76 @juga0)
-* Document code using comments (#76 @juga0, #78 @yomimono)
+* client: add "anonymity profiles" by asking for common sets of options, to reduce the ease of profiling users by the set of DHCP requests sent (#76 @juga0)
+* core, client: Document code using comments (#76 and #78, @juga0 @yomimono)
+* core: add documentation and RFCs for specs we support (@juga0)
+* unix: add support for 4.06.0 via Bytes.to_string in charruad.ml (@haesbaert)
 * Support private_classless_static_route option (#76 @juga0)
 * Adjust to tcpip 3.5.0 and mirage-protocols-lwt 1.4.0 changes mirage-qubes-ipv4
   Static_ipv4.Make now requires a Random device and a monotonic clock
   connect requires a Mclock.t
   Mirage_protocols_lwt.IPV4 does not define the type alias ethif (#83 @hannesm)
+* build: various fixes (#71, #72 by @yomimono and @hannesm)
 
 ### v0.9 2017-08-02
 
