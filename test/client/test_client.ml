@@ -24,8 +24,8 @@ module Defaults = struct
 end
 
 let random_buffer () =
-  let sz = Cstruct.BE.get_uint16 (Stdlibrandom.generate 2) 0 in
-  Stdlibrandom.generate sz
+  let sz = Cstruct.BE.get_uint16 (Mirage_random_test.generate 2) 0 in
+  Mirage_random_test.generate sz
 
 let rec no_result t n () =
   if n <= 0 then ()
@@ -39,17 +39,19 @@ let rec no_result t n () =
   end
 ;;
 
-let parseable buf = 
+let parseable buf =
   Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (Cstruct.len buf))
 
+let random_xid () = Cstruct.BE.get_uint32 (Mirage_random_test.generate 4) 0
+
 let start_makes_dhcp () =
-  let (_s, buf) = Dhcp_client.create Defaults.client_mac in
+  let (_s, buf) = Dhcp_client.create (random_xid ()) Defaults.client_mac in
   (* for now, any positive result is fine *)
   parseable buf
 
 let client_to_selecting () =
   let open Defaults in
-  let (s, buf) = Dhcp_client.create client_mac in
+  let (s, buf) = Dhcp_client.create (random_xid ()) client_mac in
   let answer = Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) in
   Alcotest.(check (result pass reject)) "input succeeds" answer answer;
   (s, Rresult.R.get_ok answer)
@@ -136,7 +138,7 @@ Alcotest.fail "client wanted to send more packets after receiving DHCPACK"
        Alcotest.(check (option pass)) "lease is held" (Some dhcpack) (Dhcp_client.lease s)
 
 let random_init n =
-  let (s, _) = Dhcp_client.create Defaults.client_mac in
+  let (s, _) = Dhcp_client.create (random_xid ()) Defaults.client_mac in
   "random buffer entry to INIT client", `Quick, (no_result s n)
 
 let random_selecting n =
@@ -166,8 +168,9 @@ let random_bound n =
 a new lease"
     | `New_lease (s, response) ->
       "random buffer entry to BOUND client", `Quick, (no_result s n)
-  
+
 let () =
+  Mirage_random_test.initialize () ;
   let nfuzz = 100 in
   Alcotest.run "client tests" [
     (* these tests will programmatically put [Dhcp_client.t] into a particular
