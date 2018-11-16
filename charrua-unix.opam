@@ -1,5 +1,4 @@
 opam-version: "2.0"
-name: "charrua-unix"
 maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
 homepage: "https://github.com/haesbaert/charrua-unix"
@@ -15,7 +14,7 @@ depends: [
   "ocaml" {>= "4.03.0"}
   "lwt" {>="3.0.0"}
   "lwt_log"
-  "charrua-core" {>= "0.10"}
+  "charrua-core" {>= "0.11"}
   "cstruct-unix"
   "cmdliner"
   "rawlink"
