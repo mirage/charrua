@@ -1,5 +1,6 @@
-### master
+### v0.11.0 2018-11-16
 
+* client: use the Random interface from Mirage directly, avoid calls to Stdlibrandom (removed from mirage-random 1.2.0)
 * unix: require lwt_log explicitly
 
 ### v0.10 2018-09-16
