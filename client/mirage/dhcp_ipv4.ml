@@ -6,5 +6,5 @@ module Make(Dhcp_client : DHCP_CLIENT) (R : Mirage_random.C) (C : Mirage_clock.M
   include Static_ipv4.Make(R)(C)(Ethif)(Arp)
   let connect dhcp clock ethif arp =
     Lwt_stream.last_new dhcp >>= fun (config : ipv4_config) ->
-    connect ~ip:config.address ~network:config.network ~gateway:config.gateway clock ethif arp
+    connect ~ip:(config.network, config.address) ?gateway:config.gateway clock ethif arp
 end
