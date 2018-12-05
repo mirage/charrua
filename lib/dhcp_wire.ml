@@ -1104,6 +1104,7 @@ let pkt_of_buf buf len =
   try wrap () with | Invalid_argument e -> Error e
 
 let buf_of_pkt pkt =
+  (* TODO mtu *)
   let dhcp = Cstruct.create 2048 in
   set_dhcp_op dhcp (op_to_int pkt.op);
   set_dhcp_htype dhcp
@@ -1158,6 +1159,7 @@ let buf_of_pkt pkt =
   in
   let ip = Ipv4_packet.(Marshal.make_cstruct ~payload_len:(Cstruct.lenv [udp;dhcp])
                           { src = pkt.srcip; dst = pkt.dstip;
+                            id = 0 (* TODO: random? *); off = 0 ;
                             proto = (Marshal.protocol_to_int `UDP);
                             ttl = 255;
                             options = Cstruct.create 0; })
