@@ -73,8 +73,8 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
           let open Dhcp_wire in
           (* a lease is obtained! Note it, and replace the current listener *)
           Log.info (fun f -> f "Lease obtained! IP: %a, routers: %a"
-          Ipaddr.V4.pp_hum l.yiaddr
-          (Fmt.list Ipaddr.V4.pp_hum) (collect_routers l.options));
+          Ipaddr.V4.pp l.yiaddr
+          (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
           push @@ Some l;
           c := s;
           match renew with

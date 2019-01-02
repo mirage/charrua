@@ -75,7 +75,7 @@ let pp fmt p =
     | Renewing (ack, request) -> Format.fprintf fmt
         "RENEWING.  Have lease %s, generated request %s" (pr ack) (pr request)
   in
-  Format.fprintf fmt "%s: %a" (Macaddr.to_string p.srcmac) pp_state p.state
+  Format.fprintf fmt "%a: %a" Macaddr.pp p.srcmac pp_state p.state
 
 (* the lease function lets callers know whether the abstract (to them) lease
    object carries a usable network configuration. *)
