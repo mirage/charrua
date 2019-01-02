@@ -21,8 +21,8 @@ module Config = struct
   type host = {
     hostname : string;
     options : Dhcp_wire.dhcp_option list;
-    fixed_addr : Ipaddr.V4.t option;
-    hw_addr : Macaddr.t;
+    fixed_addr : Ipaddr_sexp.V4.t option;
+    hw_addr : Macaddr_sexp.t;
   } [@@deriving sexp]
 
   type t = {
@@ -30,10 +30,10 @@ module Config = struct
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
-    ip_addr : Ipaddr.V4.t;
-    mac_addr : Macaddr.t;
-    network : Ipaddr.V4.Prefix.t;
-    range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
+    ip_addr : Ipaddr_sexp.V4.t;
+    mac_addr : Macaddr_sexp.t;
+    network : Ipaddr_sexp.V4.Prefix.t;
+    range : (Ipaddr_sexp.V4.t * Ipaddr_sexp.V4.t) option;
     hosts : host list;
   } [@@deriving sexp]
 
@@ -194,7 +194,7 @@ module Lease = struct
   type t = {
     tm_start   : int32;
     tm_end     : int32;
-    addr       : Ipaddr.V4.t;
+    addr       : Ipaddr_sexp.V4.t;
     client_id  : Dhcp_wire.client_id;
   } [@@deriving sexp]
 
