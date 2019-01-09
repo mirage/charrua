@@ -1,3 +1,8 @@
+### v0.11.1 2019-01-09
+
+* compatibility with ipaddr 3.0 (#88, @hannesm)
+* compatibility with tcpip 3.6.0 (#88, @hannesm)
+
 ### v0.11.0 2018-11-16
 
 * client: use the Random interface from Mirage directly, avoid calls to Stdlibrandom (removed from mirage-random 1.2.0)
