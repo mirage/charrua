@@ -19,16 +19,18 @@ depends: [
   "charrua-client-lwt" {>= "0.11.0"}
   "charrua-client" {>= "0.11.0"}
   "cstruct" {>="3.0.2"}
-  "ipaddr"
+  "ipaddr" {>= "3.0.0"}
   "rresult"
   "mirage-random" {>= "1.0.0"}
   "mirage-clock"
+  "mirage-time-lwt"
+  "mirage-net-lwt"
+  "mirage-protocols-lwt"
   "duration"
   "logs"
-  "tcpip" {>= "3.5.0"}
+  "tcpip" {>= "3.6.0"}
   "fmt"
   "lwt"
-  "mirage-types-lwt" {>="3.0.0"}
 ]
 synopsis: "A DHCP client for MirageOS"
 description: """

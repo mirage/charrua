@@ -5,4 +5,4 @@
   (public_name charrua-client-lwt)
   (modules     (dhcp_client_lwt))
   (libraries   (charrua-core.wire lwt charrua-client
-                mirage-time-lwt duration))))
+                mirage-time-lwt mirage-random mirage-net-lwt duration))))
