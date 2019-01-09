@@ -340,44 +340,44 @@ type flags =
   | Unicast [@@deriving sexp]
 
 type client_id =
-  | Hwaddr of Macaddr.t
+  | Hwaddr of Macaddr_sexp.t
   | Id of string [@@deriving sexp]
 
 type dhcp_option =
   | Pad                                     (* code 0 *)
-  | Subnet_mask of Ipaddr.V4.t              (* code 1 *)
+  | Subnet_mask of Ipaddr_sexp.V4.t         (* code 1 *)
   | Time_offset of int32                    (* code 2 *)
-  | Routers of Ipaddr.V4.t list             (* code 3 *)
-  | Time_servers of Ipaddr.V4.t list        (* code 4 *)
-  | Name_servers of Ipaddr.V4.t list        (* code 5 *)
-  | Dns_servers of Ipaddr.V4.t list         (* code 6 *)
-  | Log_servers of Ipaddr.V4.t list         (* code 7 *)
-  | Cookie_servers of Ipaddr.V4.t list      (* code 8 *)
-  | Lpr_servers of Ipaddr.V4.t list         (* code 9 *)
-  | Impress_servers of Ipaddr.V4.t list     (* code 10 *)
-  | Rsclocation_servers of Ipaddr.V4.t list (* code 11 *)
+  | Routers of Ipaddr_sexp.V4.t list        (* code 3 *)
+  | Time_servers of Ipaddr_sexp.V4.t list        (* code 4 *)
+  | Name_servers of Ipaddr_sexp.V4.t list        (* code 5 *)
+  | Dns_servers of Ipaddr_sexp.V4.t list         (* code 6 *)
+  | Log_servers of Ipaddr_sexp.V4.t list         (* code 7 *)
+  | Cookie_servers of Ipaddr_sexp.V4.t list      (* code 8 *)
+  | Lpr_servers of Ipaddr_sexp.V4.t list         (* code 9 *)
+  | Impress_servers of Ipaddr_sexp.V4.t list     (* code 10 *)
+  | Rsclocation_servers of Ipaddr_sexp.V4.t list (* code 11 *)
   | Hostname of string                      (* code 12 *)
   | Bootfile_size of int                    (* code 13 *)
   | Merit_dumpfile of string                (* code 14 *)
   | Domain_name of string                   (* code 15 *)
-  | Swap_server of Ipaddr.V4.t              (* code 16 *)
+  | Swap_server of Ipaddr_sexp.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
-  | Policy_filters of Ipaddr.V4.Prefix.t list (* code 21 *)
+  | Policy_filters of Ipaddr_sexp.V4.Prefix.t list (* code 21 *)
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
   | Pmtu_ageing_timo of int32               (* code 24 *)
   | Pmtu_plateau_table of int list          (* code 25 *)
   | Interface_mtu of int                    (* code 26 *)
   | All_subnets_local of bool               (* code 27 *)
-  | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
+  | Broadcast_addr of Ipaddr_sexp.V4.t           (* code 28 *)
   | Perform_mask_discovery of bool          (* code 29 *)
   | Mask_supplier of bool                   (* code 30 *)
   | Perform_router_disc of bool             (* code 31 *)
-  | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
-  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
+  | Router_sol_addr of Ipaddr_sexp.V4.t          (* code 32 *)
+  | Static_routes of (Ipaddr_sexp.V4.t * Ipaddr_sexp.V4.t) list (* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of int32                 (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
@@ -385,20 +385,20 @@ type dhcp_option =
   | Tcp_keepalive_interval of int32         (* code 38 *)
   | Tcp_keepalive_garbage of int            (* code 39 *)
   | Nis_domain of string                    (* code 40 *)
-  | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
-  | Ntp_servers of Ipaddr.V4.t list         (* code 42 *)
+  | Nis_servers of Ipaddr_sexp.V4.t list         (* code 41 *)
+  | Ntp_servers of Ipaddr_sexp.V4.t list         (* code 42 *)
   | Vendor_specific of string               (* code 43 *)
-  | Netbios_name_servers of Ipaddr.V4.t list(* code 44 *)
-  | Netbios_datagram_distrib_servers of Ipaddr.V4.t list (* code 45 *)
+  | Netbios_name_servers of Ipaddr_sexp.V4.t list(* code 44 *)
+  | Netbios_datagram_distrib_servers of Ipaddr_sexp.V4.t list (* code 45 *)
   | Netbios_node of int                     (* code 46 *)
   | Netbios_scope of string                 (* code 47 *)
-  | Xwindow_font_servers of Ipaddr.V4.t list(* code 48 *)
-  | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
-  | Request_ip of Ipaddr.V4.t               (* code 50 *)
+  | Xwindow_font_servers of Ipaddr_sexp.V4.t list(* code 48 *)
+  | Xwindow_display_managers of Ipaddr_sexp.V4.t list (* code 49 *)
+  | Request_ip of Ipaddr_sexp.V4.t               (* code 50 *)
   | Ip_lease_time of int32                  (* code 51 *)
   | Option_overload of int                  (* code 52 *)
   | Message_type of msgtype                 (* code 53 *)
-  | Server_identifier of Ipaddr.V4.t        (* code 54 *)
+  | Server_identifier of Ipaddr_sexp.V4.t        (* code 54 *)
   | Parameter_requests of option_code list  (* code 55 *)
   | Message of string                       (* code 56 *)
   | Max_message of int                      (* code 57 *)
@@ -409,18 +409,18 @@ type dhcp_option =
   | Netware_ip_domain of string             (* code 62 *)
   | Netware_ip_option of string             (* code 63 *)
   | Nis_plus_domain of string               (* code 64 *)
-  | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
+  | Nis_plus_servers of Ipaddr_sexp.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
   | Bootfile_name of string                 (* code 67 *)
-  | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
-  | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
-  | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
-  | Nntp_servers of Ipaddr.V4.t list        (* code 71 *)
-  | Www_servers of Ipaddr.V4.t list         (* code 72 *)
-  | Finger_servers of Ipaddr.V4.t list      (* code 73 *)
-  | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
-  | Streettalk_servers of Ipaddr.V4.t list  (* code 75 *)
-  | Streettalk_da of Ipaddr.V4.t list       (* code 76 *)
+  | Mobile_ip_home_agent of Ipaddr_sexp.V4.t list(* code 68 *)
+  | Smtp_servers of Ipaddr_sexp.V4.t list        (* code 69 *)
+  | Pop3_servers of Ipaddr_sexp.V4.t list        (* code 70 *)
+  | Nntp_servers of Ipaddr_sexp.V4.t list        (* code 71 *)
+  | Www_servers of Ipaddr_sexp.V4.t list         (* code 72 *)
+  | Finger_servers of Ipaddr_sexp.V4.t list      (* code 73 *)
+  | Irc_servers of Ipaddr_sexp.V4.t list         (* code 74 *)
+  | Streettalk_servers of Ipaddr_sexp.V4.t list  (* code 75 *)
+  | Streettalk_da of Ipaddr_sexp.V4.t list  (* code 76 *)
   | User_class of string                    (* code 77 *)
   | Directory_agent of string               (* code 78 *)
   | Service_scope of string                 (* code 79 *)
@@ -432,10 +432,10 @@ type dhcp_option =
   | Nds_tree_name of string                 (* code 86 *)
   | Nds_context of string                   (* code 87 *)
   | Bcmcs_controller_domain_name_list of string (* code 88 *)
-  | Bcmcs_controller_ipv4_addrs of Ipaddr.V4.t list (* code 89 *)
+  | Bcmcs_controller_ipv4_addrs of Ipaddr_sexp.V4.t list (* code 89 *)
   | Authentication of string                (* code 90 *)
   | Client_last_transaction_time of int32   (* code 91 *)
-  | Associated_ips of Ipaddr.V4.t list      (* code 92 *)
+  | Associated_ips of Ipaddr_sexp.V4.t list (* code 92 *)
   | Client_system of string                 (* code 93 *)
   | Client_ndi of string                    (* code 94 *)
   | Ldap of string                          (* code 95 *)
@@ -449,7 +449,7 @@ type dhcp_option =
   | Url of string                           (* code 114 *)
   | Auto_config of int                      (* code 116 *)
   | Name_service_search of string           (* code 117 *)
-  | Subnet_selection of Ipaddr.V4.t         (* code 118 *)
+  | Subnet_selection of Ipaddr_sexp.V4.t    (* code 118 *)
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
@@ -504,10 +504,10 @@ type dhcp_option =
   [@@deriving sexp]
 
 type pkt = {
-  srcmac  : Macaddr.t;
-  dstmac  : Macaddr.t;
-  srcip   : Ipaddr.V4.t;
-  dstip   : Ipaddr.V4.t;
+  srcmac  : Macaddr_sexp.t;
+  dstmac  : Macaddr_sexp.t;
+  srcip   : Ipaddr_sexp.V4.t;
+  dstip   : Ipaddr_sexp.V4.t;
   srcport : int;
   dstport : int;
   op      : op;
@@ -517,11 +517,11 @@ type pkt = {
   xid     : int32;
   secs    : int;
   flags   : flags;
-  ciaddr  : Ipaddr.V4.t;
-  yiaddr  : Ipaddr.V4.t;
-  siaddr  : Ipaddr.V4.t;
-  giaddr  : Ipaddr.V4.t;
-  chaddr  : Macaddr.t;
+  ciaddr  : Ipaddr_sexp.V4.t;
+  yiaddr  : Ipaddr_sexp.V4.t;
+  siaddr  : Ipaddr_sexp.V4.t;
+  giaddr  : Ipaddr_sexp.V4.t;
+  chaddr  : Macaddr_sexp.t;
   sname   : string;
   file    : string;
   options : dhcp_option list;
@@ -1104,6 +1104,7 @@ let pkt_of_buf buf len =
   try wrap () with | Invalid_argument e -> Error e
 
 let buf_of_pkt pkt =
+  (* TODO mtu *)
   let dhcp = Cstruct.create 2048 in
   set_dhcp_op dhcp (op_to_int pkt.op);
   set_dhcp_htype dhcp
@@ -1158,6 +1159,7 @@ let buf_of_pkt pkt =
   in
   let ip = Ipv4_packet.(Marshal.make_cstruct ~payload_len:(Cstruct.lenv [udp;dhcp])
                           { src = pkt.srcip; dst = pkt.dstip;
+                            id = 0 (* TODO: random? *); off = 0 ;
                             proto = (Marshal.protocol_to_int `UDP);
                             ttl = 255;
                             options = Cstruct.create 0; })

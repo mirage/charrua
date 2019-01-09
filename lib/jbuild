@@ -4,7 +4,7 @@
   (modules (dhcp_wire util))
   (wrapped false)
   (preprocess (pps (ppx_sexp_conv ppx_cstruct -no-check)))
-  (libraries   (tcpip.ethif tcpip.ipv4 tcpip.udp))
+  (libraries   (tcpip.ethif tcpip.ipv4 tcpip.udp ipaddr ipaddr.sexp macaddr macaddr.sexp))
 ))
 
 (library
@@ -13,7 +13,7 @@
   (modules (dhcp_server dhcp_lexer dhcp_parser ast))
   (wrapped false)
   (preprocess (pps (ppx_sexp_conv ppx_cstruct -no-check)))
-  (libraries   (ipaddr rresult tcpip charrua-core.wire))
+  (libraries   (ipaddr ipaddr.sexp macaddr macaddr.sexp rresult tcpip charrua-core.wire))
 ))
 
 (menhir ((modules (dhcp_parser))))

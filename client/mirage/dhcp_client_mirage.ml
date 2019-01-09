@@ -19,7 +19,7 @@ let config_of_lease lease : Mirage_protocols_lwt.ipv4_config option =
     | hd::_ ->
       Some Mirage_protocols_lwt.{ address; network; gateway = (Some hd) }
 
-module Make(Random : Mirage_random.C)(Time : Mirage_types_lwt.TIME) (Net : Mirage_types_lwt.NETWORK) = struct
+module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
   open Lwt.Infix
   open Mirage_protocols_lwt
 

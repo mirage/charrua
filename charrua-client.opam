@@ -22,6 +22,7 @@ depends: [
   "charrua-core" {>= "0.11.0"}
   "cstruct" {>="3.0.2"}
   "ipaddr"
+  "macaddr"
 ]
 synopsis: "DHCP client implementation"
 description: """
