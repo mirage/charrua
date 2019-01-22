@@ -150,7 +150,7 @@ let charruad configfile verbosity daemonize =
            Lwt_log.ign_notice_f "Found network for %s" s;
            (* Get a rawlink on the interface *)
            let ifname = ifname_of_address addr interfaces in
-           let link = Lwt_rawlink.(open_link ~filter:(dhcp_filter ()) ifname) in
+           let link = Lwt_rawlink.(open_link ~filter:(dhcp_server_filter ()) ifname) in
            (* Create a thread *)
            Some (input config db link)
          | None ->
