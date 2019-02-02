@@ -1,3 +1,8 @@
+### v0.11.2 2019-02-02
+
+* compatibility with tcpip 3.7.0 (#91, @hannesm)
+* compatibility with rawlink 1.0 (#90, @hannesm)
+
 ### v0.11.1 2019-01-09
 
 * compatibility with ipaddr 3.0 (#88, @hannesm)
