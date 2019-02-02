@@ -23,7 +23,8 @@ depends: [
   "sexplib"
   "ipaddr"        {>= "3.0.0"}
   "macaddr"
-  "tcpip"         {>= "3.6.0"}
+  "ethernet"
+  "tcpip"         {>= "3.7.0"}
   "rresult"
   "io-page-unix"  {with-test}
   "cstruct-unix"  {with-test}
