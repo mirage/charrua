@@ -8,7 +8,7 @@ env:
   global:
   - TESTS=true
   - PINS="charrua-core.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
-  - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
+  - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git#arp"
   matrix:
   - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-client"
   - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-client-lwt"
