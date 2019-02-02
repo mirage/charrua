@@ -1042,17 +1042,17 @@ let pkt_of_buf buf len =
   let open Rresult in
   let open Printf in
   let wrap () =
-    let min_len = sizeof_dhcp + Ethif_wire.sizeof_ethernet +
+    let min_len = sizeof_dhcp + Ethernet_wire.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
     Util.guard (len >= min_len)
       (sprintf "packet is too small: %d < %d" len min_len)
     >>= fun () ->
     (* Handle ethernet *)
-    Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
-    match eth_header.Ethif_packet.ethertype with
-    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Error "packet is not ipv4"
-    | Ethif_wire.IPv4 ->
+    Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    match eth_header.Ethernet_packet.ethertype with
+    | Ethernet_wire.ARP | Ethernet_wire.IPv6 -> Error "packet is not ipv4"
+    | Ethernet_wire.IPv4 ->
       Ipv4_packet.Unmarshal.of_cstruct eth_payload
       >>= fun (ipv4_header, ipv4_payload) ->
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
@@ -1092,8 +1092,8 @@ let pkt_of_buf buf len =
         let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
         let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
         let options = options_of_buf udp_payload len in
-        Ok { srcmac = eth_header.Ethif_packet.source;
-                    dstmac = eth_header.Ethif_packet.destination;
+        Ok { srcmac = eth_header.Ethernet_packet.source;
+                    dstmac = eth_header.Ethernet_packet.destination;
                     srcip = ipv4_header.Ipv4_packet.src;
                     dstip = ipv4_header.Ipv4_packet.dst;
                     srcport = udp_header.Udp_packet.src_port;
@@ -1142,10 +1142,10 @@ let buf_of_pkt pkt =
   in
   let dhcp = Cstruct.set_len dhcp ((Cstruct.len dhcp) - (Cstruct.len buf_end)) in
   (* Ethernet *)
-  let ethernet = Ethif_packet.(Marshal.make_cstruct
+  let ethernet = Ethernet_packet.(Marshal.make_cstruct
                                  { source = pkt.srcmac;
                                    destination = pkt.dstmac;
-                                   ethertype = Ethif_wire.IPv4; })
+                                   ethertype = Ethernet_wire.IPv4; })
   in
   (* IPv4 *)
   let pseudoheader = Ipv4_packet.Marshal.pseudoheader
@@ -1169,10 +1169,10 @@ let buf_of_pkt pkt =
 let is_dhcp buf len =
   let open Rresult in
   let aux buf =
-    Ethif_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
-    match eth_header.Ethif_packet.ethertype with
-    | Ethif_wire.ARP | Ethif_wire.IPv6 -> Ok false
-    | Ethif_wire.IPv4 ->
+    Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    match eth_header.Ethernet_packet.ethertype with
+    | Ethernet_wire.ARP | Ethernet_wire.IPv6 -> Ok false
+    | Ethernet_wire.IPv4 ->
       Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
       (* TODO: tcpip doesn't currently do checksum checking, so we lose some
          functionality by making this change *)
