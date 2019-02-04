@@ -1,0 +1,24 @@
+(library
+ (name dhcp_wire)
+ (public_name charrua-core.wire)
+ (modules dhcp_wire util)
+ (wrapped false)
+ (preprocess
+  (pps ppx_sexp_conv ppx_cstruct -- -no-check))
+ (libraries ethernet tcpip.ipv4 tcpip.udp ipaddr ipaddr.sexp macaddr
+   macaddr.sexp))
+
+(library
+ (name dhcp_server)
+ (public_name charrua-core.server)
+ (modules dhcp_server dhcp_lexer dhcp_parser ast)
+ (wrapped false)
+ (preprocess
+  (pps ppx_sexp_conv ppx_cstruct -- -no-check))
+ (libraries ipaddr ipaddr.sexp macaddr macaddr.sexp rresult tcpip
+   charrua-core.wire))
+
+(menhir
+ (modules dhcp_parser))
+
+(ocamllex dhcp_lexer)

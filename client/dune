@@ -1,0 +1,4 @@
+(library
+ (name dhcp_client)
+ (public_name charrua-client)
+ (libraries charrua-core.wire))

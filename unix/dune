@@ -1,0 +1,6 @@
+(executable
+ (name charruad)
+ (public_name charruad)
+ (package charrua-unix)
+ (libraries charrua-core.server lwt.unix cstruct-lwt cstruct-unix cmdliner
+   ipaddr tuntap rawlink.lwt mtime.clock.os tcpip.unix lwt_log))

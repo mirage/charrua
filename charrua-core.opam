@@ -8,13 +8,13 @@ dev-repo: "git+https://github.com/mirage/charrua-core.git"
 doc: "https://mirage.github.io/charrua-core/api"
 
 build: [
-  ["jbuilder" "subst" "-n" name] {pinned}
-  ["jbuilder" "build" "-p" name "-j" jobs]
-  ["jbuilder" "runtest" "-p" name "-j" jobs] {with-test}
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 
 depends: [
-  "jbuilder" {build & >="1.0+beta7"}
+  "dune" {build & >= "1.0"}
   "ppx_sexp_conv" {build}
   "ppx_cstruct"   {build}
   "menhir"        {build}

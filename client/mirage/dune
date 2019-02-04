@@ -1,0 +1,6 @@
+(library
+ (name dhcp_client_mirage)
+ (public_name charrua-client-mirage)
+ (libraries charrua-client-lwt mirage-clock mirage-random mirage-time-lwt
+   mirage-net-lwt mirage-protocols-lwt)
+ (wrapped false))
