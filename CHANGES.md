@@ -1,5 +1,6 @@
-### v0.11.2 2019-02-02
+### v0.11.2 2019-02-05
 
+* build system ported to dune (#92, @hannesm)
 * compatibility with tcpip 3.7.0 (#91, @hannesm)
 * compatibility with rawlink 1.0 (#90, @hannesm)
 
