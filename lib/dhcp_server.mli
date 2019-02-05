@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-(** {1 DHCP Server } *)
-
 (** A DHCP server is composed of two sub-modules: {! Config} and {! Input}.  The
     former deals with building a suitable configuration for using with the
     later.

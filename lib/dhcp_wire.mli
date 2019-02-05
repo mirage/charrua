@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-(** {1 DHCP wire parsers} *)
-
 (** {2 DHCP general data} *)
 
 val client_port : int
@@ -356,23 +354,23 @@ type htype =
   | Ethernet_10mb
   | Other
 
-(** Conversions of {! htype}. *)
+(** Conversions of {!htype}. *)
 
 val htype_of_sexp : Sexplib.Sexp.t -> htype
 val sexp_of_htype : htype -> Sexplib.Sexp.t
 
-(** {2 DHCP header flags}. *)
+(** {2 DHCP header flags} *)
 
 type flags =
   | Broadcast
   | Unicast
 
-(** Conversions of {! flags}. *)
+(** Conversions of {!flags}. *)
 
 val flags_of_sexp : Sexplib.Sexp.t -> flags
 val sexp_of_flags : flags -> Sexplib.Sexp.t
 
-(** {2 DHCP Client identifier}. *)
+(** {2 DHCP Client identifier} *)
 
 type client_id =
   | Hwaddr of Macaddr.t
