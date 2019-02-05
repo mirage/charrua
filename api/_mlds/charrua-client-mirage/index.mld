@@ -1,3 +1,0 @@
-{2 Library charrua-client-mirage}
-This library exposes the following toplevel modules:
-{!modules:Dhcp_client_mirage Dhcp_ipv4}

@@ -1,3 +1,0 @@
-{2 Library charrua-client-lwt}
-The entry point of this library is the module:
-{!module-Dhcp_client_lwt}.
