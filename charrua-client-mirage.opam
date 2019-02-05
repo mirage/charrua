@@ -8,12 +8,12 @@ tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
 build: [
-  ["jbuilder" "subst" "-n" name] {pinned}
-  ["jbuilder" "build" "-p" name "-j" jobs]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 
 depends: [
-  "jbuilder" {build & >= "1.0+beta9"}
+  "dune" {build & >= "1.0"}
   "ocaml" {>= "4.04.2"}
   "charrua-core" {>= "0.11.1"}
   "charrua-client-lwt" {>= "0.11.1"}
