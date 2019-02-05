@@ -26,7 +26,7 @@ depends: [
 ]
 synopsis: "DHCP client implementation"
 description: """
-charrua-client is a DHCP client powered by [charrua-core](https://github.com/haesbaert/charrua-core).
+charrua-client is a DHCP client powered by [charrua-core](https://github.com/mirage/charrua-core).
 
 The base library exposes a simple state machine in `Dhcp_client`
 for use in acquiring a DHCP lease.

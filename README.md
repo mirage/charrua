@@ -44,7 +44,7 @@ southern South America.
 
 ### Charrua-client
 
-charrua-client is a DHCP client powered by [charrua-core](https://github.com/haesbaert/charrua-core).
+charrua-client is a DHCP client powered by [charrua-core](https://github.com/mirage/charrua-core).
 
 The base library exposes a simple state machine in `Dhcp_client`
 for use in acquiring a DHCP lease.
@@ -64,7 +64,7 @@ charrua-unix is an _ISC-licensed_ Unix DHCP daemon based on
 #### Features
 
 * Supports a stripped down ISC dhcpd.conf. A configuration sample can be found
-[here](https://github.com/haesbaert/charrua-core/blob/master/sample/dhcpd.conf)
+[here](https://github.com/mirage/charrua-core/blob/master/sample/dhcpd.conf)
 * Privilege dropping: the daemon doesn't run as root.
 * Almost purely-functional code.
 * Support for multiple interfaces/subnets.
