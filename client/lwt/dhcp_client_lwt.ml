@@ -26,9 +26,9 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
       Time.sleep_ns @@ Duration.of_sec t >>= fun () ->
       match Dhcp_client.renew c with
       | `Noop -> Log.debug (fun f -> f "Can't renew this lease; won't try");  Lwt.return_unit
-      | `Response (c, buf) ->
+      | `Response (c, pkt) ->
         Log.debug (fun f -> f "attempted to renew lease: %a" Dhcp_client.pp c);
-        Net.write net buf >>= function
+        Net.write net (Dhcp_wire.pkt_into_buf pkt) >>= function
           | Error e ->
             Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
             Lwt.return_unit
@@ -37,7 +37,7 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
     in
     let rec get_lease push dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
-      Net.write net dhcpdiscover >>= function
+      Net.write net (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
       | Error e ->
         Log.err (fun f -> f "Failed to write initial lease discovery request: %a" Net.pp_error e);
         Lwt.return_unit
@@ -60,21 +60,21 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
           Log.debug (fun f -> f "No action! State is %a" Dhcp_client.pp !c);
           Lwt.return_unit
         | `Response (s, action) -> begin
-          Net.write net action >>= function
-          | Error e ->
-            Log.err (fun f -> f "Failed to write lease transaction response: %a" Net.pp_error e);
-            Lwt.return_unit
-          | Ok () ->
-            Log.debug (fun f -> f "State advanced! Now %a" Dhcp_client.pp s);
-            c := s;
-            Lwt.return_unit
+            Net.write net (Dhcp_wire.pkt_into_buf action) >>= function
+            | Error e ->
+              Log.err (fun f -> f "Failed to write lease transaction response: %a" Net.pp_error e);
+              Lwt.return_unit
+            | Ok () ->
+              Log.debug (fun f -> f "State advanced! Now %a" Dhcp_client.pp s);
+              c := s;
+              Lwt.return_unit
         end
         | `New_lease (s, l) ->
           let open Dhcp_wire in
           (* a lease is obtained! Note it, and replace the current listener *)
           Log.info (fun f -> f "Lease obtained! IP: %a, routers: %a"
-          Ipaddr.V4.pp l.yiaddr
-          (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
+                       Ipaddr.V4.pp l.yiaddr
+                       (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
           push @@ Some l;
           c := s;
           match renew with
