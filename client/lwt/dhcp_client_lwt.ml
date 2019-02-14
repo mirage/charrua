@@ -14,6 +14,8 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
     let sleep_interval = Duration.of_sec 4 in
+    let header_size = Ethernet_wire.sizeof_ethernet in
+    let size = Net.mtu net + header_size in
 
     let xid = match xid with
       | None -> Cstruct.BE.get_uint32 (Random.generate 4) 0
@@ -28,7 +30,7 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
       | `Noop -> Log.debug (fun f -> f "Can't renew this lease; won't try");  Lwt.return_unit
       | `Response (c, pkt) ->
         Log.debug (fun f -> f "attempted to renew lease: %a" Dhcp_client.pp c);
-        Net.write net (Dhcp_wire.pkt_into_buf pkt) >>= function
+        Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
           | Error e ->
             Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
             Lwt.return_unit
@@ -37,7 +39,7 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
     in
     let rec get_lease push dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
-      Net.write net (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
+      Net.write net ~size (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
       | Error e ->
         Log.err (fun f -> f "Failed to write initial lease discovery request: %a" Net.pp_error e);
         Lwt.return_unit
@@ -54,13 +56,13 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
           get_lease push dhcpdiscover
     in
     let listen push () =
-      Net.listen net (fun buf ->
+      Net.listen net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
           Log.debug (fun f -> f "No action! State is %a" Dhcp_client.pp !c);
           Lwt.return_unit
         | `Response (s, action) -> begin
-            Net.write net (Dhcp_wire.pkt_into_buf action) >>= function
+            Net.write net ~size (Dhcp_wire.pkt_into_buf action) >>= function
             | Error e ->
               Log.err (fun f -> f "Failed to write lease transaction response: %a" Net.pp_error e);
               Lwt.return_unit

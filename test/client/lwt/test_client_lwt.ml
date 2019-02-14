@@ -23,15 +23,14 @@ module No_net = struct
   type buffer = Cstruct.t
   type t = { mac : Macaddr.t; mutable packets : Cstruct.t list }
   let disconnect _ = Lwt.return_unit
-  let write t ?size fillf =
-    let size = 14 + match size with None -> 1500 | Some s -> s in
+  let write t ~size fillf =
     let buf = Cstruct.create size in
-    let l = 14 + fillf buf in
+    let l = fillf buf in
     assert (l <= size);
     let b = Cstruct.sub buf 0 l in
     t.packets <- t.packets @ [b];
     Lwt.return_ok ()
-  let listen _ _ = Lwt.return_ok ()
+  let listen _ ~header_size:_ _ = Lwt.return_ok ()
   let mac t = t.mac
   let mtu t = 1500
   let reset_stats_counters _ = ()
