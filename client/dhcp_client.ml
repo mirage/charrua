@@ -23,8 +23,6 @@ type t = {
   state  : state;
 }
 
-type buffer = Cstruct.t
-
 (* constant fields are represented here for convenience.
    This module can then be locally opened where required *)
 module Constants = struct
@@ -172,8 +170,7 @@ let create ?requests xid srcmac =
       Parameter_requests requests;
     ];
   } in
-  {srcmac; request_options = requests; state = Selecting pkt},
-    Dhcp_wire.buf_of_pkt pkt
+  {srcmac; request_options = requests; state = Selecting pkt}, pkt
 
 (* for a DHCP client, figure out whether an incoming packet should modify the
    state, and if a response message is warranted, generate it.
@@ -202,7 +199,7 @@ let input t buf =
                           ~xid:dhcpdiscover.xid
                           ~chaddr:dhcpdiscover.chaddr in
         `Response ({t with state = Requesting (incoming, dhcprequest)},
-          (Dhcp_wire.buf_of_pkt dhcprequest))
+                   dhcprequest)
     | Some DHCPOFFER, _ -> (* DHCPOFFER is irrelevant when we're not selecting *)
       `Noop
     | Some DHCPACK, Renewing _
@@ -229,11 +226,11 @@ let input t buf =
 (* try to renew the lease, probably because some time has elapsed. *)
 let renew t = match t.state with
   | Selecting _ | Requesting _ -> `Noop
-  | Renewing (_lease, request) -> `Response (t, Dhcp_wire.buf_of_pkt request)
+  | Renewing (_lease, request) -> `Response (t, request)
   | Bound lease ->
     let open Dhcp_wire in
     let request = offer t ~xid:lease.xid ~chaddr:lease.chaddr
       ~server_ip:lease.siaddr ~request_ip:lease.yiaddr
       ~offer_options:lease.options in
     let state = Renewing (lease, request) in
-    `Response ({t with state = state}, (Dhcp_wire.buf_of_pkt request))
+    `Response ({t with state = state}, request)

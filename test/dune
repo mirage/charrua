@@ -2,7 +2,7 @@
  (names test)
  (preprocess
   (pps ppx_cstruct))
- (libraries cstruct-unix io-page.unix charrua-core.server tcpip.unix))
+ (libraries cstruct-unix charrua-core.server tcpip.unix))
 
 (alias
  (name runtest)
