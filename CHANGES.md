@@ -1,20 +1,24 @@
-### v0.11.2 2019-02-05
+### v0.12.0 (2019-02-25)
+
+* Adjust to mirage-net 2.0.0 and mirage-protocols 2.0.0 changes (#94, @hannesm)
+
+### v0.11.2 (2019-02-05)
 
 * build system ported to dune (#92, @hannesm)
 * compatibility with tcpip 3.7.0 (#91, @hannesm)
 * compatibility with rawlink 1.0 (#90, @hannesm)
 
-### v0.11.1 2019-01-09
+### v0.11.1 (2019-01-09)
 
 * compatibility with ipaddr 3.0 (#88, @hannesm)
 * compatibility with tcpip 3.6.0 (#88, @hannesm)
 
-### v0.11.0 2018-11-16
+### v0.11.0 (2018-11-16)
 
 * client: use the Random interface from Mirage directly, avoid calls to Stdlibrandom (removed from mirage-random 1.2.0)
 * unix: require lwt_log explicitly
 
-### v0.10 2018-09-16
+### v0.10 (2018-09-16)
 
 * charrua-unix: safe-string support (@haesbaert)
 * client: add "anonymity profiles" by asking for common sets of options, to reduce the ease of profiling users by the set of DHCP requests sent (#76 @juga0)
@@ -28,25 +32,25 @@
   Mirage_protocols_lwt.IPV4 does not define the type alias ethif (#83 @hannesm)
 * build: various fixes (#71, #72 by @yomimono and @hannesm)
 
-### v0.9 2017-08-02
+### v0.9 (2017-08-02)
 
 * core: re-implement UDP checksum on input (#63 @haesbaert)
 * client: implement renewal logic (breaking API change) (#60 @yomimono)
 * client: split mirage sublibrary into lwt sublibrary (timing logic) and mirage sublibrary (shims for MirageOS APIs) (#60 @yomimono)
 * numerous test and build bugfixes (#68 #64 #61 @samoht, #67 #66 #65 @djs55)
 
-### v0.8 2017-06-12
+### v0.8 (2017-06-12)
 
 * Port to Jbuilder (#57 @avsm).
 
-### v0.7 2017-14-04
+### v0.7 (2017-14-04)
 
 * Fixed a bug where only the first tuple from an option list would be parsed
 * Fixed parsing of long option lists
 * Fixed parsing for options 120 and 121
 * Updated copyrights
 
-### v0.6 2017-04-01
+### v0.6 (2017-04-01)
 
 * `Dhcp_wire.buf_of_pkt` now correctly rejects empty options
 * `Dhcp_wire.options_of_buf` now enforces minimun length on all cases
@@ -54,13 +58,13 @@
 * **CRITICAL** Fixed a bug where `dhcp_flags` was read from the wrong offset
 This bug was present in versions 0.4 and 0.5
 
-### v0.5 2017-03-14
+### v0.5 (2017-03-14)
 
 * Topkg support added
 * Time type on input_pkt changed to int32
 * Bump tcpip support to version 3.1.0
 
-### v0.4 2017-01-21
+### v0.4 (2017-01-21)
 
 * MirageOS3 compatibility
 * Ocaml 4.02.3 deprecated
@@ -72,7 +76,7 @@ This bug was present in versions 0.4 and 0.5
 * Improved default lease time
 * Fixed cases where pkt_of_buf could raise an exception
 
-### v0.3 2016-04-02
+### v0.3 (2016-04-02)
 
 * Fixed uninitialized data on packet parsing, normalized to zero
 * Lease.database moved out of Config.t
@@ -83,13 +87,13 @@ This bug was present in versions 0.4 and 0.5
 * Convert to ppx
 * Minor bug fixes
 
-### v0.2 2015-11-10
+### v0.2 (2015-11-10)
 
 * Custom exceptions removed, only Invalid_argument now
 * Improved mli documentation
 * Major rewrite
 * Support ocaml 4.01
 
-### v0.1 2015-10-09
+### v0.1 (2015-10-09)
 
 * Initial release
