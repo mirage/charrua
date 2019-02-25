@@ -22,13 +22,11 @@ depends: [
   "charrua-client" {>= "0.12.0"}
   "cstruct" {>="3.0.2"}
   "ipaddr" {>="3.0.0"}
-  "rresult"
   "mirage-random" {>= "1.0.0"}
   "duration"
   "mirage-time-lwt"
   "mirage-net-lwt" {>= "2.0.0"}
   "logs"
-  "tcpip" {>= "3.6.0"}
   "fmt"
   "lwt"
 ]
