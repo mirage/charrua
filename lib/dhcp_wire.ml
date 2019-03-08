@@ -614,11 +614,10 @@ let options_of_buf buf buf_len =
           Cstruct.copy body 0 len
       in
       let get_client_id () =  if len < 2 then invalid_arg bad_len else
-          let s = Cstruct.copy body 1 (len - 1) in
           if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
-            Hwaddr (Macaddr.of_bytes_exn s)
+            Hwaddr (Macaddr.of_bytes_exn (Cstruct.copy body 1 len))
           else
-            Id s
+            Id (Cstruct.copy body 0 len)
       in
       match code with
       | 0 ->   padding ()
