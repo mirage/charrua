@@ -374,7 +374,7 @@ val sexp_of_flags : flags -> Sexplib.Sexp.t
 
 type client_id =
   | Hwaddr of Macaddr.t
-  | Id of string
+  | Id of int * string
 (** A client_id is usually a mac address from a {! dhcp_option},
     but it can also be an opaque string. See {! client_id_of_pkt}. *)
 

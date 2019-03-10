@@ -207,7 +207,7 @@ let t_bad_junk_padding_config () =
         Subnet_mask mask_t;
         End; (* Should not allow end in configuration *)
         Pad; (* Should not allow pad in configuration *)
-        Client_id (Id "The dude");
+        Client_id (Id (0, "The dude"));
       ];
       false
     with
@@ -307,7 +307,7 @@ let discover_pkt = {
     file = "";
     options = [
       Message_type DHCPDISCOVER;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -509,7 +509,7 @@ let t_bad_discover () =
     file = "";
     options = [
       Message_type DHCPDISCOVER;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -545,7 +545,7 @@ let request_nak_pkt = {
   file = "";
   options = [
     Message_type DHCPREQUEST;
-    Client_id (Id "The Dude");
+    Client_id (Id (0, "The Dude"));
     Parameter_requests [
       DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
       POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -599,7 +599,7 @@ let t_request_fixed () =
     file = "";
     options = [
       Message_type DHCPREQUEST;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -618,7 +618,7 @@ let t_request_fixed () =
       (* Fixed leases are mocked up, database should be unchanged *)
       assert (db = (Lease.make_db ()));
       let () =
-        match Lease.lease_of_client_id (Id "W.Sobchak") db with
+        match Lease.lease_of_client_id (Id (0, "W.Sobchak")) db with
         | None -> () (* good, lease is not there. *)
         | Some _l -> failwith "Found a fixed lease, bad juju."
       in
@@ -707,7 +707,7 @@ let t_request () =
     file = "";
     options = [
       Message_type DHCPREQUEST;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -729,11 +729,11 @@ let t_request () =
       if verbose then
         printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.to_list db)));
       let () =
-        match Lease.lease_of_client_id (Id "W.Sobchak") db with
+        match Lease.lease_of_client_id (Id (0, "W.Sobchak")) db with
         | None -> failwith "Lease not found";
         | Some l ->
           let open Dhcp_server.Lease in
-          assert (l.client_id = (Id "W.Sobchak"));
+          assert (l.client_id = (Id (0, "W.Sobchak")));
           assert (not (expired l ~now));
           assert (l.tm_start <= now);
           assert (l.tm_end >= now);
@@ -834,7 +834,7 @@ let t_request_no_range () =
     file = "";
     options = [
       Message_type DHCPREQUEST;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -909,7 +909,7 @@ let t_request_no_range_fixed () =
     file = "";
     options = [
       Message_type DHCPREQUEST;
-      Client_id (Id "W.Sobchak");
+      Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
         DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
@@ -927,7 +927,7 @@ let t_request_no_range_fixed () =
     (* Check if our new lease is there *)
     assert (db = (Lease.make_db ()));
     let () =
-      match Lease.lease_of_client_id (Id "W.Sobchak") db with
+      match Lease.lease_of_client_id (Id (0, "W.Sobchak")) db with
       | None -> () (* good, lease is not there. *)
       | Some _l -> failwith "Found a fixed lease, bad juju."
     in

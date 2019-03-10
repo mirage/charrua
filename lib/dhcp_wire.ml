@@ -379,7 +379,7 @@ type flags =
 
 type client_id =
   | Hwaddr of Macaddr_sexp.t
-  | Id of string [@@deriving sexp]
+  | Id of int * string [@@deriving sexp]
 
 type dhcp_option =
   | Pad                                     (* code 0 *)
@@ -653,10 +653,11 @@ let options_of_buf buf buf_len =
       in
       let get_client_id () =  if len < 2 then invalid_arg bad_len else
           let s = Cstruct.copy body 1 (len - 1) in
-          if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
+          let htype = Cstruct.get_uint8 body 0 in
+          if htype = 1 && len = 7 then
             Hwaddr (Macaddr.of_octets_exn s)
           else
-            Id s
+            Id (htype, s)
       in
       match code with
       | 0 ->   padding ()
@@ -883,7 +884,7 @@ let buf_of_options sbuf options =
   let put_client_id code v buf =
     let htype, s = match v with
       | Hwaddr mac -> (1, Macaddr.to_octets mac)
-      | Id id -> (0, id)
+      | Id (htype, id) -> (htype, id)
     in
     let len = String.length s in
     let buf = put_code code buf |> put_len (succ len) |> put_8 htype in

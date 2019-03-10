@@ -181,7 +181,11 @@ module Lease = struct
     let compare a b =
       match a, b with
       | Hwaddr maca,  Hwaddr macb -> Macaddr.compare maca macb
-      | Id ida,  Id idb -> String.compare ida idb
+      | Id (htype, ida),  Id (htype', idb) ->
+        begin match compare htype htype' with
+          | 0 -> String.compare ida idb
+          | x -> x
+        end
       | Id _, Hwaddr _ -> -1
       | Hwaddr _, Id _ -> 1
   end
@@ -294,7 +298,7 @@ module Lease = struct
       invalid_arg "invalid range, must be (low * high)";
     let hint_ip =
       let v = match id with
-        | Dhcp_wire.Id _s -> Int32.of_int 1805 (* XXX who cares *)
+        | Dhcp_wire.Id (_, _s) -> Int32.of_int 1805 (* XXX who cares *)
         | Dhcp_wire.Hwaddr hw ->
           let s = String.sub (Macaddr.to_octets hw) 2 4 in
           let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
