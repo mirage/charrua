@@ -1,6 +1,5 @@
-(executables
- (names test)
- (public_names test)
+(test
+ (name test)
  (package charrua-server)
  (preprocess (pps ppx_cstruct))
  (libraries cstruct-unix charrua charrua-server tcpip.unix))
