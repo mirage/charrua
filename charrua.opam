@@ -25,7 +25,6 @@ depends: [
   "ethernet"
   "tcpip"         {>= "3.7.0"}
   "rresult"
-  "cstruct-unix"  {with-test}
 ]
 synopsis: "DHCP wire frame encoder and decoder"
 description: """

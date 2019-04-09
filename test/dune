@@ -7,7 +7,7 @@
 
 (alias
  (name runtest)
- (package charrua)
+ (package charrua-server)
  (deps
   (:< test.exe)
   dhcp.pcap
