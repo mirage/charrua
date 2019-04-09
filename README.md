@@ -38,7 +38,7 @@ http://mirage.github.io/charrua/api
 
 ### Charrua-server
 
-The module `Dhcp_server` supports a stripped down ISC dhcpd.conf, so you can
+The module `Dhcp_server` supports a stripped down ISC `dhcpd.conf`, so you can
 probably just use your old `dhcpd.conf`. It also supports manual configuration
 building in OCaml.
 
