@@ -16,7 +16,7 @@ depends: [
   "dune" {build & >= "1.0"}
   "ppx_sexp_conv" {>="v0.10.0"}
   "ppx_cstruct"
-  "ocaml"         {>= "4.0.3"}
+  "ocaml"         {>= "4.04.2"}
   "cstruct"       {>= "3.0.1"}
   "sexplib"
   "ipaddr"        {>= "3.0.0"}

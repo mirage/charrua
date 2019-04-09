@@ -11,7 +11,7 @@ build: [
 ]
 depends: [
   "dune" {build & >= "1.0"}
-  "ocaml" {>= "4.03.0"}
+  "ocaml" {>= "4.04.2"}
   "lwt" {>="3.0.0"}
   "lwt_log"
   "charrua" {>= "0.12.0"}
