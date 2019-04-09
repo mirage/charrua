@@ -5,7 +5,7 @@ homepage:     "https://github.com/mirage/charrua"
 bug-reports:  "https://github.com/mirage/charrua/issues"
 dev-repo:     "git+https://github.com/mirage/charrua.git"
 tags:         [ "org:mirage"]
-doc:          "https://docs.mirage.io"
+doc:          "https://mirage.github.io/charrua-core/"
 
 build: [
   ["dune" "subst"] {pinned}
