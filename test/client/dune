@@ -1,12 +1,5 @@
-(executables
- (names test_client)
- (libraries cstruct-unix alcotest charrua-client charrua-core.server
-   tcpip.unix mirage-random-test))
-
-(alias
- (name runtest)
+(test
+ (name test_client)
  (package charrua-client)
- (deps
-  (:< test_client.exe))
- (action
-  (run %{<})))
+ (libraries cstruct-unix alcotest charrua-client charrua-server tcpip.unix
+            mirage-random-test))

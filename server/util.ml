@@ -24,7 +24,8 @@ let find_map f t =
   in
   loop t
 
-let filter_map f l = List.rev @@
+let filter_map f l =
+  List.rev @@
   List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
 
 let finalize f g =
@@ -35,28 +36,6 @@ let finalize f g =
   with exn ->
     g ();
     raise exn
-
-let string_extend_if_le s m =
-  let n = String.length s in
-  if n > m then
-    invalid_arg ("string is too damn big: " ^ (string_of_int n));
-  s ^ String.make (m - n) (Char.chr 0)
-
-let string_nul b =
-  let len = String.length b in
-  let rec loop i =
-    if i = len then
-      true
-    else if (String.get b i) <> (Char.chr 0) then
-      false
-    else
-      loop (succ i)
-  in
-  loop 0
-
-let cstruct_copy_normalized f buf =
-  let b = f buf in
-  if string_nul b then "" else b
 
 let some_or_default x d = match x with Some x -> x | None -> d
 let some_or_f x f = match x with Some x -> x | None -> f ()
@@ -69,8 +48,6 @@ let cons v tl = v :: tl
 let cons_if p v tl = if p then v :: tl else tl
 let cons_if_some v tl = match v with Some v -> v :: tl | None -> tl
 let cons_if_some_f v fnr tl = match v with Some x -> fnr x :: tl | None -> tl
-
-let guard p e = if p then Result.Ok () else Result.Error e
 
 let addr_in_range addr range =
   let low_ip, high_ip = range in

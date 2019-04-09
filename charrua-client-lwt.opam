@@ -1,9 +1,9 @@
 opam-version: "2.0"
 maintainer:   ["Mindy Preston"]
 authors   :   ["Mindy Preston"]
-homepage:     "https://github.com/mirage/charrua-core"
-bug-reports:  "https://github.com/mirage/charrua-core/issues"
-dev-repo:     "git+https://github.com/mirage/charrua-core.git"
+homepage:     "https://github.com/mirage/charrua"
+bug-reports:  "https://github.com/mirage/charrua/issues"
+dev-repo:     "git+https://github.com/mirage/charrua.git"
 tags:         [ "org:mirage"]
 doc:          "https://docs.mirage.io"
 
@@ -18,7 +18,7 @@ depends: [
   "ocaml" {>= "4.04.2"}
   "alcotest"     {with-test}
   "cstruct-unix" {with-test}
-  "charrua-core" {>= "0.12.0"}
+  "charrua" {>= "0.12.0"}
   "charrua-client" {>= "0.12.0"}
   "cstruct" {>="3.0.2"}
   "ipaddr" {>="3.0.0"}

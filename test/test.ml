@@ -43,6 +43,13 @@ let mask_t = Ipaddr.V4.of_string_exn "255.255.255.0"
 let range_t = (Ipaddr.V4.of_string_exn "192.168.1.50",
                Ipaddr.V4.of_string_exn "192.168.1.100")
 
+let addr_in_range addr range =
+  let low_ip, high_ip = range in
+  let low_32 = Ipaddr.V4.to_int32 low_ip in
+  let high_32 = Ipaddr.V4.to_int32 high_ip in
+  let addr_32 = Ipaddr.V4.to_int32 addr in
+  addr_32 >= low_32 && addr_32 <= high_32
+
 let assert_error x = assert (Rresult.R.is_error x)
 
 open Dhcp_wire
@@ -354,7 +361,7 @@ let t_discover fixed =
     if fixed then
       assert (reply.yiaddr = ip150_t)
     else
-      assert (Util.addr_in_range reply.yiaddr range_t);
+      assert (addr_in_range reply.yiaddr range_t);
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
@@ -749,7 +756,7 @@ let t_request () =
       assert (reply.flags = Broadcast); (* Not required by RFC2131 section 4.1 *)
       assert (reply.ciaddr = Ipaddr.V4.any);
       assert (reply.yiaddr <> Ipaddr.V4.any);
-      assert (Util.addr_in_range reply.yiaddr range_t);
+      assert (addr_in_range reply.yiaddr range_t);
       assert (reply.siaddr = ip_t);
       assert (reply.giaddr = Ipaddr.V4.any);
       assert (reply.sname = "Duder DHCP server!");
@@ -941,7 +948,7 @@ let t_request_no_range_fixed () =
     assert (reply.flags = Broadcast); (* Not required by RFC2131 section 4.1 *)
     assert (reply.ciaddr = Ipaddr.V4.any);
     assert (reply.yiaddr = ip150_t);
-    assert (not (Util.addr_in_range reply.yiaddr range_t));
+    assert (not (addr_in_range reply.yiaddr range_t));
     assert (reply.siaddr = ip_t);
     assert (reply.giaddr = Ipaddr.V4.any);
     assert (reply.sname = "Duder DHCP server!");
