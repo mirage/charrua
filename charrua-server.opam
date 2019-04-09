@@ -22,9 +22,6 @@ depends: [
   "sexplib"
   "ipaddr"        {>= "3.0.0"}
   "macaddr"
-  "ethernet"
-  "tcpip"         {>= "3.7.0"}
-  "rresult"
   "cstruct-unix"  {with-test}
 ]
 synopsis: "DHCP server"

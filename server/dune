@@ -4,10 +4,8 @@
  (private_modules dhcp_lexer dhcp_parser ast util)
  (wrapped false)
  (preprocess (pps ppx_sexp_conv))
- (libraries ipaddr ipaddr.sexp macaddr macaddr.sexp rresult tcpip
-   charrua))
+ (libraries ipaddr ipaddr.sexp macaddr macaddr.sexp charrua))
 
-(menhir
- (modules dhcp_parser))
+(menhir (modules dhcp_parser))
 
 (ocamllex dhcp_lexer)

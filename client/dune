@@ -1,4 +1,4 @@
 (library
  (name dhcp_client)
  (public_name charrua-client)
- (libraries charrua))
+ (libraries charrua cstruct ipaddr macaddr))
