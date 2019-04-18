@@ -1,12 +1,5 @@
-(executable
+(test
  (name test_client_lwt)
- (libraries cstruct-unix alcotest charrua-client-lwt charrua-core.server
-   lwt.unix mirage-random tcpip.unix))
-
-(alias
- (name runtest)
  (package charrua-client-lwt)
- (deps
-  (:< test_client_lwt.exe))
- (action
-  (run %{<})))
+ (libraries cstruct-unix alcotest charrua-client-lwt lwt.unix mirage-random
+            tcpip.unix))

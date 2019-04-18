@@ -7,17 +7,12 @@ script: bash -ex ./.travis-docker.sh
 env:
   global:
   - TESTS=true
-  - PINS="charrua-core.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
+  - PINS="charrua.dev:. charrua-server.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
   - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
   matrix:
-  - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-client"
-  - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-client-lwt"
-  - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-client-mirage"
-  - DISTRO="alpine" OCAML_VERSION="4.05" PACKAGE="charrua-unix"
-  - DISTRO="alpine" OCAML_VERSION="4.06" PACKAGE="charrua-core"
-  - DISTRO="centos-7" OCAML_VERSION="4.05" PACKAGE="charrua-unix"
-  - DISTRO="debian-stable" OCAML_VERSION="4.04" PACKAGE="charrua-unix"
-  - DISTRO="debian-unstable" OCAML_VERSION="4.05" PACKAGE="charrua-unix"
-  - DISTRO="ubuntu-14.04" OCAML_VERSION="4.04" PACKAGE="charrua-unix"
-  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.05" PACKAGE="charrua-unix"
-  - DISTRO="ubuntu-16.04" OCAML_VERSION="4.04" PACKAGE="charrua-unix"
+  - DISTRO="debian-unstable" OCAML_VERSION="4.07" PACKAGE="charrua-client"
+  - DISTRO="ubuntu-lts" OCAML_VERSION="4.07" PACKAGE="charrua-client-lwt"
+  - DISTRO="ubuntu" OCAML_VERSION="4.06" PACKAGE="charrua-client-mirage"
+  - DISTRO="debian-stable" OCAML_VERSION="4.06" PACKAGE="charrua-server"
+  - DISTRO="alpine" OCAML_VERSION="4.05" PACKAGE="charrua"
+  - DISTRO="centos-7" OCAML_VERSION="4.04" PACKAGE="charrua-unix"

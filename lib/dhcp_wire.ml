@@ -18,9 +18,47 @@
 open Sexplib.Conv
 open Sexplib.Std
 
+let guard p e = if p then Result.Ok () else Result.Error e
+
 let some_or_invalid f v = match f v with
   | Some x -> x
   | None -> invalid_arg ("Invalid value " ^ (string_of_int v))
+
+let find_option f t =
+  let rec loop = function
+    | [] -> None
+    | x :: l ->
+      match f x with
+      | None -> loop l
+      | Some _ as r -> r
+  in
+  loop t
+
+let filter_map f l =
+  List.rev @@
+  List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
+
+let string_nul b =
+  let len = String.length b in
+  let rec loop i =
+    if i = len then
+      true
+    else if (String.get b i) <> (Char.chr 0) then
+      false
+    else
+      loop (succ i)
+  in
+  loop 0
+
+let cstruct_copy_normalized f buf =
+  let b = f buf in
+  if string_nul b then "" else b
+
+let string_extend_if_le s m =
+  let n = String.length s in
+  if n > m then
+    invalid_arg ("string is too damn big: " ^ (string_of_int n));
+  s ^ String.make (m - n) (Char.chr 0)
 
 [%%cstruct
 type dhcp = {
@@ -1045,8 +1083,7 @@ let pkt_of_buf buf len =
     let min_len = sizeof_dhcp + Ethernet_wire.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
-    Util.guard (len >= min_len)
-      (sprintf "packet is too small: %d < %d" len min_len)
+    guard (len >= min_len) (sprintf "packet is too small: %d < %d" len min_len)
     >>= fun () ->
     (* Handle ethernet *)
     Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
@@ -1058,7 +1095,7 @@ let pkt_of_buf buf len =
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Error "packet is not udp"
       | Some `UDP ->
-        Util.guard
+        guard
           (Ipv4_packet.Unmarshal.verify_transport_checksum
              ~proto:`UDP ~ipv4_header ~transport_packet:ipv4_payload)
           "bad udp checksum"
@@ -1089,8 +1126,8 @@ let pkt_of_buf buf len =
             Error "Not a mac address."
         in
         check_chaddr >>= fun chaddr ->
-        let sname = Util.cstruct_copy_normalized copy_dhcp_sname udp_payload in
-        let file = Util.cstruct_copy_normalized copy_dhcp_file udp_payload in
+        let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
+        let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
         let options = options_of_buf udp_payload len in
         Ok { srcmac = eth_header.Ethernet_packet.source;
                     dstmac = eth_header.Ethernet_packet.destination;
@@ -1122,10 +1159,9 @@ let pkt_into_buf pkt buf =
   set_dhcp_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
   set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
   set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_dhcp_chaddr
-    (Util.string_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
-  set_dhcp_sname (Util.string_extend_if_le pkt.sname 64) 0 dhcp;
-  set_dhcp_file (Util.string_extend_if_le pkt.file 128) 0 dhcp;
+  set_dhcp_chaddr (string_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
+  set_dhcp_sname (string_extend_if_le pkt.sname 64) 0 dhcp;
+  set_dhcp_file (string_extend_if_le pkt.file 128) 0 dhcp;
   let options_start = Cstruct.shift dhcp sizeof_dhcp in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = Cstruct.len dhcp - Cstruct.len options_end in
@@ -1205,9 +1241,7 @@ let is_dhcp buf len =
   | Ok b -> b
   | Error _ -> false
 
-let find_option f options = Util.find_map f options
-
-let collect_options f options = Util.filter_map f options |> List.flatten
+let collect_options f options = filter_map f options |> List.flatten
 
 let client_id_of_pkt pkt =
   match find_option

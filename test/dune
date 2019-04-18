@@ -1,12 +1,12 @@
-(executables
- (names test)
- (preprocess
-  (pps ppx_cstruct))
- (libraries cstruct-unix charrua-core.server tcpip.unix))
+(test
+ (name test)
+ (package charrua-server)
+ (preprocess (pps ppx_cstruct))
+ (libraries cstruct-unix charrua charrua-server tcpip.unix))
 
 (alias
  (name runtest)
- (package charrua-core)
+ (package charrua-server)
  (deps
   (:< test.exe)
   dhcp.pcap
