@@ -1,3 +1,10 @@
+### v1.0.0 (2019-04-18)
+
+* explicit sexplib dependency, compatible with cstruct 4.0.0 (#99, @TheLortex)
+* charrua-server is an independent opam package now (#100, @hannesm)
+* charrua is the new name for charrua-core (#100, @hannesm)
+* the repository moved to https://github.com/mirage/charrua
+
 ### v0.12.0 (2019-02-25)
 
 * Adjust to mirage-net 2.0.0 and mirage-protocols 2.0.0 changes (#94, @hannesm)
