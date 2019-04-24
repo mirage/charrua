@@ -14,8 +14,8 @@ depends: [
   "ocaml" {>= "4.04.2"}
   "lwt" {>="3.0.0"}
   "lwt_log"
-  "charrua" {>= "1.0.0"}
-  "charrua-server" {>= "1.0.0"}
+  "charrua" {= version}
+  "charrua-server" {= version}
   "cstruct-unix"
   "cmdliner"
   "rawlink" {>= "1.0"}
