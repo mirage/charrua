@@ -19,8 +19,8 @@ depends: [
   "alcotest"     {with-test}
   "cstruct-unix" {with-test}
   "mirage-random-test" {with-test}
-  "charrua-server" {with-test}
-  "charrua" {>= "1.0.0"}
+  "charrua-server" {= version & with-test}
+  "charrua" {= version}
   "cstruct" {>="3.0.2"}
   "ipaddr"
   "macaddr"
