@@ -608,7 +608,7 @@ let options_of_buf buf buf_len =
             let short = Cstruct.BE.get_uint16 body offset in
             loop (offset + 2) (short :: shorts)
         in
-        if ((len mod 2) <> 0) || len < 2 then invalid_arg bad_len else
+        if ((len mod 2) <> 0) || len < min_len then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
       let get_32 () = if len <> 4 then invalid_arg bad_len else
