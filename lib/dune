@@ -2,5 +2,5 @@
  (name dhcp_wire)
  (public_name charrua)
  (preprocess (pps ppx_sexp_conv ppx_cstruct -- -no-check))
- (libraries cstruct ethernet sexplib tcpip.ipv4 tcpip.udp ipaddr ipaddr.sexp
-            macaddr macaddr.sexp rresult))
+ (libraries cstruct ethernet sexplib tcpip.ipv4 tcpip.udp ipaddr ipaddr-sexp
+            macaddr macaddr-sexp rresult))
