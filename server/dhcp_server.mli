@@ -30,11 +30,8 @@ module Config : sig
     options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t;
-  }
+  } [@@deriving sexp]
   (** {! host} config section entry. *)
-
-  val host_of_sexp : Sexplib.Sexp.t -> host
-  val sexp_of_host : host -> Sexplib.Sexp.t
 
   type t = {
     options : Dhcp_wire.dhcp_option list;
@@ -46,11 +43,8 @@ module Config : sig
     network : Ipaddr.V4.Prefix.t;
     range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
     hosts : host list;
-  }
+  } [@@deriving sexp]
   (** Server configuration *)
-
-  val t_of_sexp : Sexplib.Sexp.t -> t
-  val sexp_of_t : t -> Sexplib.Sexp.t
 
   val parse : string -> (Ipaddr.V4.t * Macaddr.t) -> t
   (** [parse cf (addr * mac)] Creates a server configuration by parsing [cf] as an
@@ -81,9 +75,6 @@ module Lease : sig
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
   } [@@deriving sexp]
-
-  val sexp_of_t : t -> Sexplib.Sexp.t
-  val t_of_sexp : Sexplib.Sexp.t -> t
 
   val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
   val timeleft : t -> now:int32 -> int32

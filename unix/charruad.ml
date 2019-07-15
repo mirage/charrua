@@ -27,7 +27,7 @@ let level_of_string = function
 
 (* Drop privileges and chroot to _charruad home *)
 let go_safe () =
-  let (pw, gr) = try
+  let (pw, _gr) = try
       (Unix.getpwnam "_charruad", Unix.getgrnam "_charruad")
     with _  ->
       failwith "No user and/or group _charruad found, please create them."
@@ -118,7 +118,7 @@ let rec input config db link =
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
-    List.find (function name, (ip_addrx, _) -> ip_addr = ip_addrx) interfaces
+    List.find (function _name, (ip_addrx, _) -> ip_addr = ip_addrx) interfaces
   in
   match ifnet with name, (_, _) -> name
 

@@ -46,7 +46,7 @@ module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_ne
       | Ok () ->
         Time.sleep_ns sleep_interval >>= fun () ->
         match Dhcp_client.lease !c with
-        | Some lease -> Lwt.return_unit
+        | Some _lease -> Lwt.return_unit
         | None ->
           let xid = Cstruct.BE.get_uint32 (Random.generate 4) 0 in
           let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in

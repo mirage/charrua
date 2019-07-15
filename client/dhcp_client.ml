@@ -122,7 +122,7 @@ let make_request ?(ciaddr = Ipaddr.V4.any) ~xid ~chaddr ~srcmac ~siaddr ~options
   })
 
 (* respond to an incoming DHCPOFFER. *)
-let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options =
+let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options:_ =
   let open Dhcp_wire in
   (* TODO: make sure the offer contains everything we expect before we accept it *)
   let options = [

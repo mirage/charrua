@@ -60,9 +60,9 @@ main:
   let subnets = sub :: subs in
   (* Now extract the options from the statements *)
   let () = List.iter (function
-      | Dhcp_option o -> ()
-      | Default_lease_time t -> ()
-      | Max_lease_time t -> ()
+      | Dhcp_option _o -> ()
+      | Default_lease_time _t -> ()
+      | Max_lease_time _t -> ()
       | _ -> choke "Only dhcp options and default|max-lease-time \
                     are allowed in the global section")
       statements
