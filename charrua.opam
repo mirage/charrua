@@ -5,7 +5,7 @@ license: "ISC"
 homepage: "https://github.com/mirage/charrua"
 bug-reports: "https://github.com/mirage/charrua/issues"
 dev-repo: "git+https://github.com/mirage/charrua.git"
-doc: "https://mirage.github.io/charrua/api"
+doc: "https://mirage.github.io/charrua/"
 
 build: [
   ["dune" "subst"] {pinned}
@@ -13,14 +13,16 @@ build: [
 ]
 
 depends: [
-  "dune" {build & >= "1.0"}
+  "ocaml"         {>= "4.04.2"}
+  "dune"
   "ppx_sexp_conv" {>="v0.10.0"}
   "ppx_cstruct"
-  "ocaml"         {>= "4.04.2"}
   "cstruct"       {>= "3.0.1"}
   "sexplib"
-  "ipaddr"        {>= "3.0.0"}
-  "macaddr"
+  "ipaddr"        {>= "4.0.0"}
+  "macaddr"       {>= "4.0.0"}
+  "ipaddr-sexp"
+  "macaddr-sexp"
   "ethernet"      {>= "2.0.0"}
   "tcpip"         {>= "3.7.0"}
   "rresult"
