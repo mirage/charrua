@@ -15,7 +15,6 @@
  *)
 
 module Config = struct
-  open Sexplib.Conv
   open Sexplib.Std
 
   type host = {
@@ -211,7 +210,7 @@ module Lease = struct
 
   let make_db () = update_db Id_map.empty Addr_map.empty
 
-  let to_list db = Id_map.fold (fun id lease l -> lease :: l) db.id_map []
+  let to_list db = Id_map.fold (fun _id lease l -> lease :: l) db.id_map []
 
   let make client_id addr ~duration ~now =
     let tm_start = now in
@@ -295,9 +294,9 @@ module Lease = struct
       invalid_arg "invalid range, must be (low * high)";
     let hint_ip =
       let v = match id with
-        | Dhcp_wire.Id s -> Int32.of_int 1805 (* XXX who cares *)
+        | Dhcp_wire.Id _s -> Int32.of_int 1805 (* XXX who cares *)
         | Dhcp_wire.Hwaddr hw ->
-          let s = String.sub (Macaddr.to_bytes hw) 2 4 in
+          let s = String.sub (Macaddr.to_octets hw) 2 4 in
           let b0 = Int32.shift_left (Char.code s.[3] |> Int32.of_int) 0 in
           let b1 = Int32.shift_left (Char.code s.[2] |> Int32.of_int) 8 in
           let b2 = Int32.shift_left (Char.code s.[1] |> Int32.of_int) 16 in
@@ -348,7 +347,7 @@ module Input = struct
     | Some host -> if host.hw_addr = mac then host.fixed_addr else None
     | None -> None
 
-  let options_of_mac config mac =
+  let _options_of_mac config mac =
     match host_of_mac config mac with
     | Some host -> host.options
     | None -> []
@@ -358,7 +357,7 @@ module Input = struct
     | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~duration:config.default_lease_time ~now), true
     | None -> Lease.lease_of_client_id client_id db, false
 
-  let good_address config mac addr db =
+  let good_address config mac addr _db =
     match (fixed_addr_of_mac config mac) with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
@@ -676,7 +675,7 @@ module Input = struct
       | RESERVED_250   | RESERVED_251   | RESERVED_253   | RESERVED_254
       as code ->
         find_option
-          (function Unassigned (c, s) as u when c = code -> Some u | _ -> None)
+          (function Unassigned (c, _s) as u when c = code -> Some u | _ -> None)
           unassigned_options
       | PAD | END -> None       (* Senseless *)
     in
@@ -690,7 +689,6 @@ module Input = struct
   let collect_replies_test = collect_replies
 
   let input_decline_release config db pkt now =
-    let open Util in
     let msgtype = match find_message_type pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
@@ -707,7 +705,7 @@ module Input = struct
       else
         match reqip with
         | None -> bad_packet "%s without request ip" msgtype
-        | Some reqip ->  (* check if the lease is actually his *)
+        | Some _reqip ->  (* check if the lease is actually his *)
           let lease, fixed_lease =
             find_lease config client_id pkt.chaddr db ~now in
           match lease with
@@ -805,7 +803,7 @@ module Input = struct
       else
         (match lease with
          | Some lease ->
-           if Lease.expired lease now &&
+           if Lease.expired lease ~now &&
               not (Lease.addr_available reqip db ~now) then
              nak ~msg:"Lease has expired and address is taken" ()
            else if lease.Lease.addr <> reqip then
@@ -866,7 +864,7 @@ module Input = struct
           Lease.get_usable_addr id db config.range ~now
       | None -> Lease.get_usable_addr id db config.range ~now
 
-  let discover_lease_time config lease db pkt now =
+  let discover_lease_time config lease _db pkt now =
     match (find_ip_lease_time pkt.options) with
     | Some ip_lease_time ->
       if Config.lease_time_good config ip_lease_time then
@@ -884,7 +882,7 @@ module Input = struct
     (* RFC section 4.3.1 *)
     (* Figure out the ip address *)
     let id = client_id_of_pkt pkt in
-    let lease, fixed_lease = find_lease config id pkt.chaddr db ~now in
+    let lease, _fixed_lease = find_lease config id pkt.chaddr db ~now in
     let ourip = config.ip_addr in
     let addr = discover_addr config lease db pkt now in
     (* Figure out the lease lease_time *)

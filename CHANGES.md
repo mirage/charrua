@@ -1,3 +1,9 @@
+### dev
+
+* support ipaddr/macaddr.4.0.0 interfaces (@avsm)
+* cleanup warnings in dune's default dev profile (@avsm)
+* test with OCaml 4.08.0 (@avsm)
+
 ### v1.0.0 (2019-04-18)
 
 * explicit sexplib dependency, compatible with cstruct 4.0.0 (#99, @TheLortex)

@@ -608,7 +608,7 @@ let options_of_buf buf buf_len =
             let short = Cstruct.BE.get_uint16 body offset in
             loop (offset + 2) (short :: shorts)
         in
-        if ((len mod 2) <> 0) || len < 2 then invalid_arg bad_len else
+        if ((len mod 2) <> 0) || len < min_len then invalid_arg bad_len else
           List.rev (loop 0 [])
       in
       let get_32 () = if len <> 4 then invalid_arg bad_len else
@@ -628,10 +628,10 @@ let options_of_buf buf buf_len =
       let get_ip_list ?(min_len=4) () =
         List.map Ipaddr.V4.of_int32 (get_32_list ~min_len:min_len ())
       in
-      let get_ip_tuple_list l =
+      let get_ip_tuple_list _ =
         let rec loop ips tuples = match ips with
           | ip1 :: ip2 :: tl -> loop tl ((ip1, ip2) :: tuples)
-          | ip :: [] -> invalid_arg bad_len
+          | _ip :: [] -> invalid_arg bad_len
           | [] -> List.rev tuples
         in
         loop (get_ip_list ~min_len:8 ()) []
@@ -654,7 +654,7 @@ let options_of_buf buf buf_len =
       let get_client_id () =  if len < 2 then invalid_arg bad_len else
           let s = Cstruct.copy body 1 (len - 1) in
           if (Cstruct.get_uint8 body 0) = 1 && len = 7 then
-            Hwaddr (Macaddr.of_bytes_exn s)
+            Hwaddr (Macaddr.of_octets_exn s)
           else
             Id s
       in
@@ -815,7 +815,7 @@ let options_of_buf buf buf_len =
       | 220 -> take (Subnet_allocation (get_8 ()))
       | 221 -> take (Virtual_subnet_selection (get_string ()))
       | 252->  take (Web_proxy_auto_disc (get_string ()))
-      | code -> discard ()
+      | _code -> discard ()
   in
   (* Extends options if it finds an Option_overload *)
   let extend buf options =
@@ -882,7 +882,7 @@ let buf_of_options sbuf options =
   in
   let put_client_id code v buf =
     let htype, s = match v with
-      | Hwaddr mac -> (1, Macaddr.to_bytes mac)
+      | Hwaddr mac -> (1, Macaddr.to_octets mac)
       | Id id -> (0, id)
     in
     let len = String.length s in
@@ -1121,7 +1121,7 @@ let pkt_of_buf buf len =
         let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
         let check_chaddr =
           if htype = Ethernet_10mb && hlen = 6 then
-            Ok (Macaddr.of_bytes_exn (String.sub (copy_dhcp_chaddr udp_payload) 0 6))
+            Ok (Macaddr.of_octets_exn (String.sub (copy_dhcp_chaddr udp_payload) 0 6))
           else
             Error "Not a mac address."
         in
@@ -1159,7 +1159,7 @@ let pkt_into_buf pkt buf =
   set_dhcp_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
   set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
   set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_dhcp_chaddr (string_extend_if_le (Macaddr.to_bytes pkt.chaddr) 16) 0 dhcp;
+  set_dhcp_chaddr (string_extend_if_le (Macaddr.to_octets pkt.chaddr) 16) 0 dhcp;
   set_dhcp_sname (string_extend_if_le pkt.sname 64) 0 dhcp;
   set_dhcp_file (string_extend_if_le pkt.file 128) 0 dhcp;
   let options_start = Cstruct.shift dhcp sizeof_dhcp in
@@ -1216,7 +1216,7 @@ let buf_of_pkt pkg =
   let l = pkt_into_buf pkg dhcp in
   Cstruct.sub dhcp 0 l
 
-let is_dhcp buf len =
+let is_dhcp buf _len =
   let open Rresult in
   let aux buf =
     Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
@@ -1230,7 +1230,7 @@ let is_dhcp buf len =
       | Some `ICMP | Some `TCP | None -> Ok false
       | Some `UDP ->
         Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
-        fun (udp_header, udp_payload) ->
+        fun (udp_header, _udp_payload) ->
         Ok ((udp_header.Udp_packet.dst_port = server_port ||
              udp_header.Udp_packet.dst_port = client_port)
             &&
