@@ -1,8 +1,8 @@
-### dev
+### v1.1.0 (2019-07-18)
 
-* support ipaddr/macaddr.4.0.0 interfaces (@avsm)
-* cleanup warnings in dune's default dev profile (@avsm)
-* test with OCaml 4.08.0 (@avsm)
+* support ipaddr/macaddr.4.0.0 interfaces (#103 @avsm)
+* cleanup warnings in dune's default dev profile (#103 @avsm)
+* test with OCaml 4.08.0 (#103 @avsm)
 
 ### v1.0.0 (2019-04-18)
 
