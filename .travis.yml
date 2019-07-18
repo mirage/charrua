@@ -9,6 +9,7 @@ env:
   - TESTS=true
   - PINS="charrua.dev:. charrua-server.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
   - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
+  - PRE_INSTALL_HOOK="cd /home/opam/opam-repository && git pull origin master && opam update -u -y"
   matrix:
   - DISTRO="alpine" OCAML_VERSION="4.08" PACKAGE="charrua-client" DEPOPTS="charrua=server"
   - DISTRO="debian-unstable" OCAML_VERSION="4.07" PACKAGE="charrua-client"
