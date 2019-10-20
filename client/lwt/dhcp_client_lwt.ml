@@ -1,7 +1,7 @@
 let src = Logs.Src.create "dhcp_client_lwt"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Net : Mirage_net_lwt.S) = struct
+module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
   open Lwt.Infix
 
   type lease = Dhcp_wire.pkt
