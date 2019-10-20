@@ -1,5 +1,5 @@
-module Make(Random : Mirage_random.C)(Time : Mirage_time_lwt.S) (Network : Mirage_net_lwt.S) : sig
-  type t = Mirage_protocols_lwt.ipv4_config Lwt_stream.t
+module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Network : Mirage_net.S) : sig
+  type t = Mirage_protocols.ipv4_config Lwt_stream.t
   val connect : ?requests:Dhcp_wire.option_code list
     -> Network.t -> t Lwt.t
   (** [connect ?requests net] attempts to use [net] to obtain a valid

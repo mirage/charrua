@@ -14,11 +14,11 @@ build: [
 ]
 
 depends: [
+  "ocaml"         {>= "4.06.0"}
   "dune"
   "ppx_sexp_conv" {>= "v0.9.0"}
   "menhir"        {build}
   "charrua"       {= version}
-  "ocaml"         {>= "4.04.2"}
   "cstruct"       {>= "3.0.1"}
   "sexplib"
   "ipaddr"        {>= "4.0.0"}
