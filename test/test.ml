@@ -385,7 +385,6 @@ let t_discover_range () = t_discover false
 let t_discover_fixed () = t_discover true
 
 let t_discover_no_range () =
-  let open Dhcp_server.Config in
   let config = Config.make
       ~hostname:"Duder DHCP server!"
       ~default_lease_time:(60 * 60 * 1)
@@ -621,7 +620,7 @@ let t_request_fixed () =
       let () =
         match Lease.lease_of_client_id (Id "W.Sobchak") db with
         | None -> () (* good, lease is not there. *)
-        | Some l -> failwith "Found a fixed lease, bad juju."
+        | Some _l -> failwith "Found a fixed lease, bad juju."
       in
       assert (reply.srcmac = mac_t);
       assert (reply.dstmac = Macaddr.broadcast);
@@ -735,11 +734,11 @@ let t_request () =
         | Some l ->
           let open Dhcp_server.Lease in
           assert (l.client_id = (Id "W.Sobchak"));
-          assert (not (expired l now));
+          assert (not (expired l ~now));
           assert (l.tm_start <= now);
           assert (l.tm_end >= now);
-          assert ((Lease.timeleft l now) <= (Int32.of_int 3600));
-          assert ((Lease.timeleft l now) >= (Int32.of_int 3599));
+          assert ((Lease.timeleft l ~now) <= (Int32.of_int 3600));
+          assert ((Lease.timeleft l ~now) >= (Int32.of_int 3599));
       in
       assert (reply.srcmac = mac_t);
       assert (reply.dstmac = Macaddr.broadcast);
@@ -796,7 +795,6 @@ let t_request () =
   | _ -> failwith "No reply"
 
 let t_request_no_range () =
-  let open Dhcp_server.Config in
   let config = Config.make
       ~hostname:"Duder DHCP server!"
       ~default_lease_time:(60 * 60 * 1)
@@ -931,7 +929,7 @@ let t_request_no_range_fixed () =
     let () =
       match Lease.lease_of_client_id (Id "W.Sobchak") db with
       | None -> () (* good, lease is not there. *)
-      | Some l -> failwith "Found a fixed lease, bad juju."
+      | Some _l -> failwith "Found a fixed lease, bad juju."
     in
     assert (reply.srcmac = mac_t);
     assert (reply.dstmac = Macaddr.broadcast);
