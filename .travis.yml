@@ -7,9 +7,7 @@ script: bash -ex ./.travis-docker.sh
 env:
   global:
   - TESTS=true
-  - PINS="charrua.dev:. charrua-server.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:."
-  - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
-  - PRE_INSTALL_HOOK="cd /home/opam/opam-repository && git pull origin master && opam update -u -y"
+  - PINS="charrua.dev:. charrua-server.dev:. charrua-unix.dev:. charrua-client.dev:. charrua-client-lwt.dev:. charrua-client-mirage.dev:. tcpip:git+https://github.com/hannesm/mirage-tcpip.git#easy ethernet:git+https://github.com/hannesm/ethernet.git#easy mirage-random-test:git+https://github.com/hannesm/mirage-random-test.git#easy"
   matrix:
   - DISTRO="alpine" OCAML_VERSION="4.09" PACKAGE="charrua-client" DEPOPTS="charrua-server"
   - DISTRO="debian-unstable" OCAML_VERSION="4.08" PACKAGE="charrua-client"
