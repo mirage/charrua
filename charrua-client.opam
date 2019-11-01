@@ -14,16 +14,16 @@ build: [
 ]
 
 depends: [
-  "dune" {>= "1.0"}
-  "ocaml" {>= "4.04.2"}
+  "dune" {>= "1.2.0"}
+  "ocaml" {>= "4.06.0"}
   "alcotest"     {with-test}
   "cstruct-unix" {with-test}
-  "mirage-random-test" {with-test}
+  "mirage-random-test" {with-test & >= "0.1.0"}
   "charrua-server" {= version & with-test}
   "charrua" {= version}
   "cstruct" {>="3.0.2"}
-  "ipaddr"
-  "macaddr"
+  "ipaddr" {>= "4.0.0"}
+  "macaddr" {>= "4.0.0"}
 ]
 synopsis: "DHCP client implementation"
 description: """

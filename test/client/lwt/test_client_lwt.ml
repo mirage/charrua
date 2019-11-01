@@ -3,14 +3,13 @@ open Lwt.Infix
 (* additional tests for time- and network-dependent code *)
 
 module No_random = struct
-  type buffer = Cstruct.t
   type g
-  let generate ?g n = Cstruct.create n
+  let generate ?g:_ n = Cstruct.create n
 end
 
 module No_time = struct
-  type 'a io = 'a Lwt.t
-  let sleep_ns n = Format.printf "Ignoring request to wait %f seconds\n" @@ Duration.to_f n;
+  let sleep_ns n =
+    Format.printf "Ignoring request to wait %f seconds\n" (Duration.to_f n);
     Lwt_main.yield ()
 end
 
@@ -18,9 +17,6 @@ module No_net = struct
   type error = Mirage_net.Net.error
   let pp_error = Mirage_net.Net.pp_error
   type stats = Mirage_net.stats
-  type 'a io = 'a Lwt.t
-  type macaddr = Macaddr.t
-  type buffer = Cstruct.t
   type t = { mac : Macaddr.t; mutable packets : Cstruct.t list }
   let disconnect _ = Lwt.return_unit
   let write t ~size fillf =
@@ -32,7 +28,7 @@ module No_net = struct
     Lwt.return_ok ()
   let listen _ ~header_size:_ _ = Lwt.return_ok ()
   let mac t = t.mac
-  let mtu t = 1500
+  let mtu _t = 1500
   let reset_stats_counters _ = ()
   let get_stats_counters _ = {
     Mirage_net.rx_bytes = 0L;

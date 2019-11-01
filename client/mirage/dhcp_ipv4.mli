@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make (D: Mirage_protocols_lwt.DHCP_CLIENT) (R : Mirage_random.C) (C : Mirage_clock.MCLOCK) (E:Mirage_protocols_lwt.ETHERNET) (A: Mirage_protocols_lwt.ARP) : sig
-  include Mirage_protocols_lwt.IPV4
-  val connect : D.t -> C.t -> E.t -> A.t -> t Lwt.t
+module Make (D: Mirage_protocols.DHCP_CLIENT) (R : Mirage_random.S) (C : Mirage_clock.MCLOCK) (E:Mirage_protocols.ETHERNET) (A: Mirage_protocols.ARP) : sig
+  include Mirage_protocols.IPV4
+  val connect : D.t -> E.t -> A.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
 end
