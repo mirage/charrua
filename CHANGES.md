@@ -1,3 +1,8 @@
+### v1.2.0 (2019-11-01)
+
+* adapt to mirage-protocols 4.0.0 and tcpip 4.0.0 changes (#105 @hannesm)
+* bump lower bound to OCaml 4.06.0 (#105 @hannesm)
+
 ### v1.1.0 (2019-07-18)
 
 * support ipaddr/macaddr.4.0.0 interfaces (#103 @avsm)
