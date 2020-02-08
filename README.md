@@ -1,7 +1,7 @@
 ## Charrua DHCP - a DHCP client, server and wire frame encoder and decoder
 
 
-[![docs](https://img.shields.io/badge/doc-online-blue.svg)](http://mirage.github.io/charrua/api)
+[![docs](https://img.shields.io/badge/doc-online-blue.svg)](https://mirage.github.io/charrua/)
 [![Build Status](https://travis-ci.org/mirage/charrua.svg)](https://travis-ci.org/mirage/charrua)
 
 [charrua](http://www.github.com/mirage/charrua) is an
@@ -23,8 +23,8 @@ southern South America.
 Charrua consists of the single module `Dhcp_wire` responsible for parsing and
 constructing DHCP messages,
 
-You can browse the API for [charrua](http://www.github.com/mirage/charrua) at
-http://mirage.github.io/charrua/api
+You can browse the API for [charrua](https://www.github.com/mirage/charrua) at
+https://mirage.github.io/charrua/
 
 #### Features
 

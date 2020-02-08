@@ -33,7 +33,7 @@ Charrua consists a single modules, `Dhcp_wire` responsible for parsing and
 constructing DHCP messages
 
 You can browse the API for [charrua](http://www.github.com/mirage/charrua) at
-http://mirage.github.io/charrua/api
+https://mirage.github.io/charrua/
 
 #### Features
 
