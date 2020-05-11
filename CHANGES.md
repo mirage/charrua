@@ -1,3 +1,7 @@
+### v1.2.1 (2020-05-11)
+
+* Fix minimal dune version (1.4) (#108 @samoht)
+
 ### v1.2.0 (2019-11-01)
 
 * adapt to mirage-protocols 4.0.0 and tcpip 4.0.0 changes (#105 @hannesm)
