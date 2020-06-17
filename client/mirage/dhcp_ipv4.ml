@@ -5,5 +5,5 @@ module Make(Dhcp_client : Mirage_protocols.DHCP_CLIENT) (R : Mirage_random.S) (C
   include Static_ipv4.Make(R)(C)(E)(Arp)
   let connect dhcp ethernet arp =
     Lwt_stream.last_new dhcp >>= fun (config : Mirage_protocols.ipv4_config) ->
-    connect ~ip:(config.network, config.address) ?gateway:config.gateway ethernet arp
+    connect ~cidr:config.network ?gateway:config.gateway ethernet arp
 end

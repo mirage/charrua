@@ -642,8 +642,8 @@ let options_of_buf buf buf_len =
           invalid_arg bad_len
         else
           List.map (function
-              | addr, mask -> try
-                  Ipaddr.V4.Prefix.of_netmask mask addr
+              | address, netmask -> try
+                  Ipaddr.V4.Prefix.of_netmask_exn ~netmask ~address
                 with
                   Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b))
             (get_ip_tuple_list ())

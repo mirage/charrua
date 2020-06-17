@@ -118,9 +118,12 @@ subnets:
   | sub = subnet; subs = subnets { sub :: (List.rev subs) }
 
 subnet:
-  | SUBNET; ip = IP; NETMASK; mask = IP; LBRACKET;
+  | SUBNET; address = IP; NETMASK; netmask = IP; LBRACKET;
   statements = statements; hosts = hosts; RBRACKET {
-  let network = Ipaddr.V4.Prefix.of_netmask mask ip in
+  let network =
+    try Ipaddr.V4.Prefix.of_netmask_exn ~netmask ~address with
+      Ipaddr.Parse_error (a, b) -> choke (a ^ ": " ^ b)
+  in
   (* Catch statements that don't make sense in a subnet *)
   let () = List.iter (function
       | Hw_eth _ | Fixed_addr _ ->
@@ -135,7 +138,7 @@ subnet:
       statements |> (function
       | Some (v1, v2) -> (v1, v2)
       | None -> choke ("Missing `range` statement for subnet " ^
-                       (Ipaddr.V4.to_string ip)))
+                       (Ipaddr.V4.to_string address)))
   in
   let options = Util.filter_map (function
       | Dhcp_option o -> Some o

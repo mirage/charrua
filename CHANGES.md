@@ -1,3 +1,7 @@
+### v1.2.2 (2020-06-22)
+
+* Support for ipaddr 5.0.0 and tcpip 5.0.0 (#109 @hannesm)
+
 ### v1.2.1 (2020-05-11)
 
 * Fix minimal dune version (1.4) (#108 @samoht)
