@@ -19,12 +19,12 @@ depends: [
   "ppx_cstruct"
   "cstruct"       {>= "3.0.1"}
   "sexplib"
-  "ipaddr"        {>= "4.0.0"}
+  "ipaddr"        {>= "5.0.0"}
   "macaddr"       {>= "4.0.0"}
   "ipaddr-sexp"
   "macaddr-sexp"
   "ethernet"      {>= "2.2.0"}
-  "tcpip"         {>= "4.0.0"}
+  "tcpip"         {>= "5.0.0"}
   "rresult"
 ]
 synopsis: "DHCP wire frame encoder and decoder"

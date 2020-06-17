@@ -22,7 +22,7 @@ depends: [
   "charrua-server" {= version & with-test}
   "charrua" {= version}
   "cstruct" {>="3.0.2"}
-  "ipaddr" {>= "4.0.0"}
+  "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
 ]
 synopsis: "DHCP client implementation"

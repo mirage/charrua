@@ -118,9 +118,12 @@ let rec input config db link =
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
-    List.find (function _name, (ip_addrx, _) -> ip_addr = ip_addrx) interfaces
+    List.find
+      (function _name, cidr ->
+         Ipaddr.V4.compare ip_addr (Ipaddr.V4.Prefix.address cidr) = 0)
+      interfaces
   in
-  match ifnet with name, (_, _) -> name
+  match ifnet with name, _ -> name
 
 let charruad configfile verbosity daemonize =
   let open Dhcp_server.Config in
@@ -130,7 +133,7 @@ let charruad configfile verbosity daemonize =
   init_log (level_of_string verbosity) daemonize;
   let interfaces = Tuntap.getifaddrs_v4 () in
   let addresses = List.map
-      (function name, (addr, _) -> (addr, Tuntap.get_macaddr name))
+      (function name, cidr -> (Ipaddr.V4.Prefix.address cidr, Tuntap.get_macaddr name))
       interfaces
   in
   let configtxt = read_file configfile in
