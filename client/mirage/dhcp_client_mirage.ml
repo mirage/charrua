@@ -1,7 +1,7 @@
 let src = Logs.Src.create "dhcp_client_mirage"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-let config_of_lease lease : Mirage_protocols.ipv4_config option =
+let config_of_lease lease =
   let open Dhcp_wire in
   (* ipv4_config expects a single IP address and the information
    * needed to construct a prefix.  It can optionally use one router. *)
@@ -12,12 +12,16 @@ let config_of_lease lease : Mirage_protocols.ipv4_config option =
     Log.debug (fun f -> f "Unusable lease: %s" @@ Dhcp_wire.pkt_to_string lease);
     None
   | Some subnet ->
-    let network = Ipaddr.V4.Prefix.of_netmask subnet address in
-    let valid_routers = Dhcp_wire.collect_routers lease.options in
-    match valid_routers with
-    | [] -> Some Mirage_protocols.{ address; network; gateway = None }
-    | hd::_ ->
-      Some Mirage_protocols.{ address; network; gateway = (Some hd) }
+    match Ipaddr.V4.Prefix.of_netmask ~netmask:subnet ~address with
+    | Error `Msg msg ->
+      Log.info (fun f -> f "Invalid address and netmask combination %s, discarding" msg);
+      None
+    | Ok network ->
+      let valid_routers = Dhcp_wire.collect_routers lease.options in
+      match valid_routers with
+      | [] -> Some Mirage_protocols.{ address; network; gateway = None }
+      | hd::_ ->
+        Some Mirage_protocols.{ address; network; gateway = Some hd }
 
 module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
   open Lwt.Infix

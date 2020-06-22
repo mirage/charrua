@@ -21,7 +21,7 @@ depends: [
   "charrua"       {= version}
   "cstruct"       {>= "3.0.1"}
   "sexplib"
-  "ipaddr"        {>= "4.0.0"}
+  "ipaddr"        {>= "5.0.0"}
   "macaddr"       {>= "4.0.0"}
   "ipaddr-sexp"
   "macaddr-sexp"
