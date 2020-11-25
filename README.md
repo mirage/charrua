@@ -1,18 +1,14 @@
 ## Charrua DHCP - a DHCP client, server and wire frame encoder and decoder
 
-
 [![docs](https://img.shields.io/badge/doc-online-blue.svg)](https://mirage.github.io/charrua/)
-[![Build Status](https://travis-ci.org/mirage/charrua.svg)](https://travis-ci.org/mirage/charrua)
 
 [charrua](http://www.github.com/mirage/charrua) is an
 _ISC-licensed_ DHCP library implementation in OCaml.
-It provides five packages:
+It provides the following packages:
 
 - charrua: a library that handles wire traffic parsing
 - charrua-server: a DHCP server implementation
 - charrua-client: a library for handling DHCP client state and messages
-- charrua-client-lwt: a DHCP client library with timeouts and network read/write
-- charrua-client-mirage: a MirageOS-compatible set of interfaces to charrua-client-lwt
 - charrua-unix: a Unix DHCP server implementation
 
 ### Charrua
