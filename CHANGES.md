@@ -1,3 +1,12 @@
+### v1.3.0 (2020-11-25)
+
+* Revise packaging: charrua-client-lwt and charrua-client-mirage are now
+  available as charrua-client.lwt and charrua-client.mirage (#110 @hannesm)
+* Dhcp_ipv4 directly uses Dhcp_client_mirage (instead of an abstract module
+  interface being passed) (#110 @hannesm)
+* Fix sending of client_identifier with appropriate type as sent by the client
+  (#98 @hannesm, reported in #84 by @lynxis)
+
 ### v1.2.2 (2020-06-22)
 
 * Support for ipaddr 5.0.0 and tcpip 5.0.0 (#109 @hannesm)
