@@ -693,7 +693,7 @@ module Input = struct
 
   let collect_replies_test = collect_replies
 
-  let input_decline_release config db pkt now =
+  let input_decline config db pkt now =
     let msgtype = match find_message_type pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
@@ -722,8 +722,30 @@ module Input = struct
               else
                 db)
 
-  let input_decline = input_decline_release
-  let input_release = input_decline_release
+  let input_release config db pkt now =
+    let msgtype = match find_message_type pkt.options with
+      | Some msgtype -> msgtype_to_string msgtype
+      | None -> failwith "Unexpected message type"
+    in
+    let ourip = config.ip_addr in
+    let sidip = find_server_identifier pkt.options in
+    let client_id = client_id_of_pkt pkt in
+    match sidip with
+    | None -> bad_packet "%s without server identifier" msgtype
+    | Some sidip ->
+      if ourip <> sidip then
+        Silence                 (* not for us *)
+      else
+        let lease, fixed_lease =
+          find_lease config client_id pkt.chaddr db ~now in
+        match lease with
+        | None -> Silence (* lease is unowned, ignore *)
+        | Some lease ->
+          Update
+            (if not fixed_lease && pkt.ciaddr = lease.addr then
+               Lease.remove lease db
+             else
+               db)
 
   let input_inform config db pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
