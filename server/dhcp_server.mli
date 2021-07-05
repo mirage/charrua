@@ -93,12 +93,12 @@ module Lease : sig
   val remove : t -> database -> database
   val replace : t -> database -> database
   val lease_of_client_id : Dhcp_wire.client_id -> database -> t option
-  val lease_of_addr : Ipaddr.V4.t -> database -> t option
+  val lease_of_addr : Ipaddr.V4.t -> database -> Dhcp_wire.client_id option
   val addr_allocated : Ipaddr.V4.t -> database -> bool
-  val addr_available : Ipaddr.V4.t -> database -> now:int32 -> bool
+  val addr_free : Ipaddr.V4.t -> database -> bool
   val get_usable_addr :
     Dhcp_wire.client_id -> database ->
-    (Ipaddr.V4.t * Ipaddr.V4.t) option -> now:int32 -> Ipaddr.V4.t option
+    (Ipaddr.V4.t * Ipaddr.V4.t) option -> Ipaddr.V4.t option
 
 end
 
