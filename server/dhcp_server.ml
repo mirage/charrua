@@ -74,7 +74,8 @@ module Config = struct
       ~addr_tuple
       ~network
       ~range
-      ~options =
+      ~options
+      () =
 
     let open Dhcp_wire in
     (* Try to ensure the user doesn't pass bad options *)

@@ -62,7 +62,8 @@ module Config : sig
     addr_tuple:Ipaddr.V4.t * Macaddr.t ->
     network:Ipaddr.V4.Prefix.t ->
     range:(Ipaddr.V4.t * Ipaddr.V4.t) option ->
-    options:Dhcp_wire.dhcp_option list -> t
+    options:Dhcp_wire.dhcp_option list ->
+    unit -> t
 
 end
 
