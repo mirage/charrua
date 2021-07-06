@@ -84,12 +84,26 @@ let init_log vlevel daemon =
         ~channel:Lwt_io.stdout
         ()
 
-let rec input config db link =
+let uptime_in_sec () =
+  Mtime_clock.elapsed () |> Mtime.Span.to_s |> Int.of_float
+
+let maybe_gc db now gbcol =
+  let open Lwt in
+  if (now - gbcol) >= 60 then
+    Lwt_log.debug "Garbage collecting..." >>= fun () ->
+    return (Dhcp_server.Lease.garbage_collect db ~now:(Int32.of_int now), now + 60)
+  else
+    return (db, gbcol)
+
+let rec input config db link gbcol =
   let open Dhcp_server.Input in
   let open Lwt in
 
   Lwt_rawlink.read_packet link
   >>= fun buf ->
+  let now = uptime_in_sec () in
+  maybe_gc db now gbcol
+  >>= fun (db, gbcol) ->
   let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
     | Error e -> Lwt_log.error e
       >>= fun () ->
@@ -97,8 +111,7 @@ let rec input config db link =
     | Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
-      let now = Mtime_clock.elapsed () |> Mtime.Span.to_s |> Int32.of_float in
-      match (input_pkt config db pkt now) with
+      match (input_pkt config db pkt (Int32.of_int now)) with
       | Silence -> return db
       | Update db -> return db
       | Reply (reply, db) ->
@@ -114,7 +127,7 @@ let rec input config db link =
         >>= fun () ->
         return db
   in
-  t >>= fun db -> input config db link
+  t >>= fun db -> input config db link gbcol
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
@@ -155,7 +168,7 @@ let charruad configfile verbosity daemonize =
            let ifname = ifname_of_address addr interfaces in
            let link = Lwt_rawlink.(open_link ~filter:(dhcp_server_filter ()) ifname) in
            (* Create a thread *)
-           Some (input config db link)
+           Some (input config db link (uptime_in_sec ()))
          | None ->
            let () = Lwt_log.ign_debug_f "No network found for %s" s in
            None)
