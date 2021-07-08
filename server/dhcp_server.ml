@@ -189,6 +189,9 @@ module Lease = struct
         end
       | Id _, Hwaddr _ -> -1
       | Hwaddr _, Id _ -> 1
+
+    let sexp_of_t t = Dhcp_wire.sexp_of_client_id t
+    let t_of_sexp t = Dhcp_wire.client_id_of_sexp t
   end
 
   module Addr_map = Map.Make(Ipaddr.V4)
@@ -215,7 +218,12 @@ module Lease = struct
 
   let make_db () = update_db Lease_map.empty Addr_map.empty
 
-  let to_list db = Lease_map.fold (fun _id lease l -> lease :: l) db.lease_map []
+  let db_to_list db = Lease_map.fold (fun _id lease l -> lease :: l) db.lease_map []
+
+  let db_equal db1 db2 =
+    (Lease_map.equal (fun l1 l2 -> l1 = l2) db1.lease_map db2.lease_map)
+    &&
+    (Addr_map.equal (fun a1 a2 -> a1 = a2) db1.addr_map db2.addr_map)
 
   let make client_id addr ~duration ~now =
     let tm_start = now in
@@ -289,6 +297,24 @@ module Lease = struct
     update_db
       (Lease_map.add lease.client_id lease db.lease_map)
       (Addr_map.add lease.addr lease.client_id db.addr_map)
+
+  let sexp_of_db db =
+    sexp_of_list
+      (sexp_of_pair Client_id.sexp_of_t sexp_of_t)
+      (Lease_map.bindings db.lease_map)
+
+  let db_of_sexp sx =
+    let l = list_of_sexp
+        (pair_of_sexp Client_id.t_of_sexp t_of_sexp)
+        sx
+    in
+    List.fold_left (fun db (cid, lease) ->
+        assert (cid = lease.client_id);
+        replace lease db) (make_db ()) l
+
+  let db_to_string db = Sexplib.Sexp.to_string_hum (sexp_of_db db)
+
+  let db_of_string s = db_of_sexp (Sexplib.Sexp.of_string s)
 
   let addr_allocated addr db =
     Util.true_if_some @@ lease_of_addr addr db

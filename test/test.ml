@@ -732,9 +732,9 @@ let t_request () =
     | Input.Reply (reply, db) ->
       (* Check if our new lease is there *)
       assert (db <> (Lease.make_db ()));
-      assert ((List.length (Lease.to_list db)) = 1);
+      assert ((List.length (Lease.db_to_list db)) = 1);
       if verbose then
-        printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.to_list db)));
+        printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.db_to_list db)));
       let () =
         match Lease.lease_of_client_id (Id (0, "W.Sobchak")) db with
         | None -> failwith "Lease not found";
@@ -978,6 +978,19 @@ let t_request_no_range_fixed () =
       printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply)
   | _ -> failwith "No reply"
 
+let t_db_serialization () =
+  let lease2 = Lease.make
+      (Id (0, "Duderino")) ip2_t ~duration:(Int32.of_int 60) ~now in
+  let lease3 = Lease.make
+      (Id (0, "Walter")) ip3_t ~duration:(Int32.of_int 60) ~now in
+  let lease4 = Lease.make
+      (Id (0, "Donnie")) ip4_t ~duration:(Int32.of_int 60) ~now in
+  let db0 = List.fold_left
+      (fun db lease -> Lease.replace lease db)
+      (Lease.make_db ()) [ lease2; lease3; lease4 ]
+  in
+  assert (Lease.db_equal db0 (Lease.db_to_string db0 |> Lease.db_of_string))
+
 let run_test test =
   let f = fst test in
   let name = snd test in
@@ -1007,6 +1020,7 @@ let all_tests = [
   (t_request_fixed, "request->ack/nak fixed");
   (t_request_no_range, "request->ack/nak no range");
   (t_request_no_range_fixed, "request->ack/nak no range fixed");
+  (t_db_serialization, "lease database serialization");
 ]
 
 let _ =
