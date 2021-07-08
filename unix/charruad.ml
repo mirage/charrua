@@ -138,7 +138,7 @@ let ifname_of_address ip_addr interfaces =
   in
   match ifnet with name, _ -> name
 
-let charruad configfile verbosity daemonize =
+let charruad configfile pidfile verbosity daemonize =
   let open Dhcp_server.Config in
   let open Dhcp_server.Lease in
   let open Lwt in
@@ -176,15 +176,21 @@ let charruad configfile verbosity daemonize =
   in
   if List.length threads = 0 then
     failwith "Could not match any interface address with any network section.";
+  (* Open pidfile before dropping priviledges *)
+  let pidc = open_out pidfile in
   go_safe ();
+  Printf.fprintf pidc "%d" (Unix.getpid ());
+  close_out pidc;
   Lwt_main.run (Lwt.pick threads >>= fun _ ->
                 Lwt_log.notice "Charrua DHCPD exiting")
 
 (* Parse command line and start the ball *)
 open Cmdliner
 let cmd =
-  let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
+  let configfile = Arg.(value & opt string "/etc/charruad.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path") in
+  let pidfile = Arg.(value & opt string "/run/charruad.pid" & info ["p" ; "pidfile"]
+                          ~doc:"Pid file path") in
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
                          ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
@@ -195,6 +201,6 @@ let cmd =
   (*       ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s." *)
   (*               (Arg.doc_alts_enum when_enum)) ["color"] in *)
   (*   Arg.(value & opt (enum when_enum) `Auto & doc) in *)
-  Term.(pure charruad $ configfile $ verbosity $ daemonize),
+  Term.(pure charruad $ configfile $ pidfile $ verbosity $ daemonize),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
