@@ -26,9 +26,9 @@ let level_of_string = function
   | _ -> invalid_arg "Unknown verbosity level"
 
 (* Drop privileges and chroot to _charruad home *)
-let go_safe () =
+let go_safe user group =
   let (pw, _gr) = try
-      (Unix.getpwnam "_charruad", Unix.getgrnam "_charruad")
+      (Unix.getpwnam user, Unix.getgrnam group)
     with _  ->
       failwith "No user and/or group _charruad found, please create them."
   in
@@ -138,7 +138,7 @@ let ifname_of_address ip_addr interfaces =
   in
   match ifnet with name, _ -> name
 
-let charruad configfile pidfile verbosity daemonize =
+let charruad configfile group pidfile user verbosity daemonize =
   let open Dhcp_server.Config in
   let open Dhcp_server.Lease in
   let open Lwt in
@@ -178,7 +178,7 @@ let charruad configfile pidfile verbosity daemonize =
     failwith "Could not match any interface address with any network section.";
   (* Open pidfile before dropping priviledges *)
   let pidc = open_out pidfile in
-  go_safe ();
+  go_safe user group;
   Printf.fprintf pidc "%d" (Unix.getpid ());
   close_out pidc;
   Lwt_main.run (Lwt.pick threads >>= fun _ ->
@@ -188,19 +188,23 @@ let charruad configfile pidfile verbosity daemonize =
 open Cmdliner
 let cmd =
   let configfile = Arg.(value & opt string "/etc/charruad.conf" & info ["c" ; "config"]
-                          ~doc:"Configuration file path") in
+                          ~doc:"Configuration file path.") in
+  let group = Arg.(value & opt string "_charruad" & info ["g" ; "group"]
+                         ~doc:"Group to run as.") in
   let pidfile = Arg.(value & opt string "/run/charruad.pid" & info ["p" ; "pidfile"]
-                          ~doc:"Pid file path") in
+                          ~doc:"Pid file path.") in
+  let user = Arg.(value & opt string "_charruad" & info ["u" ; "user"]
+                         ~doc:"User to run as.") in
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
                          ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
-                         ~doc:"Daemonize") in
+                         ~doc:"Daemonize.") in
   (* let color = *)
   (*   let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in *)
   (*   let doc = Arg.info ~docv:"WHEN" *)
   (*       ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s." *)
   (*               (Arg.doc_alts_enum when_enum)) ["color"] in *)
   (*   Arg.(value & opt (enum when_enum) `Auto & doc) in *)
-  Term.(pure charruad $ configfile $ pidfile $ verbosity $ daemonize),
+  Term.(pure charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
