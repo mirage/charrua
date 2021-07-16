@@ -1,27 +1,25 @@
 opam-version: "2.0"
-maintainer:   ["Mindy Preston"]
-authors   :   ["Mindy Preston"]
-homepage:     "https://github.com/mirage/charrua"
-bug-reports:  "https://github.com/mirage/charrua/issues"
-dev-repo:     "git+https://github.com/mirage/charrua.git"
-tags:         [ "org:mirage"]
-doc:          "https://docs.mirage.io"
+synopsis: "DHCP client implementation"
+description: """\
+charrua-client is a DHCP client powered by [charrua](https://github.com/mirage/charrua).
 
-build: [
-  [ "dune" "subst" ] {pinned}
-  [ "dune" "build" "-p" name "-j" jobs ]
-  [ "dune" "runtest" "-p" name "-j" jobs ] {with-test}
-]
-
+The base library exposes a simple state machine in `Dhcp_client`
+for use in acquiring a DHCP lease."""
+maintainer: "Mindy Preston"
+authors: "Mindy Preston"
+tags: "org:mirage"
+homepage: "https://github.com/mirage/charrua"
+doc: "https://docs.mirage.io"
+bug-reports: "https://github.com/mirage/charrua/issues"
 depends: [
   "dune" {>= "1.4.0"}
   "ocaml" {>= "4.06.0"}
-  "alcotest"     {with-test}
+  "alcotest" {with-test}
   "cstruct-unix" {with-test}
   "mirage-random-test" {with-test & >= "0.1.0"}
   "charrua-server" {= version & with-test}
   "charrua" {= version}
-  "cstruct" {>="3.0.2"}
+  "cstruct" {>= "3.0.2"}
   "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
   "mirage-random" {>= "2.0.0"}
@@ -33,11 +31,11 @@ depends: [
   "logs"
   "fmt"
   "lwt" {>= "4.0.0"}
+  "tcpip" {>= "6.1.0" & with-test}
 ]
-synopsis: "DHCP client implementation"
-description: """
-charrua-client is a DHCP client powered by [charrua](https://github.com/mirage/charrua).
-
-The base library exposes a simple state machine in `Dhcp_client`
-for use in acquiring a DHCP lease.
-"""
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/charrua.git"
