@@ -10,7 +10,7 @@ homepage: "https://github.com/mirage/charrua"
 bug-reports: "https://github.com/mirage/charrua/issues"
 depends: [
   "dune" {>= "1.4.0"}
-  "ocaml" {>= "4.06.0"}
+  "ocaml" {>= "4.08.0"}
   "lwt" {>= "3.0.0"}
   "lwt_log"
   "charrua" {= version}
