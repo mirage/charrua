@@ -19,7 +19,7 @@ module Defaults = struct
     ?hostname:None ?default_lease_time:None
     ?max_lease_time:None ?hosts:None
     ~addr_tuple:(server_ip, server_mac)
-    ~network:server_network ~range ~options
+    ~network:server_network ~range ~options ()
   let empty_db = Dhcp_server.Lease.make_db ()
 end
 
