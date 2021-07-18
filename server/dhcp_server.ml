@@ -289,7 +289,6 @@ module Lease = struct
     update_db
       (Lease_map.add lease.client_id lease db.lease_map)
       (Addr_map.add lease.addr lease.client_id db.addr_map)
-    |> sanity_check
 
   let addr_allocated addr db =
     Util.true_if_some @@ lease_of_addr addr db
