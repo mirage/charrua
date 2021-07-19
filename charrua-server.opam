@@ -1,34 +1,6 @@
 opam-version: "2.0"
-maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
-authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
-license: "ISC"
-homepage: "https://github.com/mirage/charrua"
-bug-reports: "https://github.com/mirage/charrua/issues"
-dev-repo: "git+https://github.com/mirage/charrua.git"
-doc: "https://mirage.github.io/charrua/"
-
-build: [
-  ["dune" "subst"] {pinned}
-  ["dune" "build" "-p" name "-j" jobs]
-  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
-]
-
-depends: [
-  "ocaml"         {>= "4.06.0"}
-  "dune"          {>= "1.4.0"}
-  "ppx_sexp_conv" {>= "v0.9.0"}
-  "menhir"        {build}
-  "charrua"       {= version}
-  "cstruct"       {>= "3.0.1"}
-  "sexplib"
-  "ipaddr"        {>= "5.0.0"}
-  "macaddr"       {>= "4.0.0"}
-  "ipaddr-sexp"
-  "macaddr-sexp"
-  "cstruct-unix"  {with-test}
-]
 synopsis: "DHCP server"
-description: """
+description: """\
 Charrua-server consists of a single `Dhcp_server` module used for constructing DHCP
 servers.
 
@@ -47,5 +19,32 @@ is a Mirage DHCP unikernel server based on charrua, included as a part of the Mi
 * It's in OCaml, so it's pretty cool.
 
 The name `charrua` is a reference to the, now extinct, semi-nomadic people of
-southern South America.
-"""
+southern South America."""
+maintainer: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
+authors: "Christiano F. Haesbaert <haesbaert@haesbaert.org>"
+license: "ISC"
+homepage: "https://github.com/mirage/charrua"
+doc: "https://mirage.github.io/charrua/"
+bug-reports: "https://github.com/mirage/charrua/issues"
+depends: [
+  "ocaml" {>= "4.08.0"}
+  "dune" {>= "1.4.0"}
+  "ppx_sexp_conv" {>= "v0.9.0"}
+  "menhir" {build}
+  "charrua" {= version}
+  "cstruct" {>= "3.0.1"}
+  "sexplib"
+  "ipaddr" {>= "5.0.0"}
+  "macaddr" {>= "4.0.0"}
+  "ipaddr-sexp"
+  "macaddr-sexp"
+  "cstruct-unix" {with-test}
+  "ppx_cstruct" {>= "6.0.0" & with-test}
+  "tcpip" {>= "6.1.0" & with-test}
+]
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/mirage/charrua.git"

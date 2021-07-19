@@ -54,7 +54,7 @@ rule lex = parse
   | "fixed-address" { FIXEDADDRESS }
   | "hardware" { HARDWARE }
   | "host" { HOST }
-  | "maxleasetime" { MAXLEASETIME }
+  | "max-lease-time" { MAXLEASETIME }
   | "netmask" { NETMASK }
   | "option" { OPTION }
   | "range" { RANGE }

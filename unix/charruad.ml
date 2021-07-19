@@ -26,9 +26,9 @@ let level_of_string = function
   | _ -> invalid_arg "Unknown verbosity level"
 
 (* Drop privileges and chroot to _charruad home *)
-let go_safe () =
+let go_safe user group =
   let (pw, _gr) = try
-      (Unix.getpwnam "_charruad", Unix.getgrnam "_charruad")
+      (Unix.getpwnam user, Unix.getgrnam group)
     with _  ->
       failwith "No user and/or group _charruad found, please create them."
   in
@@ -84,12 +84,26 @@ let init_log vlevel daemon =
         ~channel:Lwt_io.stdout
         ()
 
-let rec input config db link =
+let uptime_in_sec () =
+  Mtime_clock.elapsed () |> Mtime.Span.to_s |> Int.of_float
+
+let maybe_gc db now gbcol =
+  let open Lwt in
+  if (now - gbcol) >= 60 then
+    Lwt_log.debug "Garbage collecting..." >>= fun () ->
+    return (Dhcp_server.Lease.garbage_collect db ~now:(Int32.of_int now), now + 60)
+  else
+    return (db, gbcol)
+
+let rec input config db link gbcol =
   let open Dhcp_server.Input in
   let open Lwt in
 
   Lwt_rawlink.read_packet link
   >>= fun buf ->
+  let now = uptime_in_sec () in
+  maybe_gc db now gbcol
+  >>= fun (db, gbcol) ->
   let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
     | Error e -> Lwt_log.error e
       >>= fun () ->
@@ -97,8 +111,7 @@ let rec input config db link =
     | Ok pkt ->
       Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
       >>= fun () ->
-      let now = Mtime_clock.elapsed () |> Mtime.Span.to_s |> Int32.of_float in
-      match (input_pkt config db pkt now) with
+      match (input_pkt config db pkt (Int32.of_int now)) with
       | Silence -> return db
       | Update db -> return db
       | Reply (reply, db) ->
@@ -114,7 +127,7 @@ let rec input config db link =
         >>= fun () ->
         return db
   in
-  t >>= fun db -> input config db link
+  t >>= fun db -> input config db link gbcol
 
 let ifname_of_address ip_addr interfaces =
   let ifnet =
@@ -125,7 +138,7 @@ let ifname_of_address ip_addr interfaces =
   in
   match ifnet with name, _ -> name
 
-let charruad configfile verbosity daemonize =
+let charruad configfile group pidfile user verbosity daemonize =
   let open Dhcp_server.Config in
   let open Dhcp_server.Lease in
   let open Lwt in
@@ -155,7 +168,7 @@ let charruad configfile verbosity daemonize =
            let ifname = ifname_of_address addr interfaces in
            let link = Lwt_rawlink.(open_link ~filter:(dhcp_server_filter ()) ifname) in
            (* Create a thread *)
-           Some (input config db link)
+           Some (input config db link (uptime_in_sec ()))
          | None ->
            let () = Lwt_log.ign_debug_f "No network found for %s" s in
            None)
@@ -163,25 +176,35 @@ let charruad configfile verbosity daemonize =
   in
   if List.length threads = 0 then
     failwith "Could not match any interface address with any network section.";
-  go_safe ();
+  (* Open pidfile before dropping priviledges *)
+  let pidc = open_out pidfile in
+  go_safe user group;
+  Printf.fprintf pidc "%d" (Unix.getpid ());
+  close_out pidc;
   Lwt_main.run (Lwt.pick threads >>= fun _ ->
                 Lwt_log.notice "Charrua DHCPD exiting")
 
 (* Parse command line and start the ball *)
 open Cmdliner
 let cmd =
-  let configfile = Arg.(value & opt string "/etc/dhcpd.conf" & info ["c" ; "config"]
-                          ~doc:"Configuration file path") in
+  let configfile = Arg.(value & opt string "/etc/charruad.conf" & info ["c" ; "config"]
+                          ~doc:"Configuration file path.") in
+  let group = Arg.(value & opt string "_charruad" & info ["g" ; "group"]
+                         ~doc:"Group to run as.") in
+  let pidfile = Arg.(value & opt string "/run/charruad.pid" & info ["p" ; "pidfile"]
+                          ~doc:"Pid file path.") in
+  let user = Arg.(value & opt string "_charruad" & info ["u" ; "user"]
+                         ~doc:"User to run as.") in
   let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
                          ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
-                         ~doc:"Daemonize") in
+                         ~doc:"Daemonize.") in
   (* let color = *)
   (*   let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in *)
   (*   let doc = Arg.info ~docv:"WHEN" *)
   (*       ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s." *)
   (*               (Arg.doc_alts_enum when_enum)) ["color"] in *)
   (*   Arg.(value & opt (enum when_enum) `Auto & doc) in *)
-  Term.(pure charruad $ configfile $ verbosity $ daemonize),
+  Term.(pure charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize),
   Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
 let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0

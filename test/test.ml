@@ -163,10 +163,10 @@ let assert_timers options =
   | Some x -> assert (x = Int32.of_int 2880)
 
 let t_simple_config () =
-  let config = make_simple_config ~hosts:[] ~options:[] in
+  let config = make_simple_config ~hosts:[] ~options:[] () in
   assert ((List.length config.Config.options) = 1);
 
-  let config = make_simple_config ~hosts:[] ~options:[Routers [ip_t; ip2_t]; ] in
+  let config = make_simple_config ~hosts:[] ~options:[Routers [ip_t; ip2_t]; ] () in
   assert ((List.length config.Config.options) = 2);
   match List.hd config.Config.options with
   | Subnet_mask _ -> ()
@@ -175,7 +175,7 @@ let t_simple_config () =
 let t_bad_options () =
   let ok = try
       ignore @@ make_simple_config ~hosts:[]
-        ~options:[Renewal_t1 Int32.max_int];
+        ~options:[Renewal_t1 Int32.max_int] ();
       false
     with
       Invalid_argument _ -> true
@@ -184,7 +184,7 @@ let t_bad_options () =
     failwith "user cannot request renewal via options";
   let ok = try
       ignore @@ make_simple_config ~hosts:[]
-        ~options:[Rebinding_t2 Int32.max_int];
+        ~options:[Rebinding_t2 Int32.max_int] ();
       false
     with
       Invalid_argument _ -> true
@@ -193,7 +193,7 @@ let t_bad_options () =
     failwith "user cannot request rebinding via options";
   let ok = try
       ignore @@ make_simple_config ~hosts:[]
-        ~options:[Ip_lease_time Int32.max_int];
+        ~options:[Ip_lease_time Int32.max_int] ();
       false
     with
       Invalid_argument _ -> true
@@ -208,7 +208,7 @@ let t_bad_junk_padding_config () =
         End; (* Should not allow end in configuration *)
         Pad; (* Should not allow pad in configuration *)
         Client_id (Id (0, "The dude"));
-      ];
+      ] ();
       false
     with
       Invalid_argument _ -> true
@@ -223,7 +223,7 @@ let t_collect_replies () =
                 Domain_name "wololo";
                 Url "url";
                 Pop3_servers [ip_t; ip2_t];
-                Max_message 1200]
+                Max_message 1200] ()
   in
   let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1]
@@ -271,7 +271,8 @@ let t_host_options () =
                 Domain_name "wololo";
                 Url "url";
                 Pop3_servers [ip_t; ip2_t];
-                Max_message 1200];
+                Max_message 1200]
+      ()
   in
   let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1; LOG_SERVERS]
@@ -334,6 +335,7 @@ let t_discover fixed =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
@@ -400,6 +402,7 @@ let t_discover_no_range () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
@@ -432,6 +435,7 @@ let t_discover_no_range_fixed () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
     if verbose then
     printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
@@ -485,6 +489,7 @@ let t_bad_discover () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   let bad_discover = {
     srcmac = mac2_t;
@@ -575,6 +580,7 @@ let t_request_fixed () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   let request = {
     srcmac = mac2_t;
@@ -683,6 +689,7 @@ let t_request () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   let request = {
     srcmac = mac2_t;
@@ -810,6 +817,7 @@ let t_request_no_range () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   let request = {
     srcmac = mac2_t;
@@ -885,6 +893,7 @@ let t_request_no_range_fixed () =
                 Pop3_servers [ip_t; ip2_t];
                 Time_servers [ip_t];
                ]
+      ()
   in
   let request = {
     srcmac = mac2_t;

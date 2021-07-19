@@ -74,7 +74,8 @@ module Config = struct
       ~addr_tuple
       ~network
       ~range
-      ~options =
+      ~options
+      () =
 
     let open Dhcp_wire in
     (* Try to ensure the user doesn't pass bad options *)
@@ -191,7 +192,7 @@ module Lease = struct
   end
 
   module Addr_map = Map.Make(Ipaddr.V4)
-  module Id_map = Map.Make(Client_id)
+  module Lease_map = Map.Make(Client_id)
 
   (* Lease (dhcp bindings) operations *)
   type t = {
@@ -205,16 +206,16 @@ module Lease = struct
 
   (* Database, collection of leases *)
   type database = {
-    id_map : t Id_map.t;
-    addr_map : t Addr_map.t;
+    lease_map : t Lease_map.t;
+    addr_map : Client_id.t Addr_map.t;
   } (* with sexp *)
 
-  let update_db id_map addr_map =
-    { id_map; addr_map }
+  let update_db lease_map addr_map =
+    { lease_map; addr_map }
 
-  let make_db () = update_db Id_map.empty Addr_map.empty
+  let make_db () = update_db Lease_map.empty Addr_map.empty
 
-  let to_list db = Id_map.fold (fun _id lease l -> lease :: l) db.id_map []
+  let to_list db = Lease_map.fold (fun _id lease l -> lease :: l) db.lease_map []
 
   let make client_id addr ~duration ~now =
     let tm_start = now in
@@ -244,50 +245,61 @@ module Lease = struct
 
   let expired lease ~now = timeleft lease ~now = Int32.zero
 
+  let sanity_check db =
+    assert (Addr_map.cardinal db.addr_map = Lease_map.cardinal db.lease_map);
+    Lease_map.iter (fun client_id lease ->
+        assert (client_id = (Addr_map.find lease.addr db.addr_map)))
+      db.lease_map;
+    Addr_map.iter (fun addr client_id ->
+        let lease = Lease_map.find client_id db.lease_map in
+        assert (lease.client_id = client_id);
+        assert (lease.addr = addr))
+      db.addr_map;
+    db
+
   let garbage_collect db ~now =
-    update_db
-      (Id_map.filter (fun _ lease -> not (expired lease ~now)) db.id_map)
-      (Addr_map.filter (fun _ lease -> not (expired lease ~now)) db.addr_map)
+    let lease_map = Lease_map.filter
+        (fun _ lease -> not (expired lease ~now))
+        db.lease_map
+    in
+    let addr_map = Addr_map.filter
+        (fun _ client_id -> Lease_map.mem client_id lease_map)
+        db.addr_map
+    in
+    update_db lease_map addr_map |> sanity_check
 
   let lease_of_client_id client_id db = Util.find_some @@ fun () ->
-    Id_map.find client_id db.id_map
+    Lease_map.find client_id db.lease_map
 
   let lease_of_addr addr db = Util.find_some @@ fun () ->
     Addr_map.find addr db.addr_map
 
   let remove lease db =
     update_db
-      (Id_map.remove lease.client_id db.id_map)
+      (Lease_map.remove lease.client_id db.lease_map)
       (Addr_map.remove lease.addr db.addr_map)
 
   let replace lease db =
-    (* First clear both maps *)
-    let clr_map = match lease_of_addr lease.addr db with
-      | Some l -> remove l db
+    (* remove possible old one first *)
+    let db = 
+      match Lease_map.find_opt lease.client_id db.lease_map with
       | None -> db
+      | Some old_lease -> remove old_lease db
     in
-    let clr_map = match lease_of_client_id lease.client_id clr_map with
-      | Some l -> remove l db
-      | None -> db
-    in
-    let clr_map = remove lease clr_map in
     update_db
-      (Id_map.add lease.client_id lease clr_map.id_map)
-      (Addr_map.add lease.addr lease clr_map.addr_map)
+      (Lease_map.add lease.client_id lease db.lease_map)
+      (Addr_map.add lease.addr lease.client_id db.addr_map)
 
   let addr_allocated addr db =
     Util.true_if_some @@ lease_of_addr addr db
 
-  let addr_available addr db ~now =
-    match lease_of_addr addr db with
-    | None -> true
-    | Some lease -> expired lease ~now
+  let addr_free addr db = not (addr_allocated addr db)
 
 (*
  * We try to use the last 4 bytes of the mac address as a hint for the ip
  * address, if that fails, we try a linear search.
  *)
-  let get_usable_addr id db range ~now =
+  let get_usable_addr id db range =
     match range with
     | None -> None
     | Some range ->
@@ -313,20 +325,19 @@ module Lease = struct
       Int32.add low_32 |>
       Ipaddr.V4.of_int32
     in
-    let rec linear_loop off f =
+    let rec linear_loop off =
       let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
-      if f ip then
+      if addr_free ip db then
         Some ip
       else if off = high_32 then
         None
       else
-        linear_loop (Int32.succ off) f
+        linear_loop (Int32.succ off)
     in
-    if not (addr_allocated hint_ip db) then
+    if addr_free hint_ip db then
       Some hint_ip
-    else match linear_loop Int32.zero (fun a -> not (addr_allocated a db)) with
-      | Some ip -> Some ip
-      | None -> linear_loop Int32.zero (fun a -> addr_available a db ~now)
+    else
+      linear_loop Int32.zero
 
 end
 
@@ -692,7 +703,7 @@ module Input = struct
 
   let collect_replies_test = collect_replies
 
-  let input_decline_release config db pkt now =
+  let input_decline config db pkt now =
     let msgtype = match find_message_type pkt.options with
       | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
@@ -721,8 +732,30 @@ module Input = struct
               else
                 db)
 
-  let input_decline = input_decline_release
-  let input_release = input_decline_release
+  let input_release config db pkt now =
+    let msgtype = match find_message_type pkt.options with
+      | Some msgtype -> msgtype_to_string msgtype
+      | None -> failwith "Unexpected message type"
+    in
+    let ourip = config.ip_addr in
+    let sidip = find_server_identifier pkt.options in
+    let client_id = client_id_of_pkt pkt in
+    match sidip with
+    | None -> bad_packet "%s without server identifier" msgtype
+    | Some sidip ->
+      if ourip <> sidip then
+        Silence                 (* not for us *)
+      else
+        let lease, fixed_lease =
+          find_lease config client_id pkt.chaddr db ~now in
+        match lease with
+        | None -> Silence (* lease is unowned, ignore *)
+        | Some lease ->
+          Update
+            (if not fixed_lease && pkt.ciaddr = lease.addr then
+               Lease.remove lease db
+             else
+               db)
 
   let input_inform config db pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
@@ -768,9 +801,9 @@ module Input = struct
       in
       Reply (pkt, db)
     in
-    let ack ?(renew=false) lease =
+    let ack lease =
       let open Util in
-      let lease = if renew then Lease.extend lease ~now else lease in
+      let lease = Lease.extend lease ~now in
       let lease_time, t1, t2 =
         Lease.timeleft3 lease Config.t1_time_ratio Config.t2_time_ratio ~now
       in
@@ -807,25 +840,19 @@ module Input = struct
       else
         (match lease with
          | Some lease ->
-           if Lease.expired lease ~now &&
-              not (Lease.addr_available reqip db ~now) then
-             nak ~msg:"Lease has expired and address is taken" ()
-           else if lease.Lease.addr <> reqip then
+           if lease.Lease.addr <> reqip then
              nak ~msg:"Requested address is incorrect" ()
            else
-             ack ~renew:true lease
+             ack lease
          | None ->
-           if not (Lease.addr_available reqip db ~now) then
-             nak ~msg:"Requested address is not available" ()
+           if (Lease.addr_allocated reqip db) then
+             nak ~msg:"Requested address is allocated" ()
            else
              ack (Lease.make client_id reqip
                     ~duration:config.default_lease_time ~now))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
         bad_packet "Bad DHCPREQUEST, ciaddr is not 0"
-      else if Lease.expired lease ~now &&
-              not (Lease.addr_available reqip db ~now) then
-        nak ~msg:"Lease has expired and address is taken" ()
         (* TODO check if it's in the correct network when giaddr <> 0 *)
       else if pkt.giaddr = Ipaddr.V4.unspecified &&
               not (good_address config pkt.chaddr reqip db) then
@@ -833,40 +860,29 @@ module Input = struct
       else if lease.Lease.addr <> reqip then
         nak ~msg:"Requested address is incorrect" ()
       else
-        ack lease
+        Silence
     | None, None, Some lease -> (* DHCPREQUEST @ RENEWING/REBINDING state *)
       if pkt.ciaddr = Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 renewal *)
         bad_packet "Bad DHCPREQUEST, ciaddr is not 0"
-      else if Lease.expired lease ~now &&
-              not (Lease.addr_available lease.Lease.addr db ~now) then
-        nak ~msg:"Lease has expired and address is taken" ()
       else if lease.Lease.addr <> pkt.ciaddr then
         nak ~msg:"Requested address is incorrect" ()
       else
-        ack ~renew:true lease
+        ack lease
     | _ -> Silence
 
-  let discover_addr config lease db pkt now =
+  let discover_addr config lease db pkt =
     let id = client_id_of_pkt pkt in
     match lease with
     (* Handle the case where we have a lease *)
-    | Some lease ->
-      if not (Lease.expired lease ~now) then
-        Some lease.Lease.addr
-        (* If the lease expired, the address might not be available *)
-      else if (Lease.addr_available lease.Lease.addr db ~now) then
-        Some lease.Lease.addr
-      else
-        Lease.get_usable_addr id db config.range ~now
-    (* Handle the case where we have no lease *)
+    | Some lease -> Some lease.Lease.addr
     | None -> match (find_request_ip pkt.options) with
       | Some req_addr ->
         if (good_address config pkt.chaddr req_addr db) &&
-           (Lease.addr_available req_addr db ~now) then
+           (Lease.addr_free req_addr db) then
           Some req_addr
         else
-          Lease.get_usable_addr id db config.range ~now
-      | None -> Lease.get_usable_addr id db config.range ~now
+          Lease.get_usable_addr id db config.range
+      | None -> Lease.get_usable_addr id db config.range
 
   let discover_lease_time config lease _db pkt now =
     match (find_ip_lease_time pkt.options) with
@@ -888,7 +904,7 @@ module Input = struct
     let id = client_id_of_pkt pkt in
     let lease, _fixed_lease = find_lease config id pkt.chaddr db ~now in
     let ourip = config.ip_addr in
-    let addr = discover_addr config lease db pkt now in
+    let addr = discover_addr config lease db pkt in
     (* Figure out the lease lease_time *)
     let lease_time = discover_lease_time config lease db pkt now in
     match addr with
