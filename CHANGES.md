@@ -1,3 +1,15 @@
+### v1.4.0 (2021-07-19)
+
+Changes in #111 by @haesbaert
+
+* Allow optional arguments to be erased in Dhcp_server.make
+* maxleasetime -> max-lease-time in dhcpd.conf
+* fix handling of DHCPRELEASE
+* rewrite lease database
+* charruad: collect garbage leases, write pid file, implement -u/--user and
+  -g/--group
+* opam lint, raise lower bound to 4.08.0
+
 ### v1.3.0 (2020-11-25)
 
 * Revise packaging: charrua-client-lwt and charrua-client-mirage are now
