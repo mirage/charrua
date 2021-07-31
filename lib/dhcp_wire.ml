@@ -1165,7 +1165,7 @@ let pkt_into_buf pkt buf =
   set_dhcp_file (string_extend_if_le pkt.file 128) 0 dhcp;
   let options_start = Cstruct.shift dhcp sizeof_dhcp in
   let options_end = buf_of_options options_start pkt.options in
-  let partial_len = Cstruct.len dhcp - Cstruct.len options_end in
+  let partial_len = Cstruct.length dhcp - Cstruct.length options_end in
   let buf_end =
     let pad_len = 300 - partial_len in
     if pad_len > 0 then
@@ -1178,7 +1178,7 @@ let pkt_into_buf pkt buf =
     else
       options_end
   in
-  let dhcp = Cstruct.sub dhcp 0 (Cstruct.len dhcp - Cstruct.len buf_end) in
+  let dhcp = Cstruct.sub dhcp 0 (Cstruct.length dhcp - Cstruct.length buf_end) in
   (* Ethernet *)
   (match Ethernet_packet.(Marshal.into_cstruct
                             { source = pkt.srcmac;
@@ -1188,7 +1188,7 @@ let pkt_into_buf pkt buf =
    | Ok () -> ()
    | Error e -> invalid_arg e) ;
   (* IPv4 *)
-  let payload_len = Udp_wire.sizeof_udp + Cstruct.len dhcp in
+  let payload_len = Udp_wire.sizeof_udp + Cstruct.length dhcp in
   let pseudoheader = Ipv4_packet.Marshal.pseudoheader
       ~src:pkt.srcip ~dst:pkt.dstip ~proto:`UDP payload_len
   in
@@ -1209,7 +1209,8 @@ let pkt_into_buf pkt buf =
    with
    | Ok () -> ()
    | Error e -> invalid_arg e) ;
-  Ethernet_wire.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp + Cstruct.len dhcp
+  Ethernet_wire.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 +
+  Udp_wire.sizeof_udp + Cstruct.length dhcp
 
 let buf_of_pkt pkg =
   (* TODO mtu *)

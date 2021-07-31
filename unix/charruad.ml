@@ -104,7 +104,7 @@ let rec input config db link gbcol =
   let now = uptime_in_sec () in
   maybe_gc db now gbcol
   >>= fun (db, gbcol) ->
-  let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.len buf) with
+  let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) with
     | Error e -> Lwt_log.error e
       >>= fun () ->
       return db

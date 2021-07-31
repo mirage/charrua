@@ -90,11 +90,11 @@ let t_csum () =
   (* Corrupt every byte of the packet and assert that csum fails *)
   let buf = buf_of_pkt pkt in
   (* Skip ethernet + upper ip header *)
-  for off = (14 + 12) to pred (Cstruct.len buf) do
+  for off = (14 + 12) to pred (Cstruct.length buf) do
     let evilbyte = Cstruct.get_uint8 buf off in
     (* Corrupt payload *)
     Cstruct.set_uint8 buf off (succ evilbyte);
-    assert_error (pkt_of_buf buf (Cstruct.len buf));
+    assert_error (pkt_of_buf buf (Cstruct.length buf));
     (* Put back *)
     Cstruct.set_uint8 buf off evilbyte;
   done
@@ -135,7 +135,7 @@ let t_long_lists () =
     ]
   } in
   let serialized = buf_of_pkt pkt in
-  match pkt_of_buf serialized (Cstruct.len serialized) with
+  match pkt_of_buf serialized (Cstruct.length serialized) with
   | Error e -> failwith e
   | Ok deserialized -> assert (pkt = deserialized)
 

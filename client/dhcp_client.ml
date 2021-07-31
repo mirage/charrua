@@ -183,7 +183,7 @@ let create ?requests xid srcmac =
    *)
 let input t buf =
   let open Dhcp_wire in
-  match pkt_of_buf buf (Cstruct.len buf) with
+  match pkt_of_buf buf (Cstruct.length buf) with
   | Error _ -> `Noop
   | Ok incoming ->
     (* RFC2131 4.4.1: respond only to messages for our xid *)
