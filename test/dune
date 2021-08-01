@@ -10,6 +10,4 @@
  (deps
   (:< test.exe)
   dhcp.pcap
-  dhcp2.pcap)
- (action
-  (run %{<})))
+  dhcp2.pcap))
