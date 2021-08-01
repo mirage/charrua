@@ -991,37 +991,38 @@ let t_db_serialization () =
   in
   assert (Lease.db_equal db0 (Lease.db_to_string db0 |> Lease.db_of_string))
 
-let run_test test =
-  let f = fst test in
-  let name = snd test in
-  printf "%s %-40s%!" (blue "%s" "Test") (yellow "%s" name);
-  let () = try f () with
-      exn -> printf "%s\n%!" (red "failed");
-      raise exn
-  in
-  printf "%s\n%!" (green "ok")
+let to_alco test () =
+  try
+    test ();
+    Alcotest.(check pass "" () ())
+  with e ->
+    Alcotest.(check (fail (Printexc.to_string e)) "" () ())
 
-let all_tests = [
-  (t_option_codes, "option codes");
-  (t_csum, "checksum");
-  (t_long_lists, "long options lists");
-  (Pcap.t_pcap, "pcap");
-  (t_simple_config, "simple config");
-  (t_bad_options, "renewal_t in opts");
-  (t_bad_junk_padding_config, "padding in opts");
-  (t_collect_replies, "collect replies");
-  (t_host_options, "host options");
-  (t_discover_range, "discover->offer");
-  (t_discover_fixed, "discover->offer fixed");
-  (t_discover_no_range, "discover->offer no range");
-  (t_discover_no_range_fixed, "discover->offer no range fixed");
-  (t_bad_discover, "wrong mac address");
-  (t_request, "request->ack/nak");
-  (t_request_fixed, "request->ack/nak fixed");
-  (t_request_no_range, "request->ack/nak no range");
-  (t_request_no_range_fixed, "request->ack/nak no range fixed");
-  (t_db_serialization, "lease database serialization");
-]
+let alco_tests () =
+  Alcotest.run "server tests" [
+    "parsing", [
+      "option codes", `Quick, to_alco t_option_codes;
+      "checksum", `Quick, to_alco t_csum;
+      "long options lists", `Quick, to_alco t_long_lists;
+      "pcap", `Quick, to_alco Pcap.t_pcap;
+      "simple config", `Quick, to_alco t_simple_config;
+      "renewal_t in opts", `Quick, to_alco t_bad_options;
+      "padding in opts", `Quick, to_alco t_bad_junk_padding_config;
+      "collect replies", `Quick, to_alco t_collect_replies;
+      "host options", `Quick, to_alco t_host_options;
+      "lease database serialization", `Quick, to_alco t_db_serialization;
+    ];
+    "state progression", [
+      "discover->offer", `Quick, to_alco t_discover_range;
+      "discover->offer fixed", `Quick, to_alco t_discover_fixed;
+      "discover->offer no range", `Quick, to_alco t_discover_no_range;
+      "discover->offer no range fixed", `Quick, to_alco t_discover_no_range_fixed;
+      "wrong mac address", `Quick, to_alco t_bad_discover;
+      "request->ack/nak", `Quick, to_alco t_request;
+      "request->ack/nak fixed", `Quick, to_alco t_request_fixed;
+      "request->ack/nak no range", `Quick, to_alco t_request_no_range;
+      "request->ack/nak no range fixed", `Quick, to_alco t_request_no_range_fixed;
+    ];
+  ]
 
-let _ =
-  List.iter run_test all_tests;
+let _ = alco_tests ()
