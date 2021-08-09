@@ -77,6 +77,7 @@ module Lease : sig
     client_id  : Dhcp_wire.client_id;
   } [@@deriving sexp]
 
+  val make : Dhcp_wire.client_id -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
   val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
   val timeleft : t -> now:int32 -> int32
   val timeleft_exn : t -> now:int32 -> int32
@@ -88,7 +89,10 @@ module Lease : sig
   type database
 
   val make_db : unit -> database
-  val to_list : database -> t list
+  val db_to_string : database -> string
+  val db_of_string : string -> database
+  val db_to_list : database -> t list
+  val db_equal : database -> database -> bool
   val garbage_collect : database -> now:int32 -> database
   val remove : t -> database -> database
   val replace : t -> database -> database

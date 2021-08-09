@@ -90,11 +90,11 @@ let t_csum () =
   (* Corrupt every byte of the packet and assert that csum fails *)
   let buf = buf_of_pkt pkt in
   (* Skip ethernet + upper ip header *)
-  for off = (14 + 12) to pred (Cstruct.len buf) do
+  for off = (14 + 12) to pred (Cstruct.length buf) do
     let evilbyte = Cstruct.get_uint8 buf off in
     (* Corrupt payload *)
     Cstruct.set_uint8 buf off (succ evilbyte);
-    assert_error (pkt_of_buf buf (Cstruct.len buf));
+    assert_error (pkt_of_buf buf (Cstruct.length buf));
     (* Put back *)
     Cstruct.set_uint8 buf off evilbyte;
   done
@@ -135,7 +135,7 @@ let t_long_lists () =
     ]
   } in
   let serialized = buf_of_pkt pkt in
-  match pkt_of_buf serialized (Cstruct.len serialized) with
+  match pkt_of_buf serialized (Cstruct.length serialized) with
   | Error e -> failwith e
   | Ok deserialized -> assert (pkt = deserialized)
 
@@ -732,9 +732,9 @@ let t_request () =
     | Input.Reply (reply, db) ->
       (* Check if our new lease is there *)
       assert (db <> (Lease.make_db ()));
-      assert ((List.length (Lease.to_list db)) = 1);
+      assert ((List.length (Lease.db_to_list db)) = 1);
       if verbose then
-        printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.to_list db)));
+        printf "lease %s\n%!" (Lease.to_string (List.hd (Lease.db_to_list db)));
       let () =
         match Lease.lease_of_client_id (Id (0, "W.Sobchak")) db with
         | None -> failwith "Lease not found";
@@ -978,36 +978,51 @@ let t_request_no_range_fixed () =
       printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply)
   | _ -> failwith "No reply"
 
-let run_test test =
-  let f = fst test in
-  let name = snd test in
-  printf "%s %-40s%!" (blue "%s" "Test") (yellow "%s" name);
-  let () = try f () with
-      exn -> printf "%s\n%!" (red "failed");
-      raise exn
+let t_db_serialization () =
+  let lease2 = Lease.make
+      (Id (0, "Duderino")) ip2_t ~duration:(Int32.of_int 60) ~now in
+  let lease3 = Lease.make
+      (Id (0, "Walter")) ip3_t ~duration:(Int32.of_int 60) ~now in
+  let lease4 = Lease.make
+      (Id (0, "Donnie")) ip4_t ~duration:(Int32.of_int 60) ~now in
+  let db0 = List.fold_left
+      (fun db lease -> Lease.replace lease db)
+      (Lease.make_db ()) [ lease2; lease3; lease4 ]
   in
-  printf "%s\n%!" (green "ok")
+  assert (Lease.db_equal db0 (Lease.db_to_string db0 |> Lease.db_of_string))
 
-let all_tests = [
-  (t_option_codes, "option codes");
-  (t_csum, "checksum");
-  (t_long_lists, "long options lists");
-  (Pcap.t_pcap, "pcap");
-  (t_simple_config, "simple config");
-  (t_bad_options, "renewal_t in opts");
-  (t_bad_junk_padding_config, "padding in opts");
-  (t_collect_replies, "collect replies");
-  (t_host_options, "host options");
-  (t_discover_range, "discover->offer");
-  (t_discover_fixed, "discover->offer fixed");
-  (t_discover_no_range, "discover->offer no range");
-  (t_discover_no_range_fixed, "discover->offer no range fixed");
-  (t_bad_discover, "wrong mac address");
-  (t_request, "request->ack/nak");
-  (t_request_fixed, "request->ack/nak fixed");
-  (t_request_no_range, "request->ack/nak no range");
-  (t_request_no_range_fixed, "request->ack/nak no range fixed");
-]
+let to_alco test () =
+  try
+    test ();
+    Alcotest.(check pass "" () ())
+  with e ->
+    Alcotest.(check (fail (Printexc.to_string e)) "" () ())
 
-let _ =
-  List.iter run_test all_tests;
+let alco_tests () =
+  Alcotest.run "server tests" [
+    "parsing", [
+      "option codes", `Quick, to_alco t_option_codes;
+      "checksum", `Quick, to_alco t_csum;
+      "long options lists", `Quick, to_alco t_long_lists;
+      "pcap", `Quick, to_alco Pcap.t_pcap;
+      "simple config", `Quick, to_alco t_simple_config;
+      "renewal_t in opts", `Quick, to_alco t_bad_options;
+      "padding in opts", `Quick, to_alco t_bad_junk_padding_config;
+      "collect replies", `Quick, to_alco t_collect_replies;
+      "host options", `Quick, to_alco t_host_options;
+      "lease database serialization", `Quick, to_alco t_db_serialization;
+    ];
+    "state progression", [
+      "discover->offer", `Quick, to_alco t_discover_range;
+      "discover->offer fixed", `Quick, to_alco t_discover_fixed;
+      "discover->offer no range", `Quick, to_alco t_discover_no_range;
+      "discover->offer no range fixed", `Quick, to_alco t_discover_no_range_fixed;
+      "wrong mac address", `Quick, to_alco t_bad_discover;
+      "request->ack/nak", `Quick, to_alco t_request;
+      "request->ack/nak fixed", `Quick, to_alco t_request_fixed;
+      "request->ack/nak no range", `Quick, to_alco t_request_no_range;
+      "request->ack/nak no range fixed", `Quick, to_alco t_request_no_range_fixed;
+    ];
+  ]
+
+let _ = alco_tests ()

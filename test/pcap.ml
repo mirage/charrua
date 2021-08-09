@@ -100,7 +100,7 @@ let parse file =
   let fd = Unix.(openfile file [O_RDONLY] 0) in
   let t = Unix_cstruct.of_fd fd in
   if verbose then
-    printf "total pcap file length %d\n%!" (Cstruct.len t);
+    printf "total pcap file length %d\n%!" (Cstruct.length t);
 
   let header, body = Cstruct.split t sizeof_pcap_header in
   if verbose then

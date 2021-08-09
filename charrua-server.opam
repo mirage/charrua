@@ -41,6 +41,7 @@ depends: [
   "cstruct-unix" {with-test}
   "ppx_cstruct" {>= "6.0.0" & with-test}
   "tcpip" {>= "6.1.0" & with-test}
+  "alcotest" {with-test & >= "1.4.0"}
 ]
 build: [
   ["dune" "subst"] {dev}
