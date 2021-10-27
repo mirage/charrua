@@ -25,7 +25,6 @@ depends: [
   "macaddr-sexp"
   "ethernet"      {>= "2.2.0"}
   "tcpip"         {>= "5.0.0"}
-  "rresult"
 ]
 synopsis: "DHCP wire frame encoder and decoder"
 description: """

@@ -50,7 +50,7 @@ let addr_in_range addr range =
   let addr_32 = Ipaddr.V4.to_int32 addr in
   addr_32 >= low_32 && addr_32 <= high_32
 
-let assert_error x = assert (Rresult.R.is_error x)
+let assert_error x = assert (Result.is_error x)
 
 open Dhcp_wire
 open Dhcp_server

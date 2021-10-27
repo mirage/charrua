@@ -18,6 +18,8 @@
 open Sexplib.Conv
 open Sexplib.Std
 
+let ( let* ) = Result.bind
+
 let guard p e = if p then Result.Ok () else Result.Error e
 
 let some_or_invalid f v = match f v with
@@ -1078,31 +1080,34 @@ let buf_of_options sbuf options =
     set_uint8 ebuf 0 (option_code_to_int END); shift ebuf 1
 
 let pkt_of_buf buf len =
-  let open Rresult in
   let open Printf in
   let wrap () =
     let min_len = sizeof_dhcp + Ethernet_wire.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
-    guard (len >= min_len) (sprintf "packet is too small: %d < %d" len min_len)
-    >>= fun () ->
+    let* () =
+      guard (len >= min_len) (sprintf "packet is too small: %d < %d" len min_len)
+    in
     (* Handle ethernet *)
-    Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    let* eth_header, eth_payload = Ethernet_packet.Unmarshal.of_cstruct buf in
     match eth_header.Ethernet_packet.ethertype with
     | `ARP | `IPv6 -> Error "packet is not ipv4"
     | `IPv4 ->
-      Ipv4_packet.Unmarshal.of_cstruct eth_payload
-      >>= fun (ipv4_header, ipv4_payload) ->
+      let* ipv4_header, ipv4_payload =
+        Ipv4_packet.Unmarshal.of_cstruct eth_payload
+      in
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Error "packet is not udp"
       | Some `UDP ->
-        guard
-          (Ipv4_packet.Unmarshal.verify_transport_checksum
-             ~proto:`UDP ~ipv4_header ~transport_packet:ipv4_payload)
-          "bad udp checksum"
-        >>= fun () ->
-        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
-        fun (udp_header, udp_payload) ->
+        let* () =
+          guard
+            (Ipv4_packet.Unmarshal.verify_transport_checksum
+               ~proto:`UDP ~ipv4_header ~transport_packet:ipv4_payload)
+            "bad udp checksum"
+        in
+        let* udp_header, udp_payload =
+          Udp_packet.Unmarshal.of_cstruct ipv4_payload
+        in
         let op = int_to_op_exn (get_dhcp_op udp_payload) in
         let htype = if (get_dhcp_htype udp_payload) = 1 then
             Ethernet_10mb
@@ -1126,7 +1131,7 @@ let pkt_of_buf buf len =
           else
             Error "Not a mac address."
         in
-        check_chaddr >>= fun chaddr ->
+        let* chaddr = check_chaddr in
         let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
         let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
         let options = options_of_buf udp_payload len in
@@ -1219,20 +1224,22 @@ let buf_of_pkt pkg =
   Cstruct.sub dhcp 0 l
 
 let is_dhcp buf _len =
-  let open Rresult in
   let aux buf =
-    Ethernet_packet.Unmarshal.of_cstruct buf >>= fun (eth_header, eth_payload) ->
+    let* eth_header, eth_payload = Ethernet_packet.Unmarshal.of_cstruct buf in
     match eth_header.Ethernet_packet.ethertype with
     | `ARP | `IPv6 -> Ok false
     | `IPv4 ->
-      Ipv4_packet.Unmarshal.of_cstruct eth_payload >>= fun (ipv4_header, ipv4_payload) ->
+      let* ipv4_header, ipv4_payload =
+        Ipv4_packet.Unmarshal.of_cstruct eth_payload
+      in
       (* TODO: tcpip doesn't currently do checksum checking, so we lose some
          functionality by making this change *)
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Ok false
       | Some `UDP ->
-        Udp_packet.Unmarshal.of_cstruct ipv4_payload >>=
-        fun (udp_header, _udp_payload) ->
+        let* udp_header, _udp_payload =
+          Udp_packet.Unmarshal.of_cstruct ipv4_payload
+        in
         Ok ((udp_header.Udp_packet.dst_port = server_port ||
              udp_header.Udp_packet.dst_port = client_port)
             &&
