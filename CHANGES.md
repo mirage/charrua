@@ -1,3 +1,9 @@
+### v1.4.1 (2021-10-27)
+
+* Add database serializers (db_of_string/db_to_string) #112 @haesbaert
+* Remove rresult dependency (#114 @hannesm)
+* Avoid deprecated Cstruct.len function
+
 ### v1.4.0 (2021-07-19)
 
 Changes in #111 by @haesbaert

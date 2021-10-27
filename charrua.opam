@@ -17,7 +17,7 @@ depends: [
   "dune"          {>= "1.4.0"}
   "ppx_sexp_conv" {>="v0.10.0"}
   "ppx_cstruct"
-  "cstruct"       {>= "3.0.1"}
+  "cstruct"       {>= "6.0.0"}
   "sexplib"
   "ipaddr"        {>= "5.0.0"}
   "macaddr"       {>= "4.0.0"}
