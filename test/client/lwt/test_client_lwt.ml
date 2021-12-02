@@ -10,7 +10,7 @@ end
 module No_time = struct
   let sleep_ns n =
     Format.printf "Ignoring request to wait %f seconds\n" (Duration.to_f n);
-    Lwt_main.yield ()
+    Lwt.pause ()
 end
 
 module No_net = struct
@@ -51,7 +51,7 @@ let keep_trying () =
     in
     Lwt.pick [
       test;
-      Lwt_main.yield () >>= function () ->
+      Lwt.pause () >>= function () ->
       (Alcotest.(check bool) "sent >1 packet" true (List.length (No_net.get_packets net) > 1); Lwt.return_unit)
     ]
   )
