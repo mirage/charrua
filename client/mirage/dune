@@ -2,5 +2,5 @@
  (name dhcp_client_mirage)
  (public_name charrua-client.mirage)
  (libraries charrua-client.lwt ipaddr mirage-clock mirage-random mirage-time
-   mirage-net mirage-protocols logs)
+   mirage-net logs ethernet arp.mirage tcpip)
  (wrapped false))

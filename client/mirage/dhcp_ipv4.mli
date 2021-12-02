@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Make(R : Mirage_random.S) (C : Mirage_clock.MCLOCK) (Time : Mirage_time.S) (Network : Mirage_net.S) (E : Mirage_protocols.ETHERNET) (Arp : Mirage_protocols.ARP) : sig
-  include Mirage_protocols.IPV4
+module Make(R : Mirage_random.S) (C : Mirage_clock.MCLOCK) (Time : Mirage_time.S) (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) : sig
+  include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t
   val connect : Network.t -> E.t -> Arp.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
 end

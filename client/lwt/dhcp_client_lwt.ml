@@ -14,7 +14,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
     let sleep_interval = Duration.of_sec 4 in
-    let header_size = Ethernet_wire.sizeof_ethernet in
+    let header_size = Ethernet.Packet.sizeof_ethernet in
     let size = Net.mtu net + header_size in
 
     let xid = match xid with
