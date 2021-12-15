@@ -1082,15 +1082,15 @@ let buf_of_options sbuf options =
 let pkt_of_buf buf len =
   let open Printf in
   let wrap () =
-    let min_len = sizeof_dhcp + Ethernet_wire.sizeof_ethernet +
+    let min_len = sizeof_dhcp + Ethernet.Packet.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
     let* () =
       guard (len >= min_len) (sprintf "packet is too small: %d < %d" len min_len)
     in
     (* Handle ethernet *)
-    let* eth_header, eth_payload = Ethernet_packet.Unmarshal.of_cstruct buf in
-    match eth_header.Ethernet_packet.ethertype with
+    let* eth_header, eth_payload = Ethernet.Packet.of_cstruct buf in
+    match eth_header.Ethernet.Packet.ethertype with
     | `ARP | `IPv6 -> Error "packet is not ipv4"
     | `IPv4 ->
       let* ipv4_header, ipv4_payload =
@@ -1135,8 +1135,8 @@ let pkt_of_buf buf len =
         let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
         let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
         let options = options_of_buf udp_payload len in
-        Ok { srcmac = eth_header.Ethernet_packet.source;
-                    dstmac = eth_header.Ethernet_packet.destination;
+        Ok { srcmac = eth_header.Ethernet.Packet.source;
+                    dstmac = eth_header.Ethernet.Packet.destination;
                     srcip = ipv4_header.Ipv4_packet.src;
                     dstip = ipv4_header.Ipv4_packet.dst;
                     srcport = udp_header.Udp_packet.src_port;
@@ -1147,7 +1147,7 @@ let pkt_of_buf buf len =
   try wrap () with | Invalid_argument e -> Error e
 
 let pkt_into_buf pkt buf =
-  let eth, rest = Cstruct.split buf Ethernet_wire.sizeof_ethernet in
+  let eth, rest = Cstruct.split buf Ethernet.Packet.sizeof_ethernet in
   let ip, rest' = Cstruct.split rest Ipv4_wire.sizeof_ipv4 in
   let udp, dhcp = Cstruct.split rest' Udp_wire.sizeof_udp in
   set_dhcp_op dhcp (op_to_int pkt.op);
@@ -1185,7 +1185,7 @@ let pkt_into_buf pkt buf =
   in
   let dhcp = Cstruct.sub dhcp 0 (Cstruct.length dhcp - Cstruct.length buf_end) in
   (* Ethernet *)
-  (match Ethernet_packet.(Marshal.into_cstruct
+  (match Ethernet.Packet.(into_cstruct
                             { source = pkt.srcmac;
                               destination = pkt.dstmac;
                               ethertype = `IPv4; } eth)
@@ -1214,7 +1214,7 @@ let pkt_into_buf pkt buf =
    with
    | Ok () -> ()
    | Error e -> invalid_arg e) ;
-  Ethernet_wire.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 +
+  Ethernet.Packet.sizeof_ethernet + Ipv4_wire.sizeof_ipv4 +
   Udp_wire.sizeof_udp + Cstruct.length dhcp
 
 let buf_of_pkt pkg =
@@ -1225,8 +1225,8 @@ let buf_of_pkt pkg =
 
 let is_dhcp buf _len =
   let aux buf =
-    let* eth_header, eth_payload = Ethernet_packet.Unmarshal.of_cstruct buf in
-    match eth_header.Ethernet_packet.ethertype with
+    let* eth_header, eth_payload = Ethernet.Packet.of_cstruct buf in
+    match eth_header.Ethernet.Packet.ethertype with
     | `ARP | `IPv6 -> Ok false
     | `IPv4 ->
       let* ipv4_header, ipv4_payload =
