@@ -1,3 +1,9 @@
+### v1.5.0 (2021-12-15)
+
+* Adapt to mirage-protocols 8.0.0, ethernet 3.0.0, arp 3.0.0, and tcpip 7.0.0
+  changes (#116 @hannesm)
+* Avoid deprecated Lwt_main.yield, use Lwt.pause instead (#115 @hannesm)
+
 ### v1.4.1 (2021-10-27)
 
 * Add database serializers (db_of_string/db_to_string) #112 @haesbaert
