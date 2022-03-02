@@ -1206,7 +1206,7 @@ let pkt_into_buf pkt buf =
    | Error e -> invalid_arg e) ;
   (match Ipv4_packet.(Marshal.into_cstruct ~payload_len
                           { src = pkt.srcip; dst = pkt.dstip;
-                            id = 0 (* TODO: random? *); off = 0 ;
+                            id = Random.int 65536; off = 0 ;
                             proto = (Marshal.protocol_to_int `UDP);
                             ttl = 255;
                             options = Cstruct.create 0; }
