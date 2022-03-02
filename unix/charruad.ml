@@ -200,7 +200,7 @@ let cmd =
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
                          ~doc:"Daemonize.") in
   Cmd.v
-    (Cmd.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD")
+    (Cmd.info "charruad" ~version:"%%VERSION%%" ~doc:"Charrua DHCPD")
     Term.(const charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize)
 
 let () = exit (Cmd.eval cmd)
