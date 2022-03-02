@@ -199,12 +199,8 @@ let cmd =
                          ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
                          ~doc:"Daemonize.") in
-  (* let color = *)
-  (*   let when_enum = [ "always", `Always; "never", `Never; "auto", `Auto ] in *)
-  (*   let doc = Arg.info ~docv:"WHEN" *)
-  (*       ~doc:(Printf.sprintf "Colorize the output. $(docv) must be %s." *)
-  (*               (Arg.doc_alts_enum when_enum)) ["color"] in *)
-  (*   Arg.(value & opt (enum when_enum) `Auto & doc) in *)
-  Term.(pure charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize),
-  Term.info "charruad" ~version:"0.1" ~doc:"Charrua DHCPD"
-let () = match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
+  Cmd.v
+    (Cmd.info "charruad" ~version:"%%VERSION%%" ~doc:"Charrua DHCPD")
+    Term.(const charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize)
+
+let () = exit (Cmd.eval cmd)
