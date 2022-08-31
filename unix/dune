@@ -1,6 +1,16 @@
 (executable
  (name charruad)
+ (modules charruad)
  (public_name charruad)
  (package charrua-unix)
  (libraries charrua charrua-server lwt.unix cstruct-lwt cstruct-unix cmdliner
-   ipaddr tuntap rawlink.lwt mtime.clock.os lwt_log))
+   ipaddr tuntap rawlink-lwt mtime.clock.os lwt_log))
+
+(executable
+ (name charruad_eio)
+ (modules charruad_eio)
+ (public_name charruad-eio)
+ (package charrua-unix-eio)
+ (libraries charrua charrua-server cstruct-unix cmdliner
+   eio_main ipaddr tuntap rawlink-eio mtime.clock.os
+   logs-syslog logs-syslog.unix))
