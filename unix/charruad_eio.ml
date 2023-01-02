@@ -82,7 +82,7 @@ let init_log level daemon =
   Result.get_ok @@ Logs.level_of_string level
 
 let uptime_in_sec () =
-  Mtime_clock.elapsed () |> Mtime.Span.to_s |> Int.of_float
+  Int64.div (Mtime_clock.elapsed_ns ()) (Int64.of_int 1_000_000_000) |> Int64.to_int
 
 let maybe_gc db now gbcol =
   if (now - gbcol) >= 60 then
