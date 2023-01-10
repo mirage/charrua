@@ -85,7 +85,7 @@ let init_log vlevel daemon =
         ()
 
 let uptime_in_sec () =
-  Int64.div (Mtime_clock.elapsed_ns ()) (Int64.of_int 1_000_000_000) |> Int64.to_int
+  Duration.to_sec (Mtime_clock.elapsed_ns ())
 
 let maybe_gc db now gbcol =
   let open Lwt in
