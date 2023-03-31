@@ -651,10 +651,10 @@ let options_of_buf buf buf_len =
             (get_ip_tuple_list ())
       in
       let get_string () =  if len < 1 then invalid_arg bad_len else
-          Cstruct.copy body 0 len
+          Cstruct.to_string body ~off:0 ~len
       in
       let get_client_id () =  if len < 2 then invalid_arg bad_len else
-          let s = Cstruct.copy body 1 (len - 1) in
+          let s = Cstruct.to_string body ~off:1 ~len:(len - 1) in
           let htype = Cstruct.get_uint8 body 0 in
           if htype = 1 && len = 7 then
             Hwaddr (Macaddr.of_octets_exn s)
