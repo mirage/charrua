@@ -14,3 +14,15 @@
  (libraries charrua charrua-server cstruct-unix cmdliner
    eio_main ipaddr tuntap rawlink-eio mtime.clock.os
    logs-syslog logs-syslog.unix duration))
+
+(executable
+ (name charruad_async)
+ (modules charruad_async)
+ (public_name charruad-async)
+ (package charrua-unix-async)
+ (preprocess (pps ppx_jane))
+ (libraries charrua charrua-server cstruct-unix
+            async async.log_extended
+            core_unix core_unix.command_unix core_unix.daemon
+            tuntap rawlink-async
+             ))
