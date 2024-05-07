@@ -1,7 +1,7 @@
 let src = Logs.Src.create "dhcp_client_lwt"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
+module Make(Random : Mirage_random.S)(Net : Mirage_net.S) = struct
   open Lwt.Infix
 
   type lease = Dhcp_wire.pkt
@@ -25,7 +25,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
     let c = ref client in
 
     let rec do_renew c t =
-      Time.sleep_ns @@ Duration.of_sec t >>= fun () ->
+      Mirage_time.sleep_ns @@ Duration.of_sec t >>= fun () ->
       match Dhcp_client.renew c with
       | `Noop -> Log.debug (fun f -> f "Can't renew this lease; won't try");  Lwt.return_unit
       | `Response (c, pkt) ->
@@ -44,7 +44,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
         Log.err (fun f -> f "Failed to write initial lease discovery request: %a" Net.pp_error e);
         Lwt.return_unit
       | Ok () ->
-        Time.sleep_ns sleep_interval >>= fun () ->
+        Mirage_time.sleep_ns sleep_interval >>= fun () ->
         match Dhcp_client.lease !c with
         | Some _lease -> Lwt.return_unit
         | None ->
@@ -81,7 +81,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
           c := s;
           match renew with
           | true ->
-            Time.sleep_ns @@ Duration.of_sec 1800 >>= fun () ->
+            Mirage_time.sleep_ns @@ Duration.of_sec 1800 >>= fun () ->
             do_renew !c 1800
           | false ->
             push None;

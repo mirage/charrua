@@ -7,12 +7,6 @@ module No_random = struct
   let generate ?g:_ n = Cstruct.create n
 end
 
-module No_time = struct
-  let sleep_ns n =
-    Format.printf "Ignoring request to wait %f seconds\n" (Duration.to_f n);
-    Lwt.pause ()
-end
-
 module No_net = struct
   type error = Mirage_net.Net.error
   let pp_error = Mirage_net.Net.pp_error
@@ -42,7 +36,7 @@ end
 
 let keep_trying () =
   Lwt_main.run @@ (
-    let module Client = Dhcp_client_lwt.Make(No_random)(No_time)(No_net) in
+    let module Client = Dhcp_client_lwt.Make(No_random)(No_net) in
     let net = No_net.connect ~mac:(Macaddr.of_string_exn "c0:ff:ee:c0:ff:ee") () in
     let test =
       Client.connect net >>= Lwt_stream.get >|= function
