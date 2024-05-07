@@ -25,7 +25,7 @@ depends: [
   "macaddr" {>= "4.0.0"}
   "mirage-random" {>= "2.0.0"}
   "mirage-clock" {>= "3.0.0"}
-  "mirage-time" {>= "2.0.0"}
+  "mirage-time" {>= "4.0.0"}
   "mirage-net" {>= "3.0.0"}
   "duration"
   "logs"
