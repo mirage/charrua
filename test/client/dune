@@ -2,4 +2,4 @@
  (name test_client)
  (package charrua-client)
  (libraries cstruct-unix alcotest charrua-client charrua-server
-            mirage-random-test))
+            mirage-crypto-rng mirage-crypto-rng.unix))

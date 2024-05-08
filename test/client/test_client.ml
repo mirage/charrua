@@ -24,8 +24,8 @@ module Defaults = struct
 end
 
 let random_buffer () =
-  let sz = Cstruct.BE.get_uint16 (Mirage_random_test.generate 2) 0 in
-  Mirage_random_test.generate sz
+  let sz = Cstruct.BE.get_uint16 (Mirage_crypto_rng.generate 2) 0 in
+  Mirage_crypto_rng.generate sz
 
 let rec no_result t n () =
   if n <= 0 then ()
@@ -41,7 +41,7 @@ let rec no_result t n () =
 let parseable buf =
   Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (Cstruct.length buf))
 
-let random_xid () = Cstruct.BE.get_uint32 (Mirage_random_test.generate 4) 0
+let random_xid () = Cstruct.BE.get_uint32 (Mirage_crypto_rng.generate 4) 0
 
 let start_makes_dhcp () =
   let (_s, pkt) = Dhcp_client.create (random_xid ()) Defaults.client_mac in
@@ -175,7 +175,7 @@ a new lease"
       "random buffer entry to BOUND client", `Quick, (no_result s n)
 
 let () =
-  Mirage_random_test.initialize () ;
+  Mirage_crypto_rng_unix.initialize (module Mirage_crypto_rng.Fortuna) ;
   let nfuzz = 100 in
   Alcotest.run "client tests" [
     (* these tests will programmatically put [Dhcp_client.t] into a particular
