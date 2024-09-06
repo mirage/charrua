@@ -1,7 +1,7 @@
 let src = Logs.Src.create "dhcp_client_lwt"
 module Log = (val Logs.src_log src : Logs.LOG)
 
-module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
+module Make(Random : Mirage_crypto_rng_mirage.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
   open Lwt.Infix
 
   type lease = Dhcp_wire.pkt
@@ -18,7 +18,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
     let size = Net.mtu net + header_size in
 
     let xid = match xid with
-      | None -> Cstruct.BE.get_uint32 (Random.generate 4) 0
+      | None -> Randomconv.int32 Random.generate
       | Some xid -> xid
     in
     let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
@@ -48,7 +48,7 @@ module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S)
         match Dhcp_client.lease !c with
         | Some _lease -> Lwt.return_unit
         | None ->
-          let xid = Cstruct.BE.get_uint32 (Random.generate 4) 0 in
+          let xid = Randomconv.int32 Random.generate in
           let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
           c := client;
           Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");

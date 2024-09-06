@@ -24,8 +24,8 @@ module Defaults = struct
 end
 
 let random_buffer () =
-  let sz = Cstruct.BE.get_uint16 (Mirage_crypto_rng.generate 2) 0 in
-  Mirage_crypto_rng.generate sz
+  let sz = Randomconv.int16 Mirage_crypto_rng.generate in
+  Cstruct.of_string (Mirage_crypto_rng.generate sz)
 
 let rec no_result t n () =
   if n <= 0 then ()
@@ -41,7 +41,7 @@ let rec no_result t n () =
 let parseable buf =
   Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (Cstruct.length buf))
 
-let random_xid () = Cstruct.BE.get_uint32 (Mirage_crypto_rng.generate 4) 0
+let random_xid () = Randomconv.int32 Mirage_crypto_rng.generate
 
 let start_makes_dhcp () =
   let (_s, pkt) = Dhcp_client.create (random_xid ()) Defaults.client_mac in
