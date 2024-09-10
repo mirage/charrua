@@ -1,4 +1,4 @@
-module Make(Random : Mirage_random.S)(Time : Mirage_time.S) (Net : Mirage_net.S) : sig
+module Make(Random : Mirage_crypto_rng_mirage.S)(Time : Mirage_time.S) (Net : Mirage_net.S) : sig
   type lease = Dhcp_wire.pkt
 
   type t = lease Lwt_stream.t
