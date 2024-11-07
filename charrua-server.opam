@@ -39,7 +39,6 @@ depends: [
   "ipaddr-sexp"
   "macaddr-sexp"
   "cstruct-unix" {with-test}
-  "ppx_cstruct" {>= "6.0.0" & with-test}
   "tcpip" {>= "7.0.0" & with-test}
   "alcotest" {with-test & >= "1.4.0"}
 ]

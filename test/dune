@@ -1,7 +1,6 @@
 (test
  (name test)
  (package charrua-server)
- (preprocess (pps ppx_cstruct))
  (libraries cstruct-unix alcotest charrua charrua-server))
 
 (alias

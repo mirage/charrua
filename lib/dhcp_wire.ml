@@ -22,10 +22,6 @@ let ( let* ) = Result.bind
 
 let guard p e = if p then Result.Ok () else Result.Error e
 
-let some_or_invalid f v = match f v with
-  | Some x -> x
-  | None -> invalid_arg ("Invalid value " ^ (string_of_int v))
-
 let find_option f t =
   let rec loop = function
     | [] -> None
@@ -62,7 +58,7 @@ let string_extend_if_le s m =
     invalid_arg ("string is too damn big: " ^ (string_of_int n));
   s ^ String.make (m - n) (Char.chr 0)
 
-[%%cstruct
+(*
 type dhcp = {
   op:     uint8_t;
   htype:  uint8_t;
@@ -79,18 +75,73 @@ type dhcp = {
   sname:  uint8_t   [@len 64];
   file:   uint8_t   [@len 128];
 } [@@big_endian]
-]
-[%%cenum
+*)
+
+let get_dhcp_op cs = Cstruct.get_uint8 cs 0
+let set_dhcp_op cs v = Cstruct.set_uint8 cs 0 v
+
+let get_dhcp_htype cs = Cstruct.get_uint8 cs 1
+let set_dhcp_htype cs v = Cstruct.set_uint8 cs 1 v
+
+let get_dhcp_hlen cs = Cstruct.get_uint8 cs 2
+let set_dhcp_hlen cs v = Cstruct.set_uint8 cs 2 v
+
+let get_dhcp_hops cs = Cstruct.get_uint8 cs 3
+let set_dhcp_hops cs v = Cstruct.set_uint8 cs 3 v
+
+let get_dhcp_xid cs = Cstruct.BE.get_uint32 cs 4
+let set_dhcp_xid cs v = Cstruct.BE.set_uint32 cs 4 v
+
+let get_dhcp_secs cs = Cstruct.BE.get_uint16 cs 8
+let set_dhcp_secs cs v = Cstruct.BE.set_uint16 cs 8 v
+
+let get_dhcp_flags cs = Cstruct.BE.get_uint16 cs 10
+let set_dhcp_flags cs v = Cstruct.BE.set_uint16 cs 10 v
+
+let get_dhcp_ciaddr cs = Cstruct.BE.get_uint32 cs 12
+let set_dhcp_ciaddr cs v = Cstruct.BE.set_uint32 cs 12 v
+
+let get_dhcp_yiaddr cs = Cstruct.BE.get_uint32 cs 16
+let set_dhcp_yiaddr cs v = Cstruct.BE.set_uint32 cs 16 v
+
+let get_dhcp_siaddr cs = Cstruct.BE.get_uint32 cs 20
+let set_dhcp_siaddr cs v = Cstruct.BE.set_uint32 cs 20 v
+
+let get_dhcp_giaddr cs = Cstruct.BE.get_uint32 cs 24
+let set_dhcp_giaddr cs v = Cstruct.BE.set_uint32 cs 24 v
+
+let _get_dhcp_chaddr cs = Cstruct.sub cs 28 16
+let copy_dhcp_chaddr cs = Cstruct.to_string ~off:28 ~len:16 cs
+let set_dhcp_chaddr src srcoff cs = Cstruct.blit_from_string src srcoff cs 28 16
+
+let get_dhcp_sname cs = Cstruct.sub cs 44 64
+let copy_dhcp_sname cs = Cstruct.to_string ~off:44 ~len:64 cs
+let set_dhcp_sname src srcoff cs = Cstruct.blit_from_string src srcoff cs 44 64
+
+let get_dhcp_file cs = Cstruct.sub cs 108 128
+let copy_dhcp_file cs = Cstruct.to_string ~off:108 ~len:128 cs
+let set_dhcp_file src srcoff cs = Cstruct.blit_from_string src srcoff cs 108 128
+
+let sizeof_dhcp = 236
+
 type op =
-  | BOOTREQUEST [@id 1]
-  | BOOTREPLY   [@id 2]
-[@@uint8_t][@@sexp]]
+  | BOOTREQUEST (* 1 *)
+  | BOOTREPLY   (* 2 *)
+[@@deriving sexp]
 
-let int_to_op_exn v = some_or_invalid int_to_op v
+let int_to_op = function
+  | 1 -> Some BOOTREQUEST
+  | 2 -> Some BOOTREPLY
+  | _ -> None
 
-[%%cenum
+let int_to_op_exn v = Option.get (int_to_op v)
+
+let op_to_int = function
+  | BOOTREQUEST -> 1
+  | BOOTREPLY -> 2
+
 type msgtype =
-  | DHCPDISCOVER [@id 1]
+  | DHCPDISCOVER (* 1 *)
   | DHCPOFFER
   | DHCPREQUEST
   | DHCPDECLINE
@@ -105,11 +156,45 @@ type msgtype =
   | DHCPLEASEACTIVE
   | DHCPBULKLEASEQUERY
   | DHCPLEASEQUERYDONE
-[@@uint8_t][@@sexp]]
+[@@deriving sexp]
 
-let int_to_msgtype_exn v = some_or_invalid int_to_msgtype v
+let int_to_msgtype = function
+  | 1 -> Some DHCPDISCOVER
+  | 2 -> Some DHCPOFFER
+  | 3 -> Some DHCPREQUEST
+  | 4 -> Some DHCPDECLINE
+  | 5 -> Some DHCPACK
+  | 6 -> Some DHCPNAK
+  | 7 -> Some DHCPRELEASE
+  | 8 -> Some DHCPINFORM
+  | 9 -> Some DHCPFORCERENEW
+  | 10 -> Some DHCPLEASEQUERY
+  | 11 -> Some DHCPLEASEUNASSIGNED
+  | 12 -> Some DHCPLEASEUNKNOWN
+  | 13 -> Some DHCPLEASEACTIVE
+  | 14 -> Some DHCPBULKLEASEQUERY
+  | 15 -> Some DHCPLEASEQUERYDONE
+  | _ -> None
 
-[%%cenum
+let int_to_msgtype_exn v = Option.get (int_to_msgtype v)
+
+let msgtype_to_int = function
+  | DHCPDISCOVER -> 1
+  | DHCPOFFER -> 2
+  | DHCPREQUEST -> 3
+  | DHCPDECLINE -> 4
+  | DHCPACK -> 5
+  | DHCPNAK -> 6
+  | DHCPRELEASE -> 7
+  | DHCPINFORM -> 8
+  | DHCPFORCERENEW -> 9
+  | DHCPLEASEQUERY -> 10
+  | DHCPLEASEUNASSIGNED -> 11
+  | DHCPLEASEUNKNOWN -> 12
+  | DHCPLEASEACTIVE -> 13
+  | DHCPBULKLEASEQUERY -> 14
+  | DHCPLEASEQUERYDONE -> 15
+
 type option_code =
   | PAD [@id 0]
   | SUBNET_MASK [@id 1]
@@ -195,7 +280,6 @@ type option_code =
   | CLIENT_FQDN [@id 81]
   | RELAY_AGENT_INFORMATION [@id 82]
   | ISNS [@id 83]
-  | UNASSIGNED_84 [@id 84]
   | NDS_SERVERS [@id 85]
   | NDS_TREE_NAME [@id 86]
   | NDS_CONTEXT [@id 87]
@@ -207,26 +291,14 @@ type option_code =
   | CLIENT_SYSTEM [@id 93]
   | CLIENT_NDI [@id 94]
   | LDAP [@id 95]
-  | UNASSIGNED_96 [@id 96]
   | UUID_GUID [@id 97]
   | USER_AUTH [@id 98]
   | GEOCONF_CIVIC [@id 99]
   | PCODE [@id 100]
   | TCODE [@id 101]
-  | UNASSIGNED_102 [@id 102]
-  | UNASSIGNED_103 [@id 103]
-  | UNASSIGNED_104 [@id 104]
-  | UNASSIGNED_105 [@id 105]
-  | UNASSIGNED_106 [@id 106]
-  | UNASSIGNED_107 [@id 107]
-  | UNASSIGNED_108 [@id 108]
-  | UNASSIGNED_109 [@id 109]
-  | UNASSIGNED_110 [@id 110]
-  | UNASSIGNED_111 [@id 111]
   | NETINFO_ADDRESS [@id 112]
   | NETINFO_TAG [@id 113]
   | URL [@id 114]
-  | UNASSIGNED_115 [@id 115]
   | AUTO_CONFIG [@id 116]
   | NAME_SERVICE_SEARCH [@id 117]
   | SUBNET_SELECTION [@id 118]
@@ -237,8 +309,6 @@ type option_code =
   | GEOCONF [@id 123]
   | VI_VENDOR_CLASS [@id 124]
   | VI_VENDOR_INFO [@id 125]
-  | UNASSIGNED_126 [@id 126]
-  | UNASSIGNED_127 [@id 127]
   | PXE_128 [@id 128]
   | PXE_129 [@id 129]
   | PXE_130 [@id 130]
@@ -254,13 +324,9 @@ type option_code =
   | IPV4_FQDN_MOS [@id 140]
   | SIP_UA_DOMAINS [@id 141]
   | IPV4_ADDRESS_ANDSF [@id 142]
-  | UNASSIGNED_143 [@id 143]
   | GEOLOCK [@id 144]
   | FORCENEW_NONCE_CAPABLE [@id 145]
   | RDNSS_SELECTION [@id 146]
-  | UNASSIGNED_147 [@id 147]
-  | UNASSIGNED_148 [@id 148]
-  | UNASSIGNED_149 [@id 149]
   | MISC_150 [@id 150]
   | STATUS_CODE [@id 151]
   | ABSOLUTE_TIME [@id 152]
@@ -272,104 +338,341 @@ type option_code =
   | V4_PCP_SERVER [@id 158]
   | V4_PORTPARAMS [@id 159]
   | DHCP_CAPTIVE_PORTAL [@id 160]
-  | UNASSIGNED_161 [@id 161]
-  | UNASSIGNED_162 [@id 162]
-  | UNASSIGNED_163 [@id 163]
-  | UNASSIGNED_164 [@id 164]
-  | UNASSIGNED_165 [@id 165]
-  | UNASSIGNED_166 [@id 166]
-  | UNASSIGNED_167 [@id 167]
-  | UNASSIGNED_168 [@id 168]
-  | UNASSIGNED_169 [@id 169]
-  | UNASSIGNED_170 [@id 170]
-  | UNASSIGNED_171 [@id 171]
-  | UNASSIGNED_172 [@id 172]
-  | UNASSIGNED_173 [@id 173]
-  | UNASSIGNED_174 [@id 174]
   | ETHERBOOT_175 [@id 175]
   | IP_TELEFONE [@id 176]
   | ETHERBOOT_177 [@id 177]
-  | UNASSIGNED_178 [@id 178]
-  | UNASSIGNED_179 [@id 179]
-  | UNASSIGNED_180 [@id 180]
-  | UNASSIGNED_181 [@id 181]
-  | UNASSIGNED_182 [@id 182]
-  | UNASSIGNED_183 [@id 183]
-  | UNASSIGNED_184 [@id 184]
-  | UNASSIGNED_185 [@id 185]
-  | UNASSIGNED_186 [@id 186]
-  | UNASSIGNED_187 [@id 187]
-  | UNASSIGNED_188 [@id 188]
-  | UNASSIGNED_189 [@id 189]
-  | UNASSIGNED_190 [@id 190]
-  | UNASSIGNED_191 [@id 191]
-  | UNASSIGNED_192 [@id 192]
-  | UNASSIGNED_193 [@id 193]
-  | UNASSIGNED_194 [@id 194]
-  | UNASSIGNED_195 [@id 195]
-  | UNASSIGNED_196 [@id 196]
-  | UNASSIGNED_197 [@id 197]
-  | UNASSIGNED_198 [@id 198]
-  | UNASSIGNED_199 [@id 199]
-  | UNASSIGNED_200 [@id 200]
-  | UNASSIGNED_201 [@id 201]
-  | UNASSIGNED_202 [@id 202]
-  | UNASSIGNED_203 [@id 203]
-  | UNASSIGNED_204 [@id 204]
-  | UNASSIGNED_205 [@id 205]
-  | UNASSIGNED_206 [@id 206]
-  | UNASSIGNED_207 [@id 207]
   | PXE_LINUX [@id 208]
   | CONFIGURATION_FILE [@id 209]
   | PATH_PREFIX [@id 210]
   | REBOOT_TIME [@id 211]
   | OPTION_6RD [@id 212]
   | V4_ACCESS_DOMAIN [@id 213]
-  | UNASSIGNED_214 [@id 214]
-  | UNASSIGNED_215 [@id 215]
-  | UNASSIGNED_216 [@id 216]
-  | UNASSIGNED_217 [@id 217]
-  | UNASSIGNED_218 [@id 218]
-  | UNASSIGNED_219 [@id 219]
   | SUBNET_ALLOCATION [@id 220]
   | VIRTUAL_SUBNET_SELECTION [@id 221]
-  | UNASSIGNED_222 [@id 222]
-  | UNASSIGNED_223 [@id 223]
-  | RESERVED_224 [@id 224]
-  | RESERVED_225 [@id 225]
-  | RESERVED_226 [@id 226]
-  | RESERVED_227 [@id 227]
-  | RESERVED_228 [@id 228]
-  | RESERVED_229 [@id 229]
-  | RESERVED_230 [@id 230]
-  | RESERVED_231 [@id 231]
-  | RESERVED_232 [@id 232]
-  | RESERVED_233 [@id 233]
-  | RESERVED_234 [@id 234]
-  | RESERVED_235 [@id 235]
-  | RESERVED_236 [@id 236]
-  | RESERVED_237 [@id 237]
-  | RESERVED_238 [@id 238]
-  | RESERVED_239 [@id 239]
-  | RESERVED_240 [@id 240]
-  | RESERVED_241 [@id 241]
-  | RESERVED_242 [@id 242]
-  | RESERVED_243 [@id 243]
-  | RESERVED_244 [@id 244]
-  | RESERVED_245 [@id 245]
-  | RESERVED_246 [@id 246]
-  | RESERVED_247 [@id 247]
-  | RESERVED_248 [@id 248]
   | PRIVATE_CLASSLESS_STATIC_ROUTE [@id 249]
-  | RESERVED_250 [@id 250]
-  | RESERVED_251 [@id 251]
   | WEB_PROXY_AUTO_DISC [@id 252]
-  | RESERVED_253 [@id 253]
-  | RESERVED_254 [@id 254]
   | END [@id 255]
-[@@uint8_t][@@sexp]]
+  | UNKNOWN of int [@@deriving sexp]
 
-let int_to_option_code_exn v = some_or_invalid int_to_option_code v
+let int_to_option_code = function
+  | 0 -> Some PAD
+  | 1 -> Some SUBNET_MASK
+  | 2 -> Some TIME_OFFSET
+  | 3 -> Some ROUTERS
+  | 4 -> Some TIME_SERVERS
+  | 5 -> Some NAME_SERVERS
+  | 6 -> Some DNS_SERVERS
+  | 7 -> Some LOG_SERVERS
+  | 8 -> Some COOKIE_SERVERS
+  | 9 -> Some LPR_SERVERS
+  | 10 -> Some IMPRESS_SERVERS
+  | 11 -> Some RSCLOCATION_SERVERS
+  | 12 -> Some HOSTNAME
+  | 13 -> Some BOOTFILE_SIZE
+  | 14 -> Some MERIT_DUMPFILE
+  | 15 -> Some DOMAIN_NAME
+  | 16 -> Some SWAP_SERVER
+  | 17 -> Some ROOT_PATH
+  | 18 -> Some EXTENSION_PATH
+  | 19 -> Some IPFORWARDING
+  | 20 -> Some NLSR
+  | 21 -> Some POLICY_FILTERS
+  | 22 -> Some MAX_DATAGRAM
+  | 23 -> Some DEFAULT_IP_TTL
+  | 24 -> Some PMTU_AGEING_TIMO
+  | 25 -> Some PMTU_PLATEAU_TABLE
+  | 26 -> Some INTERFACE_MTU
+  | 27 -> Some ALL_SUBNETS_LOCAL
+  | 28 -> Some BROADCAST_ADDR
+  | 29 -> Some PERFORM_MASK_DISCOVERY
+  | 30 -> Some MASK_SUPPLIER
+  | 31 -> Some PERFORM_ROUTER_DISC
+  | 32 -> Some ROUTER_SOL_ADDR
+  | 33 -> Some STATIC_ROUTES
+  | 34 -> Some TRAILER_ENCAPSULATION
+  | 35 -> Some ARP_CACHE_TIMO
+  | 36 -> Some ETHERNET_ENCAPSULATION
+  | 37 -> Some TCP_DEFAULT_TTL
+  | 38 -> Some TCP_KEEPALIVE_INTERVAL
+  | 39 -> Some TCP_KEEPALIVE_GARBAGE
+  | 40 -> Some NIS_DOMAIN
+  | 41 -> Some NIS_SERVERS
+  | 42 -> Some NTP_SERVERS
+  | 43 -> Some VENDOR_SPECIFIC
+  | 44 -> Some NETBIOS_NAME_SERVERS
+  | 45 -> Some NETBIOS_DATAGRAM_DISTRIB_SERVERS
+  | 46 -> Some NETBIOS_NODE
+  | 47 -> Some NETBIOS_SCOPE
+  | 48 -> Some XWINDOW_FONT_SERVERS
+  | 49 -> Some XWINDOW_DISPLAY_MANAGERS
+  | 50 -> Some REQUEST_IP
+  | 51 -> Some IP_LEASE_TIME
+  | 52 -> Some OPTION_OVERLOAD
+  | 53 -> Some MESSAGE_TYPE
+  | 54 -> Some SERVER_IDENTIFIER
+  | 55 -> Some PARAMETER_REQUESTS
+  | 56 -> Some MESSAGE
+  | 57 -> Some MAX_MESSAGE
+  | 58 -> Some RENEWAL_T1
+  | 59 -> Some REBINDING_T2
+  | 60 -> Some VENDOR_CLASS_ID
+  | 61 -> Some CLIENT_ID
+  | 62 -> Some NETWARE_IP_DOMAIN
+  | 63 -> Some NETWARE_IP_OPTION
+  | 64 -> Some NIS_PLUS_DOMAIN
+  | 65 -> Some NIS_PLUS_SERVERS
+  | 66 -> Some TFTP_SERVER_NAME
+  | 67 -> Some BOOTFILE_NAME
+  | 68 -> Some MOBILE_IP_HOME_AGENT
+  | 69 -> Some SMTP_SERVERS
+  | 70 -> Some POP3_SERVERS
+  | 71 -> Some NNTP_SERVERS
+  | 72 -> Some WWW_SERVERS
+  | 73 -> Some FINGER_SERVERS
+  | 74 -> Some IRC_SERVERS
+  | 75 -> Some STREETTALK_SERVERS
+  | 76 -> Some STREETTALK_DA
+  | 77 -> Some USER_CLASS
+  | 78 -> Some DIRECTORY_AGENT
+  | 79 -> Some SERVICE_SCOPE
+  | 80 -> Some RAPID_COMMIT
+  | 81 -> Some CLIENT_FQDN
+  | 82 -> Some RELAY_AGENT_INFORMATION
+  | 83 -> Some ISNS
+  | 85 -> Some NDS_SERVERS
+  | 86 -> Some NDS_TREE_NAME
+  | 87 -> Some NDS_CONTEXT
+  | 88 -> Some BCMCS_CONTROLLER_DOMAIN_NAME_LIST
+  | 89 -> Some BCMCS_CONTROLLER_IPV4_ADDR
+  | 90 -> Some AUTHENTICATION
+  | 91 -> Some CLIENT_LAST_TRANSACTION_TIME
+  | 92 -> Some ASSOCIATED_IPS
+  | 93 -> Some CLIENT_SYSTEM
+  | 94 -> Some CLIENT_NDI
+  | 95 -> Some LDAP
+  | 97 -> Some UUID_GUID
+  | 98 -> Some USER_AUTH
+  | 99 -> Some GEOCONF_CIVIC
+  | 100 -> Some PCODE
+  | 101 -> Some TCODE
+  | 112 -> Some NETINFO_ADDRESS
+  | 113 -> Some NETINFO_TAG
+  | 114 -> Some URL
+  | 116 -> Some AUTO_CONFIG
+  | 117 -> Some NAME_SERVICE_SEARCH
+  | 118 -> Some SUBNET_SELECTION
+  | 119 -> Some DOMAIN_SEARCH
+  | 120 -> Some SIP_SERVERS
+  | 121 -> Some CLASSLESS_STATIC_ROUTE
+  | 122 -> Some CCC
+  | 123 -> Some GEOCONF
+  | 124 -> Some VI_VENDOR_CLASS
+  | 125 -> Some VI_VENDOR_INFO
+  | 128 -> Some PXE_128
+  | 129 -> Some PXE_129
+  | 130 -> Some PXE_130
+  | 131 -> Some PXE_131
+  | 132 -> Some PXE_132
+  | 133 -> Some PXE_133
+  | 134 -> Some PXE_134
+  | 135 -> Some PXE_135
+  | 136 -> Some PANA_AGENT
+  | 137 -> Some V4_LOST
+  | 138 -> Some CAPWAP_AC_V4
+  | 139 -> Some IPV4_ADDRESS_MOS
+  | 140 -> Some IPV4_FQDN_MOS
+  | 141 -> Some SIP_UA_DOMAINS
+  | 142 -> Some IPV4_ADDRESS_ANDSF
+  | 144 -> Some GEOLOCK
+  | 145 -> Some FORCENEW_NONCE_CAPABLE
+  | 146 -> Some RDNSS_SELECTION
+  | 150 -> Some MISC_150
+  | 151 -> Some STATUS_CODE
+  | 152 -> Some ABSOLUTE_TIME
+  | 153 -> Some START_TIME_OF_STATE
+  | 154 -> Some QUERY_START_TIME
+  | 155 -> Some QUERY_END_TIME
+  | 156 -> Some DHCP_STATE
+  | 157 -> Some DATA_SOURCE
+  | 158 -> Some V4_PCP_SERVER
+  | 159 -> Some V4_PORTPARAMS
+  | 160 -> Some DHCP_CAPTIVE_PORTAL
+  | 175 -> Some ETHERBOOT_175
+  | 176 -> Some IP_TELEFONE
+  | 177 -> Some ETHERBOOT_177
+  | 208 -> Some PXE_LINUX
+  | 209 -> Some CONFIGURATION_FILE
+  | 210 -> Some PATH_PREFIX
+  | 211 -> Some REBOOT_TIME
+  | 212 -> Some OPTION_6RD
+  | 213 -> Some V4_ACCESS_DOMAIN
+  | 220 -> Some SUBNET_ALLOCATION
+  | 221 -> Some VIRTUAL_SUBNET_SELECTION
+  | 249 -> Some PRIVATE_CLASSLESS_STATIC_ROUTE
+  | 252 -> Some WEB_PROXY_AUTO_DISC
+  | 255 -> Some END
+  | x -> Some (UNKNOWN x)
+
+let int_to_option_code_exn v = Option.get (int_to_option_code v)
+
+let option_code_to_int = function
+  | PAD -> 0
+  | SUBNET_MASK -> 1
+  | TIME_OFFSET -> 2
+  | ROUTERS -> 3
+  | TIME_SERVERS -> 4
+  | NAME_SERVERS -> 5
+  | DNS_SERVERS -> 6
+  | LOG_SERVERS -> 7
+  | COOKIE_SERVERS -> 8
+  | LPR_SERVERS -> 9
+  | IMPRESS_SERVERS -> 10
+  | RSCLOCATION_SERVERS -> 11
+  | HOSTNAME -> 12
+  | BOOTFILE_SIZE -> 13
+  | MERIT_DUMPFILE -> 14
+  | DOMAIN_NAME -> 15
+  | SWAP_SERVER -> 16
+  | ROOT_PATH -> 17
+  | EXTENSION_PATH -> 18
+  | IPFORWARDING -> 19
+  | NLSR -> 20
+  | POLICY_FILTERS -> 21
+  | MAX_DATAGRAM -> 22
+  | DEFAULT_IP_TTL -> 23
+  | PMTU_AGEING_TIMO -> 24
+  | PMTU_PLATEAU_TABLE -> 25
+  | INTERFACE_MTU -> 26
+  | ALL_SUBNETS_LOCAL -> 27
+  | BROADCAST_ADDR -> 28
+  | PERFORM_MASK_DISCOVERY -> 29
+  | MASK_SUPPLIER -> 30
+  | PERFORM_ROUTER_DISC -> 31
+  | ROUTER_SOL_ADDR -> 32
+  | STATIC_ROUTES -> 33
+  | TRAILER_ENCAPSULATION -> 34
+  | ARP_CACHE_TIMO -> 35
+  | ETHERNET_ENCAPSULATION -> 36
+  | TCP_DEFAULT_TTL -> 37
+  | TCP_KEEPALIVE_INTERVAL -> 38
+  | TCP_KEEPALIVE_GARBAGE -> 39
+  | NIS_DOMAIN -> 40
+  | NIS_SERVERS -> 41
+  | NTP_SERVERS -> 42
+  | VENDOR_SPECIFIC -> 43
+  | NETBIOS_NAME_SERVERS -> 44
+  | NETBIOS_DATAGRAM_DISTRIB_SERVERS -> 45
+  | NETBIOS_NODE -> 46
+  | NETBIOS_SCOPE -> 47
+  | XWINDOW_FONT_SERVERS -> 48
+  | XWINDOW_DISPLAY_MANAGERS -> 49
+  | REQUEST_IP -> 50
+  | IP_LEASE_TIME -> 51
+  | OPTION_OVERLOAD -> 52
+  | MESSAGE_TYPE -> 53
+  | SERVER_IDENTIFIER -> 54
+  | PARAMETER_REQUESTS -> 55
+  | MESSAGE -> 56
+  | MAX_MESSAGE -> 57
+  | RENEWAL_T1 -> 58
+  | REBINDING_T2 -> 59
+  | VENDOR_CLASS_ID -> 60
+  | CLIENT_ID -> 61
+  | NETWARE_IP_DOMAIN -> 62
+  | NETWARE_IP_OPTION -> 63
+  | NIS_PLUS_DOMAIN -> 64
+  | NIS_PLUS_SERVERS -> 65
+  | TFTP_SERVER_NAME -> 66
+  | BOOTFILE_NAME -> 67
+  | MOBILE_IP_HOME_AGENT -> 68
+  | SMTP_SERVERS -> 69
+  | POP3_SERVERS -> 70
+  | NNTP_SERVERS -> 71
+  | WWW_SERVERS -> 72
+  | FINGER_SERVERS -> 73
+  | IRC_SERVERS -> 74
+  | STREETTALK_SERVERS -> 75
+  | STREETTALK_DA -> 76
+  | USER_CLASS -> 77
+  | DIRECTORY_AGENT -> 78
+  | SERVICE_SCOPE -> 79
+  | RAPID_COMMIT -> 80
+  | CLIENT_FQDN -> 81
+  | RELAY_AGENT_INFORMATION -> 82
+  | ISNS -> 83
+  | NDS_SERVERS -> 85
+  | NDS_TREE_NAME -> 86
+  | NDS_CONTEXT -> 87
+  | BCMCS_CONTROLLER_DOMAIN_NAME_LIST -> 88
+  | BCMCS_CONTROLLER_IPV4_ADDR -> 89
+  | AUTHENTICATION -> 90
+  | CLIENT_LAST_TRANSACTION_TIME -> 91
+  | ASSOCIATED_IPS -> 92
+  | CLIENT_SYSTEM -> 93
+  | CLIENT_NDI -> 94
+  | LDAP -> 95
+  | UUID_GUID -> 97
+  | USER_AUTH -> 98
+  | GEOCONF_CIVIC -> 99
+  | PCODE -> 100
+  | TCODE -> 101
+  | NETINFO_ADDRESS -> 112
+  | NETINFO_TAG -> 113
+  | URL -> 114
+  | AUTO_CONFIG -> 116
+  | NAME_SERVICE_SEARCH -> 117
+  | SUBNET_SELECTION -> 118
+  | DOMAIN_SEARCH -> 119
+  | SIP_SERVERS -> 120
+  | CLASSLESS_STATIC_ROUTE -> 121
+  | CCC -> 122
+  | GEOCONF -> 123
+  | VI_VENDOR_CLASS -> 124
+  | VI_VENDOR_INFO -> 125
+  | PXE_128 -> 128
+  | PXE_129 -> 129
+  | PXE_130 -> 130
+  | PXE_131 -> 131
+  | PXE_132 -> 132
+  | PXE_133 -> 133
+  | PXE_134 -> 134
+  | PXE_135 -> 135
+  | PANA_AGENT -> 136
+  | V4_LOST -> 137
+  | CAPWAP_AC_V4 -> 138
+  | IPV4_ADDRESS_MOS -> 139
+  | IPV4_FQDN_MOS -> 140
+  | SIP_UA_DOMAINS -> 141
+  | IPV4_ADDRESS_ANDSF -> 142
+  | GEOLOCK -> 144
+  | FORCENEW_NONCE_CAPABLE -> 145
+  | RDNSS_SELECTION -> 146
+  | MISC_150 -> 150
+  | STATUS_CODE -> 151
+  | ABSOLUTE_TIME -> 152
+  | START_TIME_OF_STATE -> 153
+  | QUERY_START_TIME -> 154
+  | QUERY_END_TIME -> 155
+  | DHCP_STATE -> 156
+  | DATA_SOURCE -> 157
+  | V4_PCP_SERVER -> 158
+  | V4_PORTPARAMS -> 159
+  | DHCP_CAPTIVE_PORTAL -> 160
+  | ETHERBOOT_175 -> 175
+  | IP_TELEFONE -> 176
+  | ETHERBOOT_177 -> 177
+  | PXE_LINUX -> 208
+  | CONFIGURATION_FILE -> 209
+  | PATH_PREFIX -> 210
+  | REBOOT_TIME -> 211
+  | OPTION_6RD -> 212
+  | V4_ACCESS_DOMAIN -> 213
+  | SUBNET_ALLOCATION -> 220
+  | VIRTUAL_SUBNET_SELECTION -> 221
+  | PRIVATE_CLASSLESS_STATIC_ROUTE -> 249
+  | WEB_PROXY_AUTO_DISC -> 252
+  | END -> 255
+  | UNKNOWN x -> x
 
 type htype =
   | Ethernet_10mb
@@ -540,7 +843,7 @@ type dhcp_option =
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
-  | Unassigned of option_code * string      (* code * string *)
+  | Unassigned of int * string              (* code * string *)
   [@@deriving sexp]
 
 type pkt = {
@@ -1068,7 +1371,7 @@ let buf_of_options sbuf options =
     | Virtual_subnet_selection s -> put_coded_bytes 221 s buf (* code 221 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf(* code 249 *) (* XXX current, use better type *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf(* code 252 *)
-    | Unassigned (code, s) -> put_coded_bytes (option_code_to_int code) s buf (* unassigned *)
+    | Unassigned (code, s) -> put_coded_bytes code s buf (* unassigned *)
     | End -> buf (* discard, we add ourselves *)              (* code 255 *)
   in
   match options with
