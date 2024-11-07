@@ -221,11 +221,10 @@ let t_collect_replies () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "wololo";
-                Url "url";
                 Pop3_servers [ip_t; ip2_t];
                 Max_message 1200] ()
   in
-  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME;
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1]
   in
   (* RENEWAL_T1 is ignored, so replies length should be - 1 *)
@@ -236,14 +235,9 @@ let t_collect_replies () =
     | _ -> failwith "Subnet mask expected as first option"
   in
   assert ((List.length replies) = (List.length requests) - 1);
-  let () = match List.hd @@ List.rev replies with
-    | Url _ -> ()
-    | _ -> failwith "Url expected to be last"
-  in
   assert ((collect_routers replies) = [ip_t; ip2_t]);
   assert ((collect_dns_servers replies) = [ip_t]);
   assert ((find_domain_name replies) = Some "wololo");
-  assert ((find_url replies) = Some "url");
   assert ((collect_pop3_servers replies) = [ip_t; ip2_t]);
   assert ((find_max_message replies) = Some 1200)
 
@@ -259,7 +253,7 @@ let t_host_options () =
           Routers [ip5_t];
           Log_servers [ip5_t];
           Irc_servers [ip_t];   (* Won't ask must not be present *)
-          Data_source 3;        (* Won't ask must not be present *)
+          Unassigned (157, "\003");        (* Won't ask must not be present *)
         ];
       fixed_addr = None;
       hw_addr = mac_t
@@ -269,12 +263,11 @@ let t_host_options () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "wololo";
-                Url "url";
                 Pop3_servers [ip_t; ip2_t];
                 Max_message 1200]
       ()
   in
-  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+  let requests = [DNS_SERVERS; ROUTERS; DOMAIN_NAME;
                   POP3_SERVERS; SUBNET_MASK; MAX_MESSAGE; RENEWAL_T1; LOG_SERVERS]
   in
   let replies = Dhcp_server.Input.collect_replies_test config mac_t requests in
@@ -282,7 +275,7 @@ let t_host_options () =
   assert ((collect_dns_servers replies) = [ip4_t; ip_t]);
   assert ((collect_log_servers replies) = [ip5_t]);
   assert ((collect_irc_servers replies) = []);
-  assert ((find_data_source replies) = None);
+  assert ((find_unassigned 157 replies) = None);
   assert ((find_max_message replies) = (Some 1400))
 
 let discover_pkt = {
@@ -310,9 +303,9 @@ let discover_pkt = {
       Message_type DHCPDISCOVER;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ]
     ]
   }
@@ -331,9 +324,7 @@ let t_discover fixed =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -369,7 +360,7 @@ let t_discover fixed =
     assert (reply.sname = "Duder DHCP server!");
     assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
-    assert ((List.length reply.options) = (5 + 6));
+    assert ((List.length reply.options) = (5 + 5));
     let () = match List.hd reply.options with
       | Message_type x -> assert (x = DHCPOFFER);
       | _ -> failwith "First option is not Message_type"
@@ -398,9 +389,7 @@ let t_discover_no_range () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -431,9 +420,7 @@ let t_discover_no_range_fixed () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -466,7 +453,7 @@ let t_discover_no_range_fixed () =
     assert (reply.sname = "Duder DHCP server!");
     assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
-    assert ((List.length reply.options) = (5 + 6));
+    assert ((List.length reply.options) = (5 + 5));
     let () = match List.hd reply.options with
       | Message_type x -> assert (x = DHCPOFFER);
       | _ -> failwith "First option is not Message_type"
@@ -485,9 +472,7 @@ let t_bad_discover () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "The Dude";
-                Url "New shit has come to light, man.";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -516,9 +501,9 @@ let t_bad_discover () =
       Message_type DHCPDISCOVER;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ]
     ]
   }
@@ -552,9 +537,9 @@ let request_nak_pkt = {
     Message_type DHCPREQUEST;
     Client_id (Id (0, "The Dude"));
     Parameter_requests [
-      DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+      DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
       POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-      NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+      ARP_CACHE_TIMO
     ];
     Request_ip ip55_t;
     Server_identifier ip_t;
@@ -576,9 +561,7 @@ let t_request_fixed () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -607,9 +590,9 @@ let t_request_fixed () =
       Message_type DHCPREQUEST;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ];
       Request_ip ip150_t;
       Server_identifier ip_t;
@@ -648,7 +631,7 @@ let t_request_fixed () =
       assert (reply.sname = "Duder DHCP server!");
       assert (reply.file = "");
       (* 5 options are included regardless of parameter requests. *)
-      assert ((List.length reply.options) = (5 + 6));
+      assert ((List.length reply.options) = (5 + 5));
       let () = match List.hd reply.options with
         | Message_type x -> assert (x = DHCPACK);
         | _ -> failwith "First option is not Message_type"
@@ -685,9 +668,7 @@ let t_request () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -716,9 +697,9 @@ let t_request () =
       Message_type DHCPREQUEST;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ];
       Request_ip ip55_t;
       Server_identifier ip_t;
@@ -768,7 +749,7 @@ let t_request () =
       assert (reply.sname = "Duder DHCP server!");
       assert (reply.file = "");
       (* 5 options are included regardless of parameter requests. *)
-      assert ((List.length reply.options) = (5 + 6));
+      assert ((List.length reply.options) = (5 + 5));
       let () = match List.hd reply.options with
         | Message_type x -> assert (x = DHCPACK);
         | _ -> failwith "First option is not Message_type"
@@ -813,9 +794,7 @@ let t_request_no_range () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -844,9 +823,9 @@ let t_request_no_range () =
       Message_type DHCPREQUEST;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ];
       Request_ip ip55_t;
       Server_identifier ip_t;
@@ -889,9 +868,7 @@ let t_request_no_range_fixed () =
       ~options:[Routers [ip_t; ip2_t];
                 Dns_servers [ip_t];
                 Domain_name "Shut up Donnie !";
-                Url "Fucking Quintana man, that creep can roll...";
                 Pop3_servers [ip_t; ip2_t];
-                Time_servers [ip_t];
                ]
       ()
   in
@@ -920,9 +897,9 @@ let t_request_no_range_fixed () =
       Message_type DHCPREQUEST;
       Client_id (Id (0, "W.Sobchak"));
       Parameter_requests [
-        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME; URL;
+        DNS_SERVERS; NIS_SERVERS; ROUTERS; DOMAIN_NAME;
         POP3_SERVERS; SUBNET_MASK; DEFAULT_IP_TTL;
-        NETWARE_IP_DOMAIN; ARP_CACHE_TIMO
+        ARP_CACHE_TIMO
       ];
       Request_ip ip150_t;
       Server_identifier ip_t;
@@ -961,7 +938,7 @@ let t_request_no_range_fixed () =
     assert (reply.sname = "Duder DHCP server!");
     assert (reply.file = "");
     (* 5 options are included regardless of parameter requests. *)
-    assert ((List.length reply.options) = (5 + 6));
+    assert ((List.length reply.options) = (5 + 5));
     let () = match List.hd reply.options with
       | Message_type x -> assert (x = DHCPACK);
       | _ -> failwith "First option is not Message_type"

@@ -501,18 +501,11 @@ module Input = struct
       | SUBNET_MASK -> s find_subnet_mask (fun x -> Subnet_mask x)
       | TIME_OFFSET -> s find_time_offset (fun x -> Time_offset x)
       | ROUTERS -> m collect_routers (fun x -> Routers x)
-      | TIME_SERVERS -> m collect_time_servers (fun x -> Time_servers x)
-      | NAME_SERVERS -> m collect_name_servers (fun x -> Name_servers x)
       | DNS_SERVERS -> m collect_dns_servers (fun x -> Dns_servers x)
       | LOG_SERVERS -> m collect_log_servers (fun x -> Log_servers x)
-      | COOKIE_SERVERS -> m collect_cookie_servers (fun x -> Cookie_servers x)
       | LPR_SERVERS -> m collect_lpr_servers (fun x -> Lpr_servers x)
-      | IMPRESS_SERVERS -> m collect_impress_servers (fun x -> Impress_servers x)
-      | RSCLOCATION_SERVERS ->
-        m collect_rsc_location_servers (fun x -> Rsclocation_servers x)
       | HOSTNAME -> s find_hostname (fun x -> Hostname x)
       | BOOTFILE_SIZE -> s find_bootfile_size (fun x -> Bootfile_size x)
-      | MERIT_DUMPFILE -> s find_merit_dumpfile (fun x -> Merit_dumpfile x)
       | DOMAIN_NAME -> s find_domain_name (fun x -> Domain_name x)
       | SWAP_SERVER -> s find_swap_server (fun x -> Swap_server x)
       | ROOT_PATH -> s find_root_path (fun x -> Root_path x)
@@ -522,15 +515,9 @@ module Input = struct
       | POLICY_FILTERS -> m collect_policy_filters (fun x -> Policy_filters x)
       | MAX_DATAGRAM -> s find_max_datagram (fun x -> Max_datagram x)
       | DEFAULT_IP_TTL -> s find_default_ip_ttl (fun x -> Default_ip_ttl x)
-      | PMTU_AGEING_TIMO -> s find_pmtu_ageing_timo (fun x -> Pmtu_ageing_timo x)
-      | PMTU_PLATEAU_TABLE ->
-        s find_pmtu_plateau_table (fun x -> Pmtu_plateau_table x)
       | INTERFACE_MTU -> s find_interface_mtu (fun x -> Interface_mtu x)
       | ALL_SUBNETS_LOCAL -> s find_all_subnets_local (fun x -> All_subnets_local x)
       | BROADCAST_ADDR -> s find_broadcast_addr (fun x -> Broadcast_addr x)
-      | PERFORM_MASK_DISCOVERY ->
-        s find_perform_mask_discovery (fun x -> Perform_router_disc x)
-      | MASK_SUPPLIER -> s find_mask_supplier (fun x -> Mask_supplier x)
       | PERFORM_ROUTER_DISC ->
         s find_perform_router_disc (fun x -> Perform_router_disc x)
       | ROUTER_SOL_ADDR -> s find_router_sol_addr (fun x -> Router_sol_addr x)
@@ -543,8 +530,6 @@ module Input = struct
       | TCP_DEFAULT_TTL -> s find_tcp_default_ttl (fun x -> Tcp_default_ttl x)
       | TCP_KEEPALIVE_INTERVAL ->
         s find_tcp_keepalive_interval (fun x -> Tcp_keepalive_interval x)
-      | TCP_KEEPALIVE_GARBAGE ->
-        s find_tcp_keepalive_garbage (fun x -> Tcp_keepalive_garbage x)
       | NIS_DOMAIN -> s find_nis_domain (fun x -> Nis_domain x)
       | NIS_SERVERS -> m collect_nis_servers (fun x -> Nis_servers x)
       | NTP_SERVERS -> m collect_ntp_servers (fun x -> Ntp_servers x)
@@ -572,10 +557,6 @@ module Input = struct
       | REBINDING_T2 -> None (* Previously included *)
       | VENDOR_CLASS_ID -> s find_vendor_class_id (fun x -> Vendor_class_id x)
       | CLIENT_ID -> None (* Senseless *)
-      | NETWARE_IP_DOMAIN ->
-        s find_netware_ip_domain (fun x -> Netware_ip_domain x)
-      | NETWARE_IP_OPTION ->
-        s find_netware_ip_option (fun x -> Netware_ip_option x)
       | NIS_PLUS_DOMAIN -> s find_nis_plus_domain (fun x -> Nis_plus_domain x)
       | NIS_PLUS_SERVERS ->
         m collect_nis_plus_servers (fun x -> Nis_plus_servers x)
@@ -586,105 +567,25 @@ module Input = struct
       | SMTP_SERVERS -> m collect_smtp_servers (fun x -> Smtp_servers x)
       | POP3_SERVERS -> m collect_pop3_servers (fun x -> Pop3_servers x)
       | NNTP_SERVERS -> m collect_nntp_servers (fun x -> Nntp_servers x)
-      | WWW_SERVERS -> m collect_www_servers (fun x -> Www_servers x)
-      | FINGER_SERVERS -> m collect_finger_servers (fun x -> Finger_servers x)
       | IRC_SERVERS -> m collect_irc_servers (fun x -> Irc_servers x)
-      | STREETTALK_SERVERS ->
-        m collect_streettalk_servers (fun x -> Streettalk_servers x)
-      | STREETTALK_DA ->
-        m collect_streettalk_da (fun x -> Streettalk_da x)
       | USER_CLASS -> s find_user_class (fun x -> User_class x)
-      | DIRECTORY_AGENT -> s find_directory_agent (fun x -> Directory_agent x)
-      | SERVICE_SCOPE -> s find_service_scope (fun x -> Service_scope x)
       | RAPID_COMMIT -> s find_rapid_commit (fun _ -> Rapid_commit)
       | CLIENT_FQDN -> s find_client_fqdn (fun x -> Client_fqdn x)
       | RELAY_AGENT_INFORMATION ->
         s find_relay_agent_information (fun x -> Relay_agent_information x)
-      | ISNS -> s find_isns (fun x -> Isns x)
-      | NDS_SERVERS -> s find_nds_servers (fun x -> Nds_servers x)
-      | NDS_TREE_NAME -> s find_nds_tree_name (fun x -> Nds_tree_name x)
-      | NDS_CONTEXT -> s find_nds_context (fun x -> Nds_context x)
-      | BCMCS_CONTROLLER_DOMAIN_NAME_LIST ->
-        s find_bcmcs_controller_domain_name
-          (fun x -> Bcmcs_controller_domain_name_list x)
-      | BCMCS_CONTROLLER_IPV4_ADDR ->
-        m collect_bcmcs_controller_ipv4_addrs
-          (fun x -> Bcmcs_controller_ipv4_addrs x)
-      | AUTHENTICATION -> s find_authentication (fun x -> Authentication x)
-      | CLIENT_LAST_TRANSACTION_TIME ->
-        s find_client_last_transaction_time
-          (fun x -> Client_last_transaction_time x)
-      | ASSOCIATED_IPS -> m collect_associated_ips (fun x -> Associated_ips x)
       | CLIENT_SYSTEM -> s find_client_system (fun x -> Client_system x)
       | CLIENT_NDI -> s find_client_ndi (fun x -> Client_ndi x)
-      | LDAP -> s find_ldap (fun x -> Ldap x)
       | UUID_GUID -> s find_uuid_guid (fun x -> Uuid_guid x)
-      | USER_AUTH -> s find_user_auth (fun x -> User_auth x)
-      | GEOCONF_CIVIC -> s find_geoconf_civic (fun x -> Geoconf_civic x)
       | PCODE -> s find_pcode (fun x -> Pcode x)
       | TCODE -> s find_tcode (fun x -> Tcode x)
-      | NETINFO_ADDRESS -> s find_netinfo_address (fun x -> Netinfo_address x)
-      | NETINFO_TAG -> s find_netinfo_tag (fun x -> Netinfo_tag x)
-      | URL -> s find_url (fun x -> Url x)
-      | AUTO_CONFIG -> s find_auto_config (fun x -> Auto_config x)
-      | NAME_SERVICE_SEARCH ->
-        s find_name_service_search (fun x -> Name_service_search x)
+      | IPV6ONLY -> s find_ipv6only (fun x -> IPv6_only x)
       | SUBNET_SELECTION -> s find_subnet_selection (fun x -> Subnet_selection x)
       | DOMAIN_SEARCH -> s find_domain_search (fun x -> Domain_search x)
       | SIP_SERVERS -> s find_sip_servers (fun x -> Sip_servers x)
       | CLASSLESS_STATIC_ROUTE ->
         s find_classless_static_route (fun x -> Classless_static_route x)
-      | CCC -> s find_ccc (fun x -> Ccc x)
-      | GEOCONF -> s find_geoconf (fun x -> Geoconf x)
-      | VI_VENDOR_CLASS -> s find_vi_vendor_class (fun x -> Vi_vendor_class x)
       | VI_VENDOR_INFO -> s find_vi_vendor_info (fun x -> Vi_vendor_info x)
-      | PXE_128 -> s find_pxe_128 (fun x -> Pxe_128 x)
-      | PXE_129 -> s find_pxe_129 (fun x -> Pxe_129 x)
-      | PXE_130 -> s find_pxe_130 (fun x -> Pxe_130 x)
-      | PXE_131 -> s find_pxe_131 (fun x -> Pxe_131 x)
-      | PXE_132 -> s find_pxe_132 (fun x -> Pxe_132 x)
-      | PXE_133 -> s find_pxe_133 (fun x -> Pxe_133 x)
-      | PXE_134 -> s find_pxe_134 (fun x -> Pxe_134 x)
-      | PXE_135 -> s find_pxe_135 (fun x -> Pxe_135 x)
-      | PANA_AGENT -> s find_pana_agent (fun x -> Pana_agent x)
-      | V4_LOST -> s find_v4_lost (fun x -> V4_lost x)
-      | CAPWAP_AC_V4 -> s find_capwap_ac_v4 (fun x -> Capwap_ac_v4 x)
-      | IPV4_ADDRESS_MOS -> s find_ipv4_address_mos (fun x -> Ipv4_address_mos x)
-      | IPV4_FQDN_MOS -> s find_ipv4_fqdn_mos (fun x -> Ipv4_fqdn_mos x)
-      | SIP_UA_DOMAINS -> s find_sip_ua_domains (fun x -> Sip_ua_domains x)
-      | IPV4_ADDRESS_ANDSF ->
-        s find_ipv4_address_andsf (fun x -> Ipv4_address_andsf x)
-      | GEOLOCK -> s find_geolock (fun x -> Geolock x)
-      | FORCENEW_NONCE_CAPABLE ->
-        s find_forcenew_nonce_capable (fun x -> Forcenew_nonce_capable x)
-      | RDNSS_SELECTION -> s find_rdnss_selection (fun x -> Rdnss_selection x)
       | MISC_150 -> s find_misc_150 (fun x -> Misc_150 x)
-      | STATUS_CODE -> s find_status_code (fun x -> Status_code x)
-      | ABSOLUTE_TIME -> s find_absolute_time (fun x -> Absolute_time x)
-      | START_TIME_OF_STATE ->
-        s find_start_time_of_state (fun x -> Start_time_of_state x)
-      | QUERY_START_TIME -> s find_query_end_time (fun x -> Query_start_time x)
-      | QUERY_END_TIME -> s find_query_end_time (fun x -> Query_end_time x)
-      | DHCP_STATE -> s find_dhcp_state (fun x -> Dhcp_state x)
-      | DATA_SOURCE -> s find_data_source (fun x -> Data_source x)
-      | V4_PCP_SERVER -> s find_v4_pcp_server (fun x -> V4_pcp_server x)
-      | V4_PORTPARAMS -> s find_v4_portparams (fun x -> V4_portparams x)
-      | DHCP_CAPTIVE_PORTAL ->
-        s find_dhcp_captive_portal (fun x -> Dhcp_captive_portal x)
-      | ETHERBOOT_175 -> s find_etherboot_175 (fun x -> Etherboot_175 x)
-      | IP_TELEFONE -> s find_ip_telefone (fun x -> Ip_telefone x)
-      | ETHERBOOT_177 -> s find_etherboot_177 (fun x -> Etherboot_177 x)
-      | PXE_LINUX -> s find_pxe_linux (fun x -> Pxe_linux x)
-      | CONFIGURATION_FILE ->
-        s find_configuration_file (fun x -> Configuration_file x)
-      | PATH_PREFIX -> s find_path_prefix (fun x -> Path_prefix x)
-      | REBOOT_TIME -> s find_reboot_time (fun x -> Reboot_time x)
-      | OPTION_6RD -> s find_option_6rd (fun x -> Option_6rd x)
-      | V4_ACCESS_DOMAIN -> s find_v4_access_domain (fun x -> V4_access_domain x)
-      | SUBNET_ALLOCATION ->
-        s find_subnet_allocation (fun x -> Subnet_allocation x)
-      | VIRTUAL_SUBNET_SELECTION ->
-        s find_virtual_subnet_selection (fun x -> Virtual_subnet_selection x)
       | WEB_PROXY_AUTO_DISC ->
         s find_web_proxy_auto_disc (fun x -> Web_proxy_auto_disc x)
       | PRIVATE_CLASSLESS_STATIC_ROUTE ->
