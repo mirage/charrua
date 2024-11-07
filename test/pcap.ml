@@ -21,8 +21,7 @@ let printf = Printf.printf
 
 let verbose = (Array.length Sys.argv) = 2 && Sys.argv.(1) = "-v"
 
-[%%cstruct
-type pcap_header = {
+(*type pcap_header = {
   magic_number:  uint32_t;  (* magic number *)
   version_major: uint16_t;  (* major version number *)
   version_minor: uint16_t;  (* minor version number *)
@@ -30,15 +29,51 @@ type pcap_header = {
   sigfigs:       uint32_t;  (* accuracy of timestamps *)
   snaplen:       uint32_t;  (* max length of captured packets, in octets *)
   network:       uint32_t;  (* data link type *)
-} [@@little_endian]]
+  } *)
 
-[%%cstruct
-type pcap_packet = {
+let get_pcap_header_magic_number cs =
+  Cstruct.LE.get_uint32 cs 0
+
+let get_pcap_header_version_major cs =
+  Cstruct.LE.get_uint16 cs 4
+
+let get_pcap_header_version_minor cs =
+  Cstruct.LE.get_uint16 cs 6
+
+let get_pcap_header_thiszone cs =
+  Cstruct.LE.get_uint32 cs 8
+
+let get_pcap_header_sigfigs cs =
+  Cstruct.LE.get_uint32 cs 12
+
+let get_pcap_header_snaplen cs =
+  Cstruct.LE.get_uint32 cs 16
+
+let get_pcap_header_network cs =
+  Cstruct.LE.get_uint32 cs 20
+
+let sizeof_pcap_header = 24
+
+(* type pcap_packet = {
   ts_sec:  uint32_t;  (* timestamp seconds *)
   ts_usec:  uint32_t; (* timestamp microseconds *)
   incl_len: uint32_t; (* number of octets of packet saved in file *)
   orig_len: uint32_t; (* actual length of packet *)
-} [@@little_endian]]
+   } *)
+
+let get_pcap_packet_ts_sec cs =
+  Cstruct.LE.get_uint32 cs 0
+
+let get_pcap_packet_ts_usec cs =
+  Cstruct.LE.get_uint32 cs 4
+
+let get_pcap_packet_incl_len cs =
+  Cstruct.LE.get_uint32 cs 8
+
+let get_pcap_packet_orig_len cs =
+  Cstruct.LE.get_uint32 cs 12
+
+let sizeof_pcap_packet = 16
 
 let test_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with

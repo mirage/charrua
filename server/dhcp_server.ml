@@ -442,7 +442,7 @@ module Input = struct
             (reqpkt.srcmac, yiaddr)
           else
             (Macaddr.broadcast, Ipaddr.V4.broadcast)
-        | _ -> invalid_arg ("Can't send message type " ^ (msgtype_to_string m))
+        | _ -> invalid_arg ("Can't send message type " ^ string_of_int (msgtype_to_int m))
     in
     let srcip = config.ip_addr in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
@@ -689,32 +689,7 @@ module Input = struct
         s find_web_proxy_auto_disc (fun x -> Web_proxy_auto_disc x)
       | PRIVATE_CLASSLESS_STATIC_ROUTE ->
         s find_private_classless_static_route (fun x -> Private_classless_static_route x)
-      | UNASSIGNED_84  | UNASSIGNED_96  | UNASSIGNED_102 | UNASSIGNED_103
-      | UNASSIGNED_104 | UNASSIGNED_105 | UNASSIGNED_106 | UNASSIGNED_107
-      | UNASSIGNED_108 | UNASSIGNED_109 | UNASSIGNED_110 | UNASSIGNED_111
-      | UNASSIGNED_115 | UNASSIGNED_126 | UNASSIGNED_127 | UNASSIGNED_143
-      | UNASSIGNED_147 | UNASSIGNED_148 | UNASSIGNED_149 | UNASSIGNED_161
-      | UNASSIGNED_162 | UNASSIGNED_163 | UNASSIGNED_164 | UNASSIGNED_165
-      | UNASSIGNED_166 | UNASSIGNED_167 | UNASSIGNED_168 | UNASSIGNED_169
-      | UNASSIGNED_170 | UNASSIGNED_171 | UNASSIGNED_172 | UNASSIGNED_173
-      | UNASSIGNED_174 | UNASSIGNED_178 | UNASSIGNED_179 | UNASSIGNED_180
-      | UNASSIGNED_181 | UNASSIGNED_182 | UNASSIGNED_183 | UNASSIGNED_184
-      | UNASSIGNED_185 | UNASSIGNED_186 | UNASSIGNED_187 | UNASSIGNED_188
-      | UNASSIGNED_189 | UNASSIGNED_190 | UNASSIGNED_191 | UNASSIGNED_192
-      | UNASSIGNED_193 | UNASSIGNED_194 | UNASSIGNED_195 | UNASSIGNED_196
-      | UNASSIGNED_197 | UNASSIGNED_198 | UNASSIGNED_199 | UNASSIGNED_200
-      | UNASSIGNED_201 | UNASSIGNED_202 | UNASSIGNED_203 | UNASSIGNED_204
-      | UNASSIGNED_205 | UNASSIGNED_206 | UNASSIGNED_207 | UNASSIGNED_214
-      | UNASSIGNED_215 | UNASSIGNED_216 | UNASSIGNED_217 | UNASSIGNED_218
-      | UNASSIGNED_219 | UNASSIGNED_222 | UNASSIGNED_223 | RESERVED_224
-      | RESERVED_225   | RESERVED_226   | RESERVED_227   | RESERVED_228
-      | RESERVED_229   | RESERVED_230   | RESERVED_231   | RESERVED_232
-      | RESERVED_233   | RESERVED_234   | RESERVED_235   | RESERVED_236
-      | RESERVED_237   | RESERVED_238   | RESERVED_239   | RESERVED_240
-      | RESERVED_241   | RESERVED_242   | RESERVED_243   | RESERVED_244
-      | RESERVED_245   | RESERVED_246   | RESERVED_247   | RESERVED_248
-      | RESERVED_250   | RESERVED_251   | RESERVED_253   | RESERVED_254
-      as code ->
+      | UNKNOWN code ->
         find_option
           (function Unassigned (c, _s) as u when c = code -> Some u | _ -> None)
           unassigned_options
@@ -731,7 +706,7 @@ module Input = struct
 
   let input_decline config db pkt now =
     let msgtype = match find_message_type pkt.options with
-      | Some msgtype -> msgtype_to_string msgtype
+      | Some msgtype -> string_of_int (msgtype_to_int msgtype)
       | None -> failwith "Unexpected message type"
     in
     let ourip = config.ip_addr in
@@ -760,7 +735,7 @@ module Input = struct
 
   let input_release config db pkt now =
     let msgtype = match find_message_type pkt.options with
-      | Some msgtype -> msgtype_to_string msgtype
+      | Some msgtype -> string_of_int (msgtype_to_int msgtype)
       | None -> failwith "Unexpected message type"
     in
     let ourip = config.ip_addr in
@@ -973,7 +948,7 @@ module Input = struct
         | Some DHCPRELEASE  -> input_release config db pkt time
         | Some DHCPINFORM   -> input_inform config db pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
-        | Some m -> Warning ("Unhandled msgtype " ^ (msgtype_to_string m))
+        | Some m -> Warning ("Unhandled msgtype " ^ string_of_int (msgtype_to_int m))
       else
         bad_packet "Invalid packet"
     with

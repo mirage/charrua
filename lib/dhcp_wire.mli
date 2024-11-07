@@ -35,9 +35,6 @@ val int_to_op_exn : int -> op
 (** @raise Invalid_argument if [v < 0 || v > 255]  *)
 val op_to_int : op -> int
 
-val string_to_op : string -> op option
-val op_to_string : op -> string
-
 val sexp_of_op : op -> Sexplib.Sexp.t
 val op_of_sexp : Sexplib.Sexp.t -> op
 
@@ -66,9 +63,6 @@ val msgtype_to_int : msgtype -> int
 val int_to_msgtype : int -> msgtype option
 val int_to_msgtype_exn : int -> msgtype
 (** @raise Invalid_argument if not a valid {! msgtype} value *)
-
-val string_to_msgtype : string -> msgtype option
-val msgtype_to_string : msgtype -> string
 
 val sexp_of_msgtype : msgtype -> Sexplib.Sexp.t
 val msgtype_of_sexp : Sexplib.Sexp.t -> msgtype
@@ -160,7 +154,6 @@ type option_code =
   | CLIENT_FQDN
   | RELAY_AGENT_INFORMATION
   | ISNS
-  | UNASSIGNED_84
   | NDS_SERVERS
   | NDS_TREE_NAME
   | NDS_CONTEXT
@@ -172,26 +165,14 @@ type option_code =
   | CLIENT_SYSTEM
   | CLIENT_NDI
   | LDAP
-  | UNASSIGNED_96
   | UUID_GUID
   | USER_AUTH
   | GEOCONF_CIVIC
   | PCODE
   | TCODE
-  | UNASSIGNED_102
-  | UNASSIGNED_103
-  | UNASSIGNED_104
-  | UNASSIGNED_105
-  | UNASSIGNED_106
-  | UNASSIGNED_107
-  | UNASSIGNED_108
-  | UNASSIGNED_109
-  | UNASSIGNED_110
-  | UNASSIGNED_111
   | NETINFO_ADDRESS
   | NETINFO_TAG
   | URL
-  | UNASSIGNED_115
   | AUTO_CONFIG
   | NAME_SERVICE_SEARCH
   | SUBNET_SELECTION
@@ -202,8 +183,6 @@ type option_code =
   | GEOCONF
   | VI_VENDOR_CLASS
   | VI_VENDOR_INFO
-  | UNASSIGNED_126
-  | UNASSIGNED_127
   | PXE_128
   | PXE_129
   | PXE_130
@@ -219,13 +198,9 @@ type option_code =
   | IPV4_FQDN_MOS
   | SIP_UA_DOMAINS
   | IPV4_ADDRESS_ANDSF
-  | UNASSIGNED_143
   | GEOLOCK
   | FORCENEW_NONCE_CAPABLE
   | RDNSS_SELECTION
-  | UNASSIGNED_147
-  | UNASSIGNED_148
-  | UNASSIGNED_149
   | MISC_150
   | STATUS_CODE
   | ABSOLUTE_TIME
@@ -237,104 +212,24 @@ type option_code =
   | V4_PCP_SERVER
   | V4_PORTPARAMS
   | DHCP_CAPTIVE_PORTAL
-  | UNASSIGNED_161
-  | UNASSIGNED_162
-  | UNASSIGNED_163
-  | UNASSIGNED_164
-  | UNASSIGNED_165
-  | UNASSIGNED_166
-  | UNASSIGNED_167
-  | UNASSIGNED_168
-  | UNASSIGNED_169
-  | UNASSIGNED_170
-  | UNASSIGNED_171
-  | UNASSIGNED_172
-  | UNASSIGNED_173
-  | UNASSIGNED_174
   | ETHERBOOT_175
   | IP_TELEFONE
   | ETHERBOOT_177
-  | UNASSIGNED_178
-  | UNASSIGNED_179
-  | UNASSIGNED_180
-  | UNASSIGNED_181
-  | UNASSIGNED_182
-  | UNASSIGNED_183
-  | UNASSIGNED_184
-  | UNASSIGNED_185
-  | UNASSIGNED_186
-  | UNASSIGNED_187
-  | UNASSIGNED_188
-  | UNASSIGNED_189
-  | UNASSIGNED_190
-  | UNASSIGNED_191
-  | UNASSIGNED_192
-  | UNASSIGNED_193
-  | UNASSIGNED_194
-  | UNASSIGNED_195
-  | UNASSIGNED_196
-  | UNASSIGNED_197
-  | UNASSIGNED_198
-  | UNASSIGNED_199
-  | UNASSIGNED_200
-  | UNASSIGNED_201
-  | UNASSIGNED_202
-  | UNASSIGNED_203
-  | UNASSIGNED_204
-  | UNASSIGNED_205
-  | UNASSIGNED_206
-  | UNASSIGNED_207
   | PXE_LINUX
   | CONFIGURATION_FILE
   | PATH_PREFIX
   | REBOOT_TIME
   | OPTION_6RD
   | V4_ACCESS_DOMAIN
-  | UNASSIGNED_214
-  | UNASSIGNED_215
-  | UNASSIGNED_216
-  | UNASSIGNED_217
-  | UNASSIGNED_218
-  | UNASSIGNED_219
   | SUBNET_ALLOCATION
   | VIRTUAL_SUBNET_SELECTION
-  | UNASSIGNED_222
-  | UNASSIGNED_223
-  | RESERVED_224
-  | RESERVED_225
-  | RESERVED_226
-  | RESERVED_227
-  | RESERVED_228
-  | RESERVED_229
-  | RESERVED_230
-  | RESERVED_231
-  | RESERVED_232
-  | RESERVED_233
-  | RESERVED_234
-  | RESERVED_235
-  | RESERVED_236
-  | RESERVED_237
-  | RESERVED_238
-  | RESERVED_239
-  | RESERVED_240
-  | RESERVED_241
-  | RESERVED_242
-  | RESERVED_243
-  | RESERVED_244
-  | RESERVED_245
-  | RESERVED_246
-  | RESERVED_247
-  | RESERVED_248
   | PRIVATE_CLASSLESS_STATIC_ROUTE
-  | RESERVED_250
-  | RESERVED_251
   | WEB_PROXY_AUTO_DISC
-  | RESERVED_253
-  | RESERVED_254
   | END
+  | UNKNOWN of int
 (** The type of a dhcp parameter request, these are all the values according to
     {{:https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml}iana}
-*) 
+*)
 
 (** Conversions of DHCP {! option_code}s. *)
 
@@ -344,9 +239,6 @@ val option_code_to_int : option_code -> int
 
 val sexp_of_option_code : option_code -> Sexplib.Sexp.t
 val option_code_of_sexp : Sexplib.Sexp.t -> option_code
-
-val string_to_option_code : string -> option_code option
-val option_code_to_string : option_code -> string
 
 (** {2 DHCP hardware type} *)
 
@@ -544,7 +436,7 @@ type dhcp_option =
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
-  | Unassigned of option_code * string      (* code * string *)
+  | Unassigned of int * string              (* int * string *)
   [@@deriving sexp]
 (** Not all options are currently implemented. *)
 
@@ -721,8 +613,8 @@ val find_vi_vendor_class : dhcp_option list -> string option
 val find_vi_vendor_info : dhcp_option list -> string option
 val find_virtual_subnet_selection : dhcp_option list -> string option
 val find_web_proxy_auto_disc : dhcp_option list -> string option
-val find_unassigned : option_code -> dhcp_option list -> (option_code * string) option
-val collect_unassigned : option_code -> dhcp_option list -> (option_code * string) list
+val find_unassigned : int -> dhcp_option list -> (int * string) option
+val collect_unassigned : int -> dhcp_option list -> (int * string) list
 
 (** {2 DHCP Packet - fixed-length fields, plus a variable-length list of options} *)
 
