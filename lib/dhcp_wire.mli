@@ -149,7 +149,7 @@ type option_code =
   | PRIVATE_CLASSLESS_STATIC_ROUTE
   | WEB_PROXY_AUTO_DISC
   | END
-  | UNKNOWN of int
+  | OTHER of int
 (** The type of a dhcp parameter request, these are all the values according to
     {{:https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml}iana}
 *)
@@ -282,7 +282,7 @@ type dhcp_option =
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
-  | Unassigned of int * string              (* int * string *)
+  | Other of int * string              (* int * string *)
   [@@deriving sexp]
 (** Not all options are currently implemented. *)
 
@@ -382,8 +382,8 @@ val find_vendor_specific : dhcp_option list -> string option
 val find_vi_vendor_info : dhcp_option list -> string option
 val find_web_proxy_auto_disc : dhcp_option list -> string option
 val find_private_classless_static_route : dhcp_option list -> string option
-val find_unassigned : int -> dhcp_option list -> (int * string) option
-val collect_unassigned : int -> dhcp_option list -> (int * string) list
+val find_other : int -> dhcp_option list -> (int * string) option
+val collect_other : int -> dhcp_option list -> (int * string) list
 
 (** {2 DHCP Packet - fixed-length fields, plus a variable-length list of options} *)
 

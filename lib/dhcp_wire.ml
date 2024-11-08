@@ -275,7 +275,7 @@ type option_code =
   | PRIVATE_CLASSLESS_STATIC_ROUTE [@id 249]
   | WEB_PROXY_AUTO_DISC [@id 252]
   | END [@id 255]
-  | UNKNOWN of int [@@deriving sexp]
+  | OTHER of int [@@deriving sexp]
 
 let int_to_option_code = function
   | 0 -> Some PAD
@@ -357,7 +357,7 @@ let int_to_option_code = function
   | 249 -> Some PRIVATE_CLASSLESS_STATIC_ROUTE
   | 252 -> Some WEB_PROXY_AUTO_DISC
   | 255 -> Some END
-  | x -> Some (UNKNOWN x)
+  | x -> Some (OTHER x)
 
 let int_to_option_code_exn v = Option.get (int_to_option_code v)
 
@@ -441,7 +441,7 @@ let option_code_to_int = function
   | PRIVATE_CLASSLESS_STATIC_ROUTE -> 249
   | WEB_PROXY_AUTO_DISC -> 252
   | END -> 255
-  | UNKNOWN x -> x
+  | OTHER x -> x
 
 type htype =
   | Ethernet_10mb
@@ -535,7 +535,7 @@ type dhcp_option =
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
-  | Unassigned of int * string              (* code * string *)
+  | Other of int * string              (* code * string *)
   [@@deriving sexp]
 
 type pkt = {
@@ -899,7 +899,7 @@ let buf_of_options sbuf options =
     | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf (* code 252 *)
-    | Unassigned (code, s) -> put_coded_bytes code s buf (* unassigned *)
+    | Other (code, s) -> put_coded_bytes code s buf (* unassigned *)
     | End -> buf (* discard, we add ourselves *)              (* code 255 *)
   in
   match options with
@@ -1251,7 +1251,7 @@ let find_web_proxy_auto_disc =
   find_option (function Web_proxy_auto_disc x -> Some x | _ -> None)
 let find_private_classless_static_route =
   find_option (function Private_classless_static_route x -> Some x | _ -> None)
-let find_unassigned code =
-  find_option (function Unassigned (c, s) when c = code -> Some (c, s) | _ -> None)
-let collect_unassigned code =
-  collect_options (function Unassigned (c, s) when c = code -> Some [(c, s)] | _ -> None)
+let find_other code =
+  find_option (function Other (c, s) when c = code -> Some (c, s) | _ -> None)
+let collect_other code =
+  collect_options (function Other (c, s) when c = code -> Some [(c, s)] | _ -> None)
