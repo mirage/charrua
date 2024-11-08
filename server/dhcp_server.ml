@@ -482,7 +482,7 @@ module Input = struct
         preqs
     in
     let unassigned_options =
-      List.filter (function Unassigned (_ ,_) -> true | _ -> false)
+      List.filter (function Other (_ ,_) -> true | _ -> false)
         options
     in
     (* matches multiple options *)
@@ -590,9 +590,9 @@ module Input = struct
         s find_web_proxy_auto_disc (fun x -> Web_proxy_auto_disc x)
       | PRIVATE_CLASSLESS_STATIC_ROUTE ->
         s find_private_classless_static_route (fun x -> Private_classless_static_route x)
-      | UNKNOWN code ->
+      | OTHER code ->
         find_option
-          (function Unassigned (c, _s) as u when c = code -> Some u | _ -> None)
+          (function Other (c, _s) as u when c = code -> Some u | _ -> None)
           unassigned_options
       | PAD | END -> None       (* Senseless *)
     in

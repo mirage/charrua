@@ -253,7 +253,7 @@ let t_host_options () =
           Routers [ip5_t];
           Log_servers [ip5_t];
           Irc_servers [ip_t];   (* Won't ask must not be present *)
-          Unassigned (157, "\003");        (* Won't ask must not be present *)
+          Other (157, "\003");        (* Won't ask must not be present *)
         ];
       fixed_addr = None;
       hw_addr = mac_t
@@ -275,7 +275,7 @@ let t_host_options () =
   assert ((collect_dns_servers replies) = [ip4_t; ip_t]);
   assert ((collect_log_servers replies) = [ip5_t]);
   assert ((collect_irc_servers replies) = []);
-  assert ((find_unassigned 157 replies) = None);
+  assert ((find_other 157 replies) = None);
   assert ((find_max_message replies) = (Some 1400))
 
 let discover_pkt = {
