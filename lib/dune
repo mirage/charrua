@@ -1,6 +1,4 @@
 (library
  (name dhcp_wire)
  (public_name charrua)
- (preprocess (pps ppx_sexp_conv))
- (libraries cstruct ethernet sexplib tcpip.ipv4 tcpip.udp ipaddr ipaddr-sexp
-            macaddr macaddr-sexp))
+ (libraries cstruct ethernet tcpip.ipv4 tcpip.udp ipaddr macaddr fmt ohex))

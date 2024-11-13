@@ -30,7 +30,7 @@ module Config : sig
     options : Dhcp_wire.dhcp_option list;
     fixed_addr : Ipaddr.V4.t option;
     hw_addr : Macaddr.t;
-  } [@@deriving sexp]
+  }
   (** {! host} config section entry. *)
 
   type t = {
@@ -43,7 +43,7 @@ module Config : sig
     network : Ipaddr.V4.Prefix.t;
     range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
     hosts : host list;
-  } [@@deriving sexp]
+  }
   (** Server configuration *)
 
   val parse : string -> (Ipaddr.V4.t * Macaddr.t) -> t
@@ -75,7 +75,7 @@ module Lease : sig
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
-  } [@@deriving sexp]
+  }
 
   val make : Dhcp_wire.client_id -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
   val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t

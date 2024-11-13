@@ -64,14 +64,17 @@ let default_requests =
 
 (* a pretty-printer for the client, useful for debugging and logging. *)
 let pp fmt p =
-  let pr = Dhcp_wire.pkt_to_string in
   let pp_state fmt = function
-    | Selecting pkt -> Format.fprintf fmt "SELECTING.  Generated %s" @@ pr pkt
-    | Requesting (received, sent) -> Format.fprintf fmt
-        "REQUESTING. Received %s, and generated response %s" (pr received) (pr sent)
-    | Bound pkt -> Format.fprintf fmt "BOUND.  Received %s" @@ pr pkt
-    | Renewing (ack, request) -> Format.fprintf fmt
-        "RENEWING.  Have lease %s, generated request %s" (pr ack) (pr request)
+    | Selecting pkt -> Format.fprintf fmt "SELECTING.  Generated %a" Dhcp_wire.pp_pkt pkt
+    | Requesting (received, sent) ->
+      Format.fprintf fmt
+        "REQUESTING. Received %a, and generated response %a"
+        Dhcp_wire.pp_pkt received Dhcp_wire.pp_pkt sent
+    | Bound pkt -> Format.fprintf fmt "BOUND.  Received %a" Dhcp_wire.pp_pkt pkt
+    | Renewing (ack, request) ->
+      Format.fprintf fmt
+        "RENEWING.  Have lease %a, generated request %a"
+        Dhcp_wire.pp_pkt ack Dhcp_wire.pp_pkt request
   in
   Format.fprintf fmt "%a: %a" Macaddr.pp p.srcmac pp_state p.state
 

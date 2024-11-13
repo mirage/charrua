@@ -4,4 +4,4 @@
  (public_name charruad)
  (package charrua-unix)
  (libraries charrua charrua-server lwt.unix cstruct-lwt cstruct-unix cmdliner
-   ipaddr tuntap rawlink-lwt mtime.clock.os lwt_log duration))
+   ipaddr tuntap rawlink-lwt mtime.clock.os logs duration lwt_log fmt.cli fmt.tty logs.fmt logs.cli))

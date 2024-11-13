@@ -15,9 +15,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-open Sexplib.Conv
-open Sexplib.Std
-
 let ( let* ) = Result.bind
 
 let guard p e = if p then Result.Ok () else Result.Error e
@@ -127,7 +124,10 @@ let sizeof_dhcp = 236
 type op =
   | BOOTREQUEST (* 1 *)
   | BOOTREPLY   (* 2 *)
-[@@deriving sexp]
+
+let op_to_string = function
+  | BOOTREQUEST -> "BOOT REQUEST"
+  | BOOTREPLY -> "BOOT REPLY"
 
 let int_to_op = function
   | 1 -> Some BOOTREQUEST
@@ -156,7 +156,23 @@ type msgtype =
   | DHCPLEASEACTIVE
   | DHCPBULKLEASEQUERY
   | DHCPLEASEQUERYDONE
-[@@deriving sexp]
+
+let msgtype_to_string = function
+  | DHCPDISCOVER -> "DHCP DISCOVER"
+  | DHCPOFFER -> "DHCP OFFER"
+  | DHCPREQUEST -> "DHCP REQUEST"
+  | DHCPDECLINE -> "DHCP DECLINE"
+  | DHCPACK -> "DHCP ACK"
+  | DHCPNAK -> "DHCP NAK"
+  | DHCPRELEASE -> "DHCP RELEASE"
+  | DHCPINFORM -> "DHCP INFORM"
+  | DHCPFORCERENEW -> "DHCP FORCE RENEW"
+  | DHCPLEASEQUERY -> "DHCP LEASE QUERY"
+  | DHCPLEASEUNASSIGNED -> "DHCP LEASE UNASSIGNED"
+  | DHCPLEASEUNKNOWN -> "DHCP LEASE UNKNOWN"
+  | DHCPLEASEACTIVE -> "DHCP LEASE ACTIVE"
+  | DHCPBULKLEASEQUERY -> "DHCP BULK LEASE QUERY"
+  | DHCPLEASEQUERYDONE -> "DHCP LEASE QUERY DONE"
 
 let int_to_msgtype = function
   | 1 -> Some DHCPDISCOVER
@@ -275,7 +291,89 @@ type option_code =
   | PRIVATE_CLASSLESS_STATIC_ROUTE [@id 249]
   | WEB_PROXY_AUTO_DISC [@id 252]
   | END [@id 255]
-  | OTHER of int [@@deriving sexp]
+  | OTHER of int
+
+let option_code_to_string = function
+  | PAD -> "PAD"
+  | SUBNET_MASK -> "Subnet mask"
+  | TIME_OFFSET -> "Time offset"
+  | ROUTERS -> "Routers"
+  | DNS_SERVERS -> "DNS servers"
+  | LOG_SERVERS -> "Log servers"
+  | LPR_SERVERS -> "LPR servers"
+  | HOSTNAME -> "Hostname"
+  | BOOTFILE_SIZE -> "Bootfile size"
+  | DOMAIN_NAME -> "Domain name"
+  | SWAP_SERVER -> "Swap server"
+  | ROOT_PATH -> "Root path"
+  | EXTENSION_PATH -> "Extension path"
+  | IPFORWARDING -> "IP forwarding"
+  | NLSR -> "NLSR"
+  | POLICY_FILTERS -> "Policy filters"
+  | MAX_DATAGRAM -> "Max datagram"
+  | DEFAULT_IP_TTL -> "Default IP TTL"
+  | INTERFACE_MTU -> "Interface MTU"
+  | ALL_SUBNETS_LOCAL -> "All subnets local"
+  | BROADCAST_ADDR -> "Broadcast address"
+  | PERFORM_ROUTER_DISC -> "Perform router discovery"
+  | ROUTER_SOL_ADDR -> "Router solicitation address"
+  | STATIC_ROUTES -> "Static routes"
+  | TRAILER_ENCAPSULATION -> "Trailer encapsulation"
+  | ARP_CACHE_TIMO -> "ARP cache timeout"
+  | ETHERNET_ENCAPSULATION -> "Ethernet encapsulation"
+  | TCP_DEFAULT_TTL -> "TCP default TTL"
+  | TCP_KEEPALIVE_INTERVAL -> "TCP keep-alive interval"
+  | NIS_DOMAIN -> "NIS domain"
+  | NIS_SERVERS -> "NIS servers"
+  | NTP_SERVERS -> "NTP servers"
+  | VENDOR_SPECIFIC -> "Vendor specific"
+  | NETBIOS_NAME_SERVERS -> "NETBIOS name servers"
+  | NETBIOS_DATAGRAM_DISTRIB_SERVERS -> "NETBIOS datagram distribution servers"
+  | NETBIOS_NODE -> "NETBIOS node"
+  | NETBIOS_SCOPE -> "NETBIOS scope"
+  | XWINDOW_FONT_SERVERS -> "X window font servers"
+  | XWINDOW_DISPLAY_MANAGERS -> "X window display managers"
+  | REQUEST_IP -> "Request IP"
+  | IP_LEASE_TIME -> "IP lease time"
+  | OPTION_OVERLOAD -> "Option overload"
+  | MESSAGE_TYPE -> "Message type"
+  | SERVER_IDENTIFIER -> "Server identifier"
+  | PARAMETER_REQUESTS -> "Parameters requests"
+  | MESSAGE -> "Message"
+  | MAX_MESSAGE -> "Max message"
+  | RENEWAL_T1 -> "Renewal T1"
+  | REBINDING_T2 -> "Rebinding T2"
+  | VENDOR_CLASS_ID -> "Vendor class ID"
+  | CLIENT_ID -> "Client ID"
+  | NIS_PLUS_DOMAIN -> "NIS+ domain"
+  | NIS_PLUS_SERVERS -> "NIS+ servers"
+  | TFTP_SERVER_NAME -> "TFTP server name"
+  | BOOTFILE_NAME -> "Bootfile name"
+  | MOBILE_IP_HOME_AGENT -> "Mobile IP home agent"
+  | SMTP_SERVERS -> "SMTP servers"
+  | POP3_SERVERS -> "POP3 servers"
+  | NNTP_SERVERS -> "NNTP servers"
+  | IRC_SERVERS -> "IRC servers"
+  | USER_CLASS -> "User class"
+  | RAPID_COMMIT -> "Rapid commit"
+  | CLIENT_FQDN -> "Client FQDN"
+  | RELAY_AGENT_INFORMATION -> "Relay agent information"
+  | CLIENT_SYSTEM -> "Client system"
+  | CLIENT_NDI -> "Client NDI"
+  | UUID_GUID -> "UUID GUID"
+  | PCODE -> "PCODE"
+  | TCODE -> "TCODE"
+  | IPV6ONLY -> "IPv6 only"
+  | SUBNET_SELECTION -> "Subnet selection"
+  | DOMAIN_SEARCH -> "Domain search"
+  | SIP_SERVERS -> "SIP servers"
+  | CLASSLESS_STATIC_ROUTE -> "Classless static route"
+  | VI_VENDOR_INFO -> "VI vendor info"
+  | MISC_150 -> "Misc 150"
+  | PRIVATE_CLASSLESS_STATIC_ROUTE -> "Private classless static route"
+  | WEB_PROXY_AUTO_DISC -> "Web proxy auto discovery"
+  | END -> "End"
+  | OTHER id -> "Other " ^ string_of_int id
 
 let int_to_option_code = function
   | 0 -> Some PAD
@@ -445,61 +543,87 @@ let option_code_to_int = function
 
 type htype =
   | Ethernet_10mb
-  | Other [@@deriving sexp]
+  | Other
+
+let htype_to_string = function
+  | Ethernet_10mb -> "Ethernet 10MB"
+  | Other -> "Other"
 
 type flags =
   | Broadcast
-  | Unicast [@@deriving sexp]
+  | Unicast
+
+let flags_to_string = function
+  | Broadcast -> "Broadcast"
+  | Unicast -> "Unicast"
 
 type client_id =
-  | Hwaddr of Macaddr_sexp.t
-  | Id of int * string [@@deriving sexp]
+  | Hwaddr of Macaddr.t
+  | Id of int * string
+
+let client_id_to_string = function
+  | Hwaddr mac -> "MAC " ^ Macaddr.to_string mac
+  | Id (id, txt) -> "ID " ^ string_of_int id ^ " " ^ Ohex.encode txt
+
+let string_to_client_id = function
+  | s when String.starts_with ~prefix:"MAC " s ->
+    Result.to_option
+      (Result.map (fun mac -> Hwaddr mac)
+         (Macaddr.of_string (String.sub s 4 (String.length s - 4))))
+  | s when String.starts_with ~prefix:"ID " s ->
+    (match String.split_on_char ' ' s with
+     | [ _id ; id ; txt ]->
+       (match int_of_string_opt id with
+        | None -> None
+        | Some id -> Some (Id (id, Ohex.decode txt)))
+     | _ -> None)
+  | _ -> None
 
 type dhcp_option =
   | Pad                                     (* code 0 *)
-  | Subnet_mask of Ipaddr_sexp.V4.t         (* code 1 *)
+  | Subnet_mask of Ipaddr.V4.t         (* code 1 *)
   | Time_offset of int32                    (* code 2 *)
-  | Routers of Ipaddr_sexp.V4.t list        (* code 3 *)
-  | Dns_servers of Ipaddr_sexp.V4.t list         (* code 6 *)
-  | Log_servers of Ipaddr_sexp.V4.t list         (* code 7 *)
-  | Lpr_servers of Ipaddr_sexp.V4.t list         (* code 9 *)
+  | Routers of Ipaddr.V4.t list        (* code 3 *)
+  | Dns_servers of Ipaddr.V4.t list         (* code 6 *)
+  | Log_servers of Ipaddr.V4.t list         (* code 7 *)
+  | Lpr_servers of Ipaddr.V4.t list         (* code 9 *)
   | Hostname of string                      (* code 12 *)
   | Bootfile_size of int                    (* code 13 *)
   | Domain_name of string                   (* code 15 *)
-  | Swap_server of Ipaddr_sexp.V4.t              (* code 16 *)
+  | Swap_server of Ipaddr.V4.t              (* code 16 *)
   | Root_path of string                     (* code 17 *)
   | Extension_path of string                (* code 18 *)
   | Ipforwarding of bool                    (* code 19 *)
   | Nlsr of bool                            (* code 20 *)
-  | Policy_filters of Ipaddr_sexp.V4.Prefix.t list (* code 21 *)
+  | Policy_filters of Ipaddr.V4.Prefix.t list (* code 21 *)
   | Max_datagram of int                     (* code 22 *)
   | Default_ip_ttl of int                   (* code 23 *)
   | Interface_mtu of int                    (* code 26 *)
   | All_subnets_local of bool               (* code 27 *)
-  | Broadcast_addr of Ipaddr_sexp.V4.t           (* code 28 *)
+  | Broadcast_addr of Ipaddr.V4.t           (* code 28 *)
   | Perform_router_disc of bool             (* code 31 *)
-  | Router_sol_addr of Ipaddr_sexp.V4.t          (* code 32 *)
-  | Static_routes of (Ipaddr_sexp.V4.t * Ipaddr_sexp.V4.t) list (* code 33 *)
+  | Router_sol_addr of Ipaddr.V4.t          (* code 32 *)
+  | Static_routes of (Ipaddr.V4.t * Ipaddr.V4.t) list (* code 33 *)
   | Trailer_encapsulation of bool           (* code 34 *)
   | Arp_cache_timo of int32                 (* code 35 *)
   | Ethernet_encapsulation of bool          (* code 36 *)
   | Tcp_default_ttl of int                  (* code 37 *)
   | Tcp_keepalive_interval of int32         (* code 38 *)
   | Nis_domain of string                    (* code 40 *)
-  | Nis_servers of Ipaddr_sexp.V4.t list         (* code 41 *)
-  | Ntp_servers of Ipaddr_sexp.V4.t list         (* code 42 *)
+  | Nis_servers of Ipaddr.V4.t list         (* code 41 *)
+  | Ntp_servers of Ipaddr.V4.t list         (* code 42 *)
   | Vendor_specific of string               (* code 43 *)
-  | Netbios_name_servers of Ipaddr_sexp.V4.t list(* code 44 *)
-  | Netbios_datagram_distrib_servers of Ipaddr_sexp.V4.t list (* code 45 *)
+  | Netbios_name_servers of Ipaddr.V4.t list(* code 44 *)
+  | Netbios_datagram_distrib_servers of Ipaddr.V4.t list (* code 45 *)
   | Netbios_node of int                     (* code 46 *)
   | Netbios_scope of string                 (* code 47 *)
-  | Xwindow_font_servers of Ipaddr_sexp.V4.t list(* code 48 *)
-  | Xwindow_display_managers of Ipaddr_sexp.V4.t list (* code 49 *)
-  | Request_ip of Ipaddr_sexp.V4.t               (* code 50 *)
+  | Xwindow_font_servers of Ipaddr.V4.t list(* code 48 *)
+  | Xwindow_display_managers of Ipaddr.V4.t list (* code 49 *)
+  | Request_ip of Ipaddr.V4.t               (* code 50 *)
   | Ip_lease_time of int32                  (* code 51 *)
   | Option_overload of int                  (* code 52 *)
   | Message_type of msgtype                 (* code 53 *)
-  | Server_identifier of Ipaddr_sexp.V4.t        (* code 54 *)
+  | Server_identifier of Ipaddr.V4.t        (* code 54 *)
   | Parameter_requests of option_code list  (* code 55 *)
   | Message of string                       (* code 56 *)
   | Max_message of int                      (* code 57 *)
@@ -508,14 +632,14 @@ type dhcp_option =
   | Vendor_class_id of string               (* code 60 *)
   | Client_id of client_id                  (* code 61 *)
   | Nis_plus_domain of string               (* code 64 *)
-  | Nis_plus_servers of Ipaddr_sexp.V4.t list    (* code 65 *)
+  | Nis_plus_servers of Ipaddr.V4.t list    (* code 65 *)
   | Tftp_server_name of string              (* code 66 *)
   | Bootfile_name of string                 (* code 67 *)
-  | Mobile_ip_home_agent of Ipaddr_sexp.V4.t list(* code 68 *)
-  | Smtp_servers of Ipaddr_sexp.V4.t list        (* code 69 *)
-  | Pop3_servers of Ipaddr_sexp.V4.t list        (* code 70 *)
-  | Nntp_servers of Ipaddr_sexp.V4.t list        (* code 71 *)
-  | Irc_servers of Ipaddr_sexp.V4.t list         (* code 74 *)
+  | Mobile_ip_home_agent of Ipaddr.V4.t list(* code 68 *)
+  | Smtp_servers of Ipaddr.V4.t list        (* code 69 *)
+  | Pop3_servers of Ipaddr.V4.t list        (* code 70 *)
+  | Nntp_servers of Ipaddr.V4.t list        (* code 71 *)
+  | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | User_class of string                    (* code 77 *)
   | Rapid_commit                            (* code 80 *)
   | Client_fqdn of string                   (* code 81 *)
@@ -526,7 +650,7 @@ type dhcp_option =
   | Pcode of string                         (* code 100 *)
   | Tcode of string                         (* code 101 *)
   | IPv6_only of int32                      (* code 108 *)
-  | Subnet_selection of Ipaddr_sexp.V4.t    (* code 118 *)
+  | Subnet_selection of Ipaddr.V4.t    (* code 118 *)
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
@@ -536,13 +660,94 @@ type dhcp_option =
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Other of int * string              (* code * string *)
-  [@@deriving sexp]
+
+let dhcp_option_to_string = function
+  | Pad -> "Pad"
+  | Subnet_mask ip -> "Subnet mask " ^ Ipaddr.V4.to_string ip
+  | Time_offset off -> "Time offset " ^ Int32.to_string off
+  | Routers ips -> "Routers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Dns_servers ips -> "DNS servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Log_servers ips -> "Log servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Lpr_servers ips -> "LPR servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Hostname s -> "Hostname " ^ s
+  | Bootfile_size s -> "Bootfile size " ^ string_of_int s
+  | Domain_name s -> "Domain name " ^ s
+  | Swap_server ip -> "Swap server " ^ Ipaddr.V4.to_string ip
+  | Root_path s -> "Root path " ^ s
+  | Extension_path s -> "Extension path " ^ s
+  | Ipforwarding b -> "IP forwarding " ^ string_of_bool b
+  | Nlsr b -> "NLSR " ^ string_of_bool b
+  | Policy_filters f -> "Policy filters " ^ String.concat ", " (List.map Ipaddr.V4.Prefix.to_string f)
+  | Max_datagram s -> "Max datagram " ^ string_of_int s
+  | Default_ip_ttl s -> "Default IP TTL " ^ string_of_int s
+  | Interface_mtu s -> "Interface MTU " ^ string_of_int s
+  | All_subnets_local b -> "All subnets local " ^ string_of_bool b
+  | Broadcast_addr ip -> "Broadcast address " ^ Ipaddr.V4.to_string ip
+  | Perform_router_disc b -> "Perform router discovery " ^ string_of_bool b
+  | Router_sol_addr ip -> "Router solicitation address " ^ Ipaddr.V4.to_string ip
+  | Static_routes routes -> "Static routes " ^ String.concat ", " (List.map (fun (a, b) -> Ipaddr.V4.to_string a ^ " -> " ^ Ipaddr.V4.to_string b) routes)
+  | Trailer_encapsulation b -> "Trailer encapsulation " ^ string_of_bool b
+  | Arp_cache_timo t -> "ARP cache timeout " ^ Int32.to_string t
+  | Ethernet_encapsulation b -> "Ethernet encapsulation " ^ string_of_bool b
+  | Tcp_default_ttl t -> "TCP default TTL " ^ string_of_int t
+  | Tcp_keepalive_interval t -> "TCP keep-alive interval " ^ Int32.to_string t
+  | Nis_domain s -> "NIS domain " ^ s
+  | Nis_servers ips -> "NIS servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Ntp_servers ips -> "NTP servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Vendor_specific s -> "Vendor specific " ^ s
+  | Netbios_name_servers ips -> "NETBIOS name servers "  ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Netbios_datagram_distrib_servers ips -> "NETBIOS datagram distribution servers "  ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Netbios_node i -> "NETBIOS node " ^ string_of_int i
+  | Netbios_scope s -> "NETBIOS scope " ^ s
+  | Xwindow_font_servers ips -> "XWindow font servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Xwindow_display_managers ips -> "Xwindow display managers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Request_ip ip -> "Request IP " ^ Ipaddr.V4.to_string ip
+  | Ip_lease_time i -> "IP lease time " ^ Int32.to_string i
+  | Option_overload i -> "Option overload " ^ string_of_int i
+  | Message_type t -> "Message type " ^ msgtype_to_string t
+  | Server_identifier ip -> "Server identifier " ^ Ipaddr.V4.to_string ip
+  | Parameter_requests ops -> "Parameter request " ^ String.concat ", " (List.map option_code_to_string ops)
+  | Message s -> "Message " ^ s
+  | Max_message i -> "Max message " ^ string_of_int i
+  | Renewal_t1 t -> "Renewal T1 " ^ Int32.to_string t
+  | Rebinding_t2 t -> "Rebinding T2 " ^ Int32.to_string t
+  | Vendor_class_id s -> "Vendor class ID " ^ s
+  | Client_id c -> "Client ID " ^ client_id_to_string c
+  | Nis_plus_domain s -> "NIS+ domain " ^ s
+  | Nis_plus_servers ips -> "NIS+ servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Tftp_server_name s -> "TFTP server name " ^ s
+  | Bootfile_name s -> "Bootfile name " ^ s
+  | Mobile_ip_home_agent ips -> "Mobile IP home agent " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Smtp_servers ips -> "SMTP servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Pop3_servers ips -> "POP3 servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Nntp_servers ips -> "NNTP servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | Irc_servers ips -> "IRC servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
+  | User_class s -> "User class " ^ s
+  | Rapid_commit -> "Rapid commit"
+  | Client_fqdn s -> "Client FQDN " ^ s
+  | Relay_agent_information s -> "Relay agent information " ^ s
+  | Client_system s -> "Client system " ^ s
+  | Client_ndi s -> "Client NDI " ^ s
+  | Uuid_guid s -> "UUID GUID " ^ s
+  | Pcode s -> "PCODE " ^ s
+  | Tcode s -> "TCODE " ^ s
+  | IPv6_only i -> "IPv6 only " ^ Int32.to_string i
+  | Subnet_selection ip -> "Subnet selection " ^ Ipaddr.V4.to_string ip
+  | Domain_search s -> "Domain search " ^ s
+  | Sip_servers s -> "SIP servers " ^ s
+  | Classless_static_route s -> "Classless static route " ^ s
+  | Vi_vendor_info s -> "VI vendor info " ^ s
+  | Misc_150 s -> "Misc 150 " ^ s
+  | Private_classless_static_route s -> "Private classless static route " ^ s
+  | Web_proxy_auto_disc s -> "Web proxy auto discovery " ^ s
+  | End -> "End"
+  | Other (id, s) -> "Other " ^ string_of_int id ^ ": " ^ s
 
 type pkt = {
-  srcmac  : Macaddr_sexp.t;
-  dstmac  : Macaddr_sexp.t;
-  srcip   : Ipaddr_sexp.V4.t;
-  dstip   : Ipaddr_sexp.V4.t;
+  srcmac  : Macaddr.t;
+  dstmac  : Macaddr.t;
+  srcip   : Ipaddr.V4.t;
+  dstip   : Ipaddr.V4.t;
   srcport : int;
   dstport : int;
   op      : op;
@@ -552,15 +757,22 @@ type pkt = {
   xid     : int32;
   secs    : int;
   flags   : flags;
-  ciaddr  : Ipaddr_sexp.V4.t;
-  yiaddr  : Ipaddr_sexp.V4.t;
-  siaddr  : Ipaddr_sexp.V4.t;
-  giaddr  : Ipaddr_sexp.V4.t;
-  chaddr  : Macaddr_sexp.t;
+  ciaddr  : Ipaddr.V4.t;
+  yiaddr  : Ipaddr.V4.t;
+  siaddr  : Ipaddr.V4.t;
+  giaddr  : Ipaddr.V4.t;
+  chaddr  : Macaddr.t;
   sname   : string;
   file    : string;
   options : dhcp_option list;
-} [@@deriving sexp]
+}
+
+let pp_pkt ppf pkt =
+  Fmt.pf ppf "src MAC %a dst MAC %a@.src IP %a dst IP %a@.src port %u dst port %u@.operation %s@.htype %s hlen %u hops %u@.XID %lu secs %u flags %s@.ciaddr %a yiaddr %a@.siaddr %a giaddr %a chaddr %a@.sname %s file %s@.options %a"
+    Macaddr.pp pkt.srcmac Macaddr.pp pkt.dstmac Ipaddr.V4.pp pkt.srcip Ipaddr.V4.pp pkt.dstip
+    pkt.srcport pkt.dstport (op_to_string pkt.op) (htype_to_string pkt.htype) pkt.hlen pkt.hops pkt.xid pkt.secs
+    (flags_to_string pkt.flags) Ipaddr.V4.pp pkt.ciaddr Ipaddr.V4.pp pkt.yiaddr Ipaddr.V4.pp pkt.siaddr Ipaddr.V4.pp pkt.giaddr Macaddr.pp pkt.chaddr pkt.sname pkt.file Fmt.(list ~sep:(any ", ") string) (List.map dhcp_option_to_string pkt.options)
+
 
 let client_port = 68
 let server_port = 67
@@ -1090,12 +1302,6 @@ let client_id_of_pkt pkt =
   with
   | Some id -> id
   | None -> Hwaddr pkt.chaddr
-
-(* string_of_* functions *)
-let to_hum f x = Sexplib.Sexp.to_string_hum (f x)
-let client_id_to_string = to_hum sexp_of_client_id
-let pkt_to_string = to_hum sexp_of_pkt
-let dhcp_option_to_string = to_hum sexp_of_dhcp_option
 
 let find_subnet_mask =
   find_option (function Subnet_mask x -> Some x | _ -> None)

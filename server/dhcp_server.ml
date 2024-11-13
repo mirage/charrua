@@ -15,26 +15,24 @@
  *)
 
 module Config = struct
-  open Sexplib.Std
-
   type host = {
     hostname : string;
     options : Dhcp_wire.dhcp_option list;
-    fixed_addr : Ipaddr_sexp.V4.t option;
-    hw_addr : Macaddr_sexp.t;
-  } [@@deriving sexp]
+    fixed_addr : Ipaddr.V4.t option;
+    hw_addr : Macaddr.t;
+  }
 
   type t = {
     options : Dhcp_wire.dhcp_option list;
     hostname : string;
     default_lease_time : int32;
     max_lease_time : int32;
-    ip_addr : Ipaddr_sexp.V4.t;
-    mac_addr : Macaddr_sexp.t;
-    network : Ipaddr_sexp.V4.Prefix.t;
-    range : (Ipaddr_sexp.V4.t * Ipaddr_sexp.V4.t) option;
+    ip_addr : Ipaddr.V4.t;
+    mac_addr : Macaddr.t;
+    network : Ipaddr.V4.Prefix.t;
+    range : (Ipaddr.V4.t * Ipaddr.V4.t) option;
     hosts : host list;
-  } [@@deriving sexp]
+  }
 
   let t1_time_ratio = 0.5
   let t2_time_ratio = 0.8
@@ -170,10 +168,6 @@ module Config = struct
 end
 
 module Lease = struct
-
-  open Sexplib.Conv
-  open Sexplib.Std
-
   module Client_id = struct
     open Dhcp_wire
 
@@ -189,9 +183,6 @@ module Lease = struct
         end
       | Id _, Hwaddr _ -> -1
       | Hwaddr _, Id _ -> 1
-
-    let sexp_of_t t = Dhcp_wire.sexp_of_client_id t
-    let t_of_sexp t = Dhcp_wire.client_id_of_sexp t
   end
 
   module Addr_map = Map.Make(Ipaddr.V4)
@@ -201,17 +192,21 @@ module Lease = struct
   type t = {
     tm_start   : int32;
     tm_end     : int32;
-    addr       : Ipaddr_sexp.V4.t;
+    addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
-  } [@@deriving sexp]
+  }
 
-  let to_string lease = Sexplib.Sexp.to_string_hum (sexp_of_t lease)
+  let to_string lease =
+    "start " ^ Int32.to_string lease.tm_start ^
+    " end " ^ Int32.to_string lease.tm_end ^
+    " addr " ^ Ipaddr.V4.to_string lease.addr ^
+    " client id " ^ Dhcp_wire.client_id_to_string lease.client_id
 
   (* Database, collection of leases *)
   type database = {
     lease_map : t Lease_map.t;
     addr_map : Client_id.t Addr_map.t;
-  } (* with sexp *)
+  }
 
   let update_db lease_map addr_map =
     { lease_map; addr_map }
@@ -289,7 +284,7 @@ module Lease = struct
 
   let replace lease db =
     (* remove possible old one first *)
-    let db = 
+    let db =
       match Lease_map.find_opt lease.client_id db.lease_map with
       | None -> db
       | Some old_lease -> remove old_lease db
@@ -298,23 +293,47 @@ module Lease = struct
       (Lease_map.add lease.client_id lease db.lease_map)
       (Addr_map.add lease.addr lease.client_id db.addr_map)
 
-  let sexp_of_db db =
-    sexp_of_list
-      (sexp_of_pair Client_id.sexp_of_t sexp_of_t)
-      (Lease_map.bindings db.lease_map)
+  let lease_to_string l =
+    Int32.to_string l.tm_start ^ "," ^ Int32.to_string l.tm_end ^ "," ^
+    Ipaddr.V4.to_string l.addr ^ "," ^ Dhcp_wire.client_id_to_string l.client_id
 
-  let db_of_sexp sx =
-    let l = list_of_sexp
-        (pair_of_sexp Client_id.t_of_sexp t_of_sexp)
-        sx
+  let lease_of_string s =
+    match String.split_on_char ',' s with
+    | tm_start :: tm_end :: addr :: client_id ->
+      (match Int32.of_string_opt tm_start, Int32.of_string_opt tm_end, Ipaddr.V4.of_string addr, Dhcp_wire.string_to_client_id (String.concat "," client_id) with
+       | Some tm_start, Some tm_end, Ok addr, Some client_id ->
+         Some { tm_start ; tm_end ; addr ; client_id }
+       | _ -> None)
+    | _ -> None
+
+  let db_to_string db =
+    Lease_map.bindings db.lease_map |>
+    List.map (fun (cid, lease) ->
+        Dhcp_wire.client_id_to_string cid ^ ":" ^ lease_to_string lease
+      ) |> String.concat "\n"
+
+  let db_of_string s =
+    let entries = String.split_on_char '\n' s in
+    let things =
+      List.fold_left (fun acc entry ->
+          match acc with
+          | None -> None
+          | Some acc ->
+            (match String.split_on_char ':' entry with
+             | client_id :: lease ->
+               (match Dhcp_wire.string_to_client_id client_id, lease_of_string (String.concat ":" lease) with
+                | Some cid, Some lease ->
+                  Some ((cid, lease) :: acc)
+                | _ -> None)
+             | _ -> None))
+        (Some []) entries
     in
-    List.fold_left (fun db (cid, lease) ->
-        assert (cid = lease.client_id);
-        replace lease db) (make_db ()) l
-
-  let db_to_string db = Sexplib.Sexp.to_string_hum (sexp_of_db db)
-
-  let db_of_string s = db_of_sexp (Sexplib.Sexp.of_string s)
+    match things with
+    | Some l ->
+      List.fold_left (fun db (cid, lease) ->
+          assert (cid = lease.client_id);
+          replace lease db) (make_db ()) l
+    | None -> assert false
 
   let addr_allocated addr db =
     Util.true_if_some @@ lease_of_addr addr db
@@ -442,7 +461,7 @@ module Input = struct
             (reqpkt.srcmac, yiaddr)
           else
             (Macaddr.broadcast, Ipaddr.V4.broadcast)
-        | _ -> invalid_arg ("Can't send message type " ^ string_of_int (msgtype_to_int m))
+        | _ -> invalid_arg ("Can't send message type " ^ msgtype_to_string m)
     in
     let srcip = config.ip_addr in
     { srcmac; dstmac; srcip; dstip; srcport; dstport;
@@ -607,7 +626,7 @@ module Input = struct
 
   let input_decline config db pkt now =
     let msgtype = match find_message_type pkt.options with
-      | Some msgtype -> string_of_int (msgtype_to_int msgtype)
+      | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
     in
     let ourip = config.ip_addr in
@@ -636,7 +655,7 @@ module Input = struct
 
   let input_release config db pkt now =
     let msgtype = match find_message_type pkt.options with
-      | Some msgtype -> string_of_int (msgtype_to_int msgtype)
+      | Some msgtype -> msgtype_to_string msgtype
       | None -> failwith "Unexpected message type"
     in
     let ourip = config.ip_addr in
@@ -849,7 +868,7 @@ module Input = struct
         | Some DHCPRELEASE  -> input_release config db pkt time
         | Some DHCPINFORM   -> input_inform config db pkt
         | None -> bad_packet "Malformed packet: no dhcp msgtype"
-        | Some m -> Warning ("Unhandled msgtype " ^ string_of_int (msgtype_to_int m))
+        | Some m -> Warning ("Unhandled msgtype " ^ msgtype_to_string m)
       else
         bad_packet "Invalid packet"
     with

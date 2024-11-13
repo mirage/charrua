@@ -31,12 +31,12 @@ type op =
 (** Conversions of {! op}s. *)
 
 val int_to_op : int -> op option
-val int_to_op_exn : int -> op
-(** @raise Invalid_argument if [v < 0 || v > 255]  *)
+
+val int_to_op_exn : int -> op (** @raise Invalid_argument if [v < 0 || v > 255]  *)
+
 val op_to_int : op -> int
 
-val sexp_of_op : op -> Sexplib.Sexp.t
-val op_of_sexp : Sexplib.Sexp.t -> op
+val op_to_string : op -> string
 
 (** {2 DHCP message type option values} *)
 
@@ -64,8 +64,7 @@ val int_to_msgtype : int -> msgtype option
 val int_to_msgtype_exn : int -> msgtype
 (** @raise Invalid_argument if not a valid {! msgtype} value *)
 
-val sexp_of_msgtype : msgtype -> Sexplib.Sexp.t
-val msgtype_of_sexp : Sexplib.Sexp.t -> msgtype
+val msgtype_to_string : msgtype -> string
 
 (** {2 DHCP option codes (names only, for use in parameter requests)} *)
 
@@ -159,9 +158,7 @@ type option_code =
 val int_to_option_code : int -> option_code option
 val int_to_option_code_exn : int -> option_code
 val option_code_to_int : option_code -> int
-
-val sexp_of_option_code : option_code -> Sexplib.Sexp.t
-val option_code_of_sexp : Sexplib.Sexp.t -> option_code
+val option_code_to_string : option_code -> string
 
 (** {2 DHCP hardware type} *)
 
@@ -171,8 +168,7 @@ type htype =
 
 (** Conversions of {!htype}. *)
 
-val htype_of_sexp : Sexplib.Sexp.t -> htype
-val sexp_of_htype : htype -> Sexplib.Sexp.t
+val htype_to_string : htype -> string
 
 (** {2 DHCP header flags} *)
 
@@ -182,8 +178,7 @@ type flags =
 
 (** Conversions of {!flags}. *)
 
-val flags_of_sexp : Sexplib.Sexp.t -> flags
-val sexp_of_flags : flags -> Sexplib.Sexp.t
+val flags_to_string : flags -> string
 
 (** {2 DHCP Client identifier} *)
 
@@ -195,10 +190,8 @@ type client_id =
 
 (** Conversions of {! client_id}. *)
 
-val client_id_of_sexp : Sexplib.Sexp.t -> client_id
-val sexp_of_client_id : client_id -> Sexplib.Sexp.t
-
 val client_id_to_string : client_id -> string
+val string_to_client_id : string -> client_id option
 
 (** {2 DHCP options} *)
 
@@ -283,10 +276,11 @@ type dhcp_option =
   | Web_proxy_auto_disc of string           (* code 252 *)
   | End                                     (* code 255 *)
   | Other of int * string              (* int * string *)
-  [@@deriving sexp]
 (** Not all options are currently implemented. *)
 
 (** Conversions of {! dhcp_option}. *)
+
+val dhcp_option_to_string : dhcp_option -> string
 
 val buf_of_options : Cstruct.t -> dhcp_option list -> Cstruct.t
 val options_of_buf : Cstruct.t -> int -> dhcp_option list
@@ -299,11 +293,6 @@ val collect_options : ('a -> 'b list option) -> 'a list -> 'b list
 (** [collect_options f l] collects all options where [f] evaluates to [Some]
     value on list [l], this is useful for list options like [Routers], if
     multiple list options are found, the resulting list is flattened. *)
-
-val dhcp_option_of_sexp : Sexplib.Sexp.t -> dhcp_option
-val sexp_of_dhcp_option : dhcp_option -> Sexplib.Sexp.t
-
-val dhcp_option_to_string : dhcp_option -> string
 
 val collect_dns_servers : dhcp_option list -> Ipaddr.V4.t list
 val collect_irc_servers : dhcp_option list -> Ipaddr.V4.t list
@@ -417,11 +406,9 @@ val pkt_of_buf : Cstruct.t -> int -> (pkt, string) result
 val buf_of_pkt : pkt -> Cstruct.t
 val pkt_into_buf : pkt -> Cstruct.t -> int
 
-val pkt_of_sexp : Sexplib.Sexp.t -> pkt
-val sexp_of_pkt : pkt -> Sexplib.Sexp.t
+val pp_pkt : pkt Fmt.t
 
 val client_id_of_pkt : pkt -> client_id
-val pkt_to_string : pkt -> string
 
 (** Helpers. *)
 

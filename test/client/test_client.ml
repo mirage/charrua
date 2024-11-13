@@ -3,7 +3,7 @@ let cstruct = Alcotest.of_pp Cstruct.hexdump_pp
 let msgtype =
   let module M = struct
     type t = Dhcp_wire.msgtype
-    let pp fmt m = Format.fprintf fmt "%u" (Dhcp_wire.msgtype_to_int m)
+    let pp fmt m = Format.fprintf fmt "%s" (Dhcp_wire.msgtype_to_string m)
     let equal p q = (compare p q) = 0
   end in
   (module M : Alcotest.TESTABLE with type t = M.t)

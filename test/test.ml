@@ -329,7 +329,7 @@ let t_discover fixed =
       ()
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<DISCOVER>>") pp_pkt discover_pkt;
   match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
@@ -371,7 +371,7 @@ let t_discover fixed =
     assert ((List.length routers) = 2);
     assert ((List.hd routers) = ip_t);
     if verbose then
-      printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
+      Format.printf "%s\n%a\n%!" (yellow "<<OFFER>>") pp_pkt reply;
   | _ -> failwith "No reply"
 
 let t_discover_range () = t_discover false
@@ -394,7 +394,7 @@ let t_discover_no_range () =
       ()
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<DISCOVER>>") pp_pkt discover_pkt;
   match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Dhcp_server.Input.Warning s -> if s <> "No ips left to offer" then
       failwith "expected string `'No ips left to offer`'"
@@ -425,7 +425,7 @@ let t_discover_no_range_fixed () =
       ()
   in
     if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<DISCOVER>>") (pkt_to_string discover_pkt);
+      Format.printf "\n%s\n%a\n%!" (yellow "<<DISCOVER>>") pp_pkt discover_pkt;
   match Input.input_pkt config (Lease.make_db ()) discover_pkt now with
   | Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
@@ -464,7 +464,7 @@ let t_discover_no_range_fixed () =
     assert ((List.length routers) = 2);
     assert ((List.hd routers) = ip_t);
     if verbose then
-      printf "%s\n%s\n%!" (yellow "<<OFFER>>") (pkt_to_string reply);
+      Format.printf "%s\n%a\n%!" (yellow "<<OFFER>>") pp_pkt reply;
   | _ -> failwith "No reply"
 
 let t_bad_discover () =
@@ -600,7 +600,7 @@ let t_request_fixed () =
   }
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<REQUEST>>") pp_pkt request;
   let db =
     match Input.input_pkt config (Lease.make_db ()) request now with
     | Input.Reply (reply, db) ->
@@ -645,7 +645,7 @@ let t_request_fixed () =
       assert ((List.length routers) = 2);
       assert ((List.hd routers) = ip_t);
       if verbose then
-        printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply);
+        Format.printf "%s\n%a\n%!" (yellow "<<ACK>>") pp_pkt reply;
       db
     | _ -> failwith "No reply"
   in
@@ -660,7 +660,7 @@ let t_request_fixed () =
       | _ -> failwith "First option is not Message_type"
     in
     if verbose then
-      printf "%s\n%s\n%!" (yellow "<<NAK>>") (pkt_to_string reply);
+      Format.printf "%s\n%a\n%!" (yellow "<<NAK>>") pp_pkt reply;
   | _ -> failwith "No reply"
 
 let t_request () =
@@ -707,7 +707,7 @@ let t_request () =
   }
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<REQUEST>>") pp_pkt request;
   let db =
     match Input.input_pkt config (Lease.make_db ()) request now with
     | Input.Reply (reply, db) ->
@@ -763,7 +763,7 @@ let t_request () =
       assert ((List.length routers) = 2);
       assert ((List.hd routers) = ip_t);
       if verbose then
-        printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply);
+        Format.printf "%s\n%a\n%!" (yellow "<<ACK>>") pp_pkt reply;
       db
     | _ -> failwith "No reply"
   in
@@ -779,7 +779,7 @@ let t_request () =
       | _ -> failwith "First option is not Message_type"
     in
     if verbose then
-      printf "%s\n%s\n%!" (yellow "<<NAK>>") (pkt_to_string reply);
+      Format.printf "%s\n%a\n%!" (yellow "<<NAK>>") pp_pkt reply;
   | _ -> failwith "No reply"
 
 let t_request_no_range () =
@@ -833,7 +833,7 @@ let t_request_no_range () =
   }
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<REQUEST>>") pp_pkt request;
   match Input.input_pkt config (Lease.make_db ()) request now with
   | Dhcp_server.Input.Reply (reply, db) ->
     assert (db = (Lease.make_db ()));
@@ -907,7 +907,7 @@ let t_request_no_range_fixed () =
   }
   in
   if verbose then
-    printf "\n%s\n%s\n%!" (yellow "<<REQUEST>>") (pkt_to_string request);
+    Format.printf "\n%s\n%a\n%!" (yellow "<<REQUEST>>") pp_pkt request;
   match Input.input_pkt config (Lease.make_db ()) request now with
   | Input.Reply (reply, db) ->
     (* Check if our new lease is there *)
@@ -952,7 +952,7 @@ let t_request_no_range_fixed () =
     assert ((List.length routers) = 2);
     assert ((List.hd routers) = ip_t);
     if verbose then
-      printf "%s\n%s\n%!" (yellow "<<ACK>>") (pkt_to_string reply)
+      Format.printf "%s\n%a\n%!" (yellow "<<ACK>>") pp_pkt reply
   | _ -> failwith "No reply"
 
 let t_db_serialization () =
