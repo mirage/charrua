@@ -2,8 +2,7 @@
  (name dhcp_server)
  (public_name charrua-server)
  (private_modules dhcp_lexer dhcp_parser ast util)
- (preprocess (pps ppx_sexp_conv))
- (libraries ipaddr ipaddr-sexp macaddr macaddr-sexp charrua))
+ (libraries ipaddr macaddr charrua))
 
 (menhir (modules dhcp_parser))
 

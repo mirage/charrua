@@ -9,7 +9,7 @@ let config_of_lease lease =
   match Dhcp_wire.find_subnet_mask lease.options with
   | None ->
     Log.info (fun f -> f "Lease obtained with no subnet mask; discarding it");
-    Log.debug (fun f -> f "Unusable lease: %s" @@ Dhcp_wire.pkt_to_string lease);
+    Log.debug (fun f -> f "Unusable lease: %a" Dhcp_wire.pp_pkt lease);
     None
   | Some subnet ->
     match Ipaddr.V4.Prefix.of_netmask ~netmask:subnet ~address with

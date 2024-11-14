@@ -19,12 +19,6 @@ let () = Printexc.record_backtrace true
 let filter_map f l = List.rev @@
   List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
 
-let level_of_string = function
-  | "warning" -> Lwt_log.Warning
-  | "notice" -> Lwt_log.Notice
-  | "debug" -> Lwt_log.Debug
-  | _ -> invalid_arg "Unknown verbosity level"
-
 (* Drop privileges and chroot to _charruad home *)
 let go_safe user group =
   let (pw, _gr) = try
@@ -109,22 +103,19 @@ let rec input config db link gbcol =
       >>= fun () ->
       return db
     | Ok pkt ->
-      Lwt_log.debug_f "Received packet: %s" (Dhcp_wire.pkt_to_string pkt)
-      >>= fun () ->
+      Logs.debug (fun m -> m "Received packet: %a" Dhcp_wire.pp_pkt pkt);
       match (input_pkt config db pkt (Int32.of_int now)) with
       | Silence -> return db
       | Update db -> return db
       | Reply (reply, db) ->
-        Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply)
-        >>= fun () ->
-        Lwt_log.debug_f "Sent reply packet: %s" (Dhcp_wire.pkt_to_string reply)
-        >>= fun () ->
+        Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply) >>= fun () ->
+        Logs.debug (fun m -> m "Sent reply packet: %a" Dhcp_wire.pp_pkt reply);
         return db
-      | Warning w -> Lwt_log.warning w
-        >>= fun () ->
+      | Warning w ->
+        Logs.warn (fun m -> m "%s" w);
         return db
-      | Error e -> Lwt_log.error e
-        >>= fun () ->
+      | Error e ->
+        Logs.err (fun m -> m "%s" e);
         return db
   in
   t >>= fun db -> input config db link gbcol
@@ -138,12 +129,11 @@ let ifname_of_address ip_addr interfaces =
   in
   match ifnet with name, _ -> name
 
-let charruad configfile group pidfile user verbosity daemonize =
+let charruad () configfile group pidfile user daemonize =
   let open Dhcp_server.Config in
   let open Dhcp_server.Lease in
   let open Lwt in
 
-  init_log (level_of_string verbosity) daemonize;
   let interfaces = Tuntap.getifaddrs_v4 () in
   let addresses = List.map
       (function name, cidr -> (Ipaddr.V4.Prefix.address cidr, Tuntap.get_macaddr name))
@@ -185,7 +175,19 @@ let charruad configfile group pidfile user verbosity daemonize =
                 Lwt_log.notice "Charrua DHCPD exiting")
 
 (* Parse command line and start the ball *)
+
+let setup_log style_renderer level =
+  Fmt_tty.setup_std_outputs ?style_renderer ();
+  Logs.set_level level;
+  Logs.set_reporter (Logs_fmt.reporter ~dst:Format.std_formatter ())
+
 open Cmdliner
+
+let setup_log =
+  Term.(const setup_log
+        $ Fmt_cli.style_renderer ()
+        $ Logs_cli.level ())
+
 let cmd =
   let configfile = Arg.(value & opt string "/etc/charruad.conf" & info ["c" ; "config"]
                           ~doc:"Configuration file path.") in
@@ -195,12 +197,10 @@ let cmd =
                           ~doc:"Pid file path.") in
   let user = Arg.(value & opt string "_charruad" & info ["u" ; "user"]
                          ~doc:"User to run as.") in
-  let verbosity = Arg.(value & opt string "notice" & info ["v" ; "verbosity"]
-                         ~doc:"Log verbosity, warning|notice|debug") in
   let daemonize = Arg.(value & flag & info ["D" ; "daemon"]
                          ~doc:"Daemonize.") in
   Cmd.v
     (Cmd.info "charruad" ~version:"%%VERSION%%" ~doc:"Charrua DHCPD")
-    Term.(const charruad $ configfile $ group $ pidfile $ user $ verbosity $ daemonize)
+    Term.(const charruad $ setup_log $ configfile $ group $ pidfile $ user $ daemonize)
 
 let () = exit (Cmd.eval cmd)

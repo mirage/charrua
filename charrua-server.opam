@@ -29,17 +29,12 @@ bug-reports: "https://github.com/mirage/charrua/issues"
 depends: [
   "ocaml" {>= "4.08.0"}
   "dune" {>= "1.4.0"}
-  "ppx_sexp_conv" {>= "v0.9.0"}
   "menhir" {build & >= "20180523"}
   "charrua" {= version}
   "cstruct" {>= "6.0.0"}
-  "sexplib"
   "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
-  "ipaddr-sexp"
-  "macaddr-sexp"
   "cstruct-unix" {with-test}
-  "ppx_cstruct" {>= "6.0.0" & with-test}
   "tcpip" {>= "7.0.0" & with-test}
   "alcotest" {with-test & >= "1.4.0"}
 ]
