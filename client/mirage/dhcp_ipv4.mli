@@ -15,7 +15,7 @@
  *)
 
 module Make(R : Mirage_crypto_rng_mirage.S) (C : Mirage_clock.MCLOCK) (Time : Mirage_time.S) (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) : sig
-  include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t
+  include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
   val connect : Network.t -> E.t -> Arp.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
 end
