@@ -1,3 +1,15 @@
+### v1.6.0 (2024-12-09)
+
+* charruad: update to new cmdliner (#117 @haesbaert)
+* support mtime >= 2.0.0 (#121 @haesbaert, @tmcgilchrist)
+* charrua-unix: use duration package (#122 @hannesm)
+* replace Cstruct.copy by Cstruct.to_string (#123 @gridbugs)
+* use mirage-crypto-rng instead of mirage-random-test (#126 @hannesm)
+* remove mirage-random dependency, use mirage-crypto-rng instead - and update
+  to mirage-crypto-rng >= 1.0.0 (#127 @hannesm)
+* remove ppx_cstruct and sexplib from dependency cone (#128 @hannesm)
+* charrua-client: update to tcpip >= 8.1.0 (#129 @hannesm)
+
 ### v1.5.0 (2021-12-15)
 
 * Adapt to mirage-protocols 8.0.0, ethernet 3.0.0, arp 3.0.0, and tcpip 7.0.0
