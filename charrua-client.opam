@@ -23,9 +23,9 @@ depends: [
   "cstruct" {>= "6.0.0"}
   "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
-  "mirage-crypto-rng-mirage" {>= "1.0.0"}
-  "mirage-clock" {>= "3.0.0"}
-  "mirage-time" {>= "2.0.0"}
+  "mirage-crypto-rng" {>= "1.0.0"}
+  "mirage-mtime" {>= "4.0.0"}
+  "mirage-sleep" {>= "4.0.0"}
   "mirage-net" {>= "3.0.0"}
   "randomconv" {>= "0.2.0"}
   "duration"

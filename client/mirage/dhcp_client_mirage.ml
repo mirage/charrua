@@ -22,13 +22,13 @@ let config_of_lease lease =
       | [] -> Some (network, None)
       | hd::_ -> Some (network, Some hd)
 
-module Make(Random : Mirage_crypto_rng_mirage.S)(Time : Mirage_time.S) (Net : Mirage_net.S) = struct
+module Make (Net : Mirage_net.S) = struct
   open Lwt.Infix
 
   type t = (Ipaddr.V4.Prefix.t * Ipaddr.V4.t option) Lwt_stream.t
 
   let connect ?(requests : Dhcp_wire.option_code list option) net =
-    let module Lwt_client = Dhcp_client_lwt.Make(Random)(Time)(Net) in
+    let module Lwt_client = Dhcp_client_lwt.Make(Net) in
     Lwt_client.connect ~renew:false ?requests net >>= fun lease_stream ->
     Lwt.return @@ Lwt_stream.filter_map config_of_lease lease_stream
 end
