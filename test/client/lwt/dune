@@ -2,4 +2,4 @@
  (name test_client_lwt)
  (package charrua-client)
  (libraries cstruct-unix alcotest charrua-client.lwt lwt.unix
-   mirage-crypto-rng-lwt))
+   mirage-crypto-rng.unix))

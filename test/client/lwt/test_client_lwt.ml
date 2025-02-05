@@ -37,7 +37,7 @@ end
 
 let keep_trying () =
   Lwt_main.run @@ (
-    Mirage_crypto_rng_lwt.initialize (module Mirage_crypto_rng.Fortuna);
+    Mirage_crypto_rng_unix.use_default ();
     let module Client = Dhcp_client_lwt.Make(Mirage_crypto_rng)(No_time)(No_net) in
     let net = No_net.connect ~mac:(Macaddr.of_string_exn "c0:ff:ee:c0:ff:ee") () in
     let test =

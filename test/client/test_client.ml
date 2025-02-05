@@ -175,7 +175,7 @@ a new lease"
       "random buffer entry to BOUND client", `Quick, (no_result s n)
 
 let () =
-  Mirage_crypto_rng_unix.initialize (module Mirage_crypto_rng.Fortuna) ;
+  Mirage_crypto_rng_unix.use_default () ;
   let nfuzz = 100 in
   Alcotest.run "client tests" [
     (* these tests will programmatically put [Dhcp_client.t] into a particular
