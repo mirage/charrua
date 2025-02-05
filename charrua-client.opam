@@ -43,3 +43,4 @@ build: [
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 dev-repo: "git+https://github.com/mirage/charrua.git"
+x-maintenance-intent: [ "(latest)" ]
