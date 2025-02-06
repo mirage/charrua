@@ -17,8 +17,7 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "alcotest" {with-test}
   "cstruct-unix" {with-test}
-  "mirage-crypto-rng" {with-test & >= "1.0.0"}
-  "mirage-crypto-rng-lwt" {with-test & >= "1.0.0"}
+  "mirage-crypto-rng" {with-test & >= "1.2.0"}
   "charrua-server" {= version & with-test}
   "charrua" {= version}
   "cstruct" {>= "6.0.0"}

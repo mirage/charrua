@@ -29,7 +29,7 @@ bug-reports: "https://github.com/mirage/charrua/issues"
 depends: [
   "ocaml" {>= "4.08.0"}
   "dune" {>= "1.4.0"}
-  "menhir" {build & >= "20180523"}
+  "menhir" {build & >= "20181006"}
   "charrua" {= version}
   "cstruct" {>= "6.0.0"}
   "ipaddr" {>= "5.0.0"}
