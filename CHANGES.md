@@ -1,3 +1,8 @@
+### v2.0.0 (2025-02-11)
+
+* Adapt to tcpip 9.0.0 API changes (less functors) (#132 @hannesm)
+* Adapt to mirage-crypto 1.2.0 API changes (#131 @hannesm)
+
 ### v1.6.0 (2024-12-09)
 
 * charruad: update to new cmdliner (#117 @haesbaert)
