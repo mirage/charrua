@@ -35,7 +35,7 @@ depends: [
   "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
   "cstruct-unix" {with-test}
-  "tcpip" {>= "7.0.0" & with-test}
+  "tcpip" {>= "9.0.0" & with-test}
   "alcotest" {with-test & >= "1.4.0"}
 ]
 build: [

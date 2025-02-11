@@ -1,4 +1,4 @@
-module Make(Random : Mirage_crypto_rng_mirage.S)(Time : Mirage_time.S) (Network : Mirage_net.S) : sig
+module Make (Network : Mirage_net.S) : sig
   type t = (Ipaddr.V4.Prefix.t * Ipaddr.V4.t option) Lwt_stream.t
   val connect : ?requests:Dhcp_wire.option_code list
     -> Network.t -> t Lwt.t
