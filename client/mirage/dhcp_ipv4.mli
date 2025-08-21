@@ -16,6 +16,7 @@
 
 module Make (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
-  val connect : Network.t -> E.t -> Arp.t -> t Lwt.t
+  val connect : ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
+    Network.t -> E.t -> Arp.t -> t Lwt.t
     (** Connect to an ipv4 device using information from a DHCP lease. *)
 end
