@@ -20,6 +20,7 @@ type state  = | Selecting of Dhcp_wire.pkt (* dhcpdiscover sent *)
 type t = {
   srcmac : Macaddr.t;
   request_options : Dhcp_wire.option_code list;
+  options : Dhcp_wire.dhcp_option list;
   state  : state;
 }
 
@@ -125,14 +126,15 @@ let make_request ?(ciaddr = Ipaddr.V4.any) ~xid ~chaddr ~srcmac ~siaddr ~options
   })
 
 (* respond to an incoming DHCPOFFER. *)
-let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options:_ =
+let offer (t : t) ~xid ~chaddr ~server_ip ~request_ip ~offer_options:_ =
   let open Dhcp_wire in
   (* TODO: make sure the offer contains everything we expect before we accept it *)
   let options = [
     Message_type DHCPREQUEST;
     Request_ip request_ip;
     Server_identifier server_ip;
-  ] in
+  ] @ t.options
+  in
   let options =
     match t.request_options with
     | [] -> options (* if this is the case, the user explicitly requested it; honor that *)
@@ -143,7 +145,7 @@ let offer t ~xid ~chaddr ~server_ip ~request_ip ~offer_options:_ =
 (* make a new DHCP client. allow the user to request a specific xid, any
    requests, and the MAC address to use as the source for Ethernet messages and
    the chaddr in the fixed-length part of the message *)
-let create ?requests xid srcmac =
+let create ?(options = []) ?requests xid srcmac =
   let open Constants in
   let open Dhcp_wire in
   let requests = match requests with
@@ -171,9 +173,9 @@ let create ?requests xid srcmac =
       Message_type DHCPDISCOVER;
       Client_id (Hwaddr srcmac);
       Parameter_requests requests;
-    ];
+    ] @ options;
   } in
-  {srcmac; request_options = requests; state = Selecting pkt}, pkt
+  {srcmac; request_options = requests; options; state = Selecting pkt}, pkt
 
 (* for a DHCP client, figure out whether an incoming packet should modify the
    state, and if a response message is warranted, generate it.
@@ -208,7 +210,7 @@ let input t buf =
     | Some DHCPACK, Renewing _
     | Some DHCPACK, Requesting _ -> `New_lease ({t with state = Bound incoming}, incoming)
     | Some DHCPNAK, Requesting _ | Some DHCPNAK, Renewing _ ->
-      `Response (create ~requests:t.request_options (xid t) t.srcmac)
+      `Response (create ~options:t.options ~requests:t.request_options (xid t) t.srcmac)
     | Some DHCPACK, Selecting _ (* too soon *)
     | Some DHCPACK, Bound _ -> (* too late *)
       `Noop

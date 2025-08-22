@@ -4,6 +4,7 @@ module Make (Net : Mirage_net.S) : sig
   type t = lease Lwt_stream.t
 
   val connect : ?renew:bool -> ?xid:Cstruct.uint32 ->
+    ?options:Dhcp_wire.dhcp_option list ->
     ?requests:Dhcp_wire.option_code list -> Net.t -> t Lwt.t
   (** [connect renew ~xid requests net] starts a DHCP client communicating
       over the network interface [net].  The client will attempt to get a DHCP

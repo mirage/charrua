@@ -3,7 +3,7 @@ type t
 
 val pp : Format.formatter -> t -> unit
 
-val create : ?requests : Dhcp_wire.option_code list -> Cstruct.uint32 -> Macaddr.t -> (t * Dhcp_wire.pkt)
+val create : ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list -> Cstruct.uint32 -> Macaddr.t -> (t * Dhcp_wire.pkt)
 (** [create xid mac] returns a pair of [t, buffer].  [t] represents the current
  * state of the client in the lease transaction, and [buffer] is the suggested
  * next packet the caller should take to progress toward accepting a lease.
