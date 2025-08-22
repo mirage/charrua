@@ -968,6 +968,50 @@ let t_db_serialization () =
   in
   assert (Lease.db_equal db0 (Lease.db_to_string db0 |> Lease.db_of_string))
 
+let dhcp_client_fqdn () =
+  let data = Ohex.decode {|
+  ff ff ff ff ff ff 94 65 9c 56 35 65 08 00 45 10
+  01 48 00 00 00 00 80 11 39 96 00 00 00 00 ff ff
+  ff ff 00 44 00 43 01 34 fe 84 01 01 06 00 3e 83
+  a9 57 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 94 65 9c 56 35 65 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  00 00 00 00 00 00 63 82 53 63 35 01 01 0c 0b 6d
+  79 2e 6e 61 6d 65 2e 6f 72 67 51 13 05 00 00 02
+  6d 79 07 65 78 61 6d 70 6c 65 03 63 6f 6d 00 37
+  07 01 1c 02 03 0f 06 0c ff 00 00 00 00 00 00 00
+  00 00 00 00 00 00 |}
+  in
+  let client_fqdn = [ `Server_A ; `Wire_encoding ], Domain_name.of_string_exn "my.example.com" in
+  match Dhcp_wire.pkt_of_buf (Cstruct.of_string data) (String.length data) with
+  | Error s -> invalid_arg s
+  | Ok pkt ->
+    match find_client_fqdn pkt.Dhcp_wire.options with
+    | None -> invalid_arg "expected client fqdn being present"
+    | Some (flags, n) ->
+      assert (flags = fst client_fqdn);
+      assert (Domain_name.equal n (snd client_fqdn));
+      let b = Dhcp_wire.buf_of_pkt pkt in
+      match Dhcp_wire.pkt_of_buf b (Cstruct.length b) with
+      | Error s -> invalid_arg s
+      | Ok pkt' ->
+        match find_client_fqdn pkt'.Dhcp_wire.options with
+        | None -> invalid_arg "expected client fqdn being present"
+        | Some (flags, n) ->
+          assert (flags = fst client_fqdn);
+          assert (Domain_name.equal n (snd client_fqdn))
+
 let to_alco test () =
   try
     test ();
@@ -988,6 +1032,7 @@ let alco_tests () =
       "collect replies", `Quick, to_alco t_collect_replies;
       "host options", `Quick, to_alco t_host_options;
       "lease database serialization", `Quick, to_alco t_db_serialization;
+      "DHCP client FQDN", `Quick, to_alco dhcp_client_fqdn;
     ];
     "state progression", [
       "discover->offer", `Quick, to_alco t_discover_range;

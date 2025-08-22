@@ -193,6 +193,21 @@ type client_id =
 val client_id_to_string : client_id -> string
 val string_to_client_id : string -> client_id option
 
+type client_fqdn =
+  [ `Server_A (* C2S server should register A in DNS *)
+  | `Overriden (* S2C DNS entry was overriden *)
+  | `No_update (* C2S should not do any DNS updates *)
+  | `Wire_encoding (* both, if not set some deprecated ASCII encoding *)
+  ] list *
+  (* rcode_1 and rcode_2, both ignored *)
+  [ `raw ] Domain_name.t
+(** A client_fqdn is some flags, and a domain name. *)
+
+(** Conversions of {! client_fqdn}. *)
+
+val client_fqdn_to_string : client_fqdn -> string
+val string_to_client_fqdn : string -> client_fqdn
+
 (** {2 DHCP options} *)
 
 type dhcp_option =
@@ -258,7 +273,7 @@ type dhcp_option =
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | User_class of string                    (* code 77 *)
   | Rapid_commit                            (* code 80 *)
-  | Client_fqdn of string                   (* code 81 *)
+  | Client_fqdn of client_fqdn              (* code 81 *)
   | Relay_agent_information of string       (* code 82 *)
   | Client_system of string                 (* code 93 *)
   | Client_ndi of string                    (* code 94 *)
@@ -315,7 +330,7 @@ val find_bootfile_name : dhcp_option list -> string option
 val find_bootfile_size : dhcp_option list -> int option
 val find_broadcast_addr : dhcp_option list -> Ipaddr.V4.t option
 val find_classless_static_route : dhcp_option list -> string option
-val find_client_fqdn : dhcp_option list -> string option
+val find_client_fqdn : dhcp_option list -> client_fqdn option
 val find_client_id : dhcp_option list -> client_id option
 val find_client_ndi : dhcp_option list -> string option
 val find_client_system : dhcp_option list -> string option
