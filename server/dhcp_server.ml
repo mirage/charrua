@@ -404,7 +404,7 @@ module Input = struct
 
   let fixed_addr_of_mac config mac =
     match host_of_mac config mac with
-    | Some host -> if host.hw_addr = mac then host.fixed_addr else None
+    | Some host -> host.fixed_addr
     | None -> None
 
   let _options_of_mac config mac =
