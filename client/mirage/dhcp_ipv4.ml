@@ -7,7 +7,11 @@ module Make (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) = struct
   let connect ?cidr ?gateway ?options ?requests net ethernet arp =
     (match cidr with
      | None ->
-       DHCP.connect ?options ?requests net >>= fun dhcp ->
+       let requests = match requests with
+         | None -> Dhcp_wire.[ SUBNET_MASK; ROUTERS ]
+         | Some s -> s
+       in
+       DHCP.connect ?options ~requests net >>= fun dhcp ->
        Lwt_stream.last_new dhcp
      | Some ip ->
        Lwt.return (ip, gateway)) >>= fun (cidr, gateway) ->
