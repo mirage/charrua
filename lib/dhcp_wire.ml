@@ -579,6 +579,45 @@ let string_to_client_id = function
      | _ -> None)
   | _ -> None
 
+(* from RFC 4702 *)
+type client_fqdn =
+  [ `Server_A (* C2S server should register A in DNS *)
+  | `Overriden (* S2C DNS entry was overriden *)
+  | `No_update (* C2S should not do any DNS updates *)
+  | `Wire_encoding (* both, if not set some deprecated ASCII encoding *)
+  ] list *
+  (* rcode_1 and rcode_2, both ignored *)
+  [ `raw ] Domain_name.t
+
+let client_fqdn_to_string (flags, fqdn) =
+  let flag_to_string = function
+    | `Server_A -> "S"
+    | `Overriden -> "O"
+    | `No_update -> "N"
+    | `Wire_encoding -> "E"
+  in
+  String.concat "" (List.map flag_to_string flags) ^ ", " ^
+  Domain_name.to_string fqdn
+
+let string_to_client_fqdn data =
+  let char_to_flag = function
+    | 'S' -> Some `Server_A
+    | 'O' -> Some `Overriden
+    | 'N' -> Some `No_update
+    | 'E' -> Some `Wire_encoding
+    | _ -> None
+  in
+  let flags, fqdn =
+    match String.split_on_char ' ' data with
+    | [] -> "", ""
+    | f :: rest -> f, String.concat " " rest
+  in
+  String.fold_left (fun acc c -> match char_to_flag c with
+      | Some f -> f :: acc
+      | None -> acc)
+    [] flags,
+  match Domain_name.of_string fqdn with Ok s -> s | Error _ -> Domain_name.root
+
 type dhcp_option =
   | Pad                                     (* code 0 *)
   | Subnet_mask of Ipaddr.V4.t         (* code 1 *)
@@ -642,7 +681,7 @@ type dhcp_option =
   | Irc_servers of Ipaddr.V4.t list         (* code 74 *)
   | User_class of string                    (* code 77 *)
   | Rapid_commit                            (* code 80 *)
-  | Client_fqdn of string                   (* code 81 *)
+  | Client_fqdn of client_fqdn              (* code 81 *)
   | Relay_agent_information of string       (* code 82 *)
   | Client_system of string                 (* code 93 *)
   | Client_ndi of string                    (* code 94 *)
@@ -724,7 +763,7 @@ let dhcp_option_to_string = function
   | Irc_servers ips -> "IRC servers " ^ String.concat ", " (List.map Ipaddr.V4.to_string ips)
   | User_class s -> "User class " ^ s
   | Rapid_commit -> "Rapid commit"
-  | Client_fqdn s -> "Client FQDN " ^ s
+  | Client_fqdn s -> "Client FQDN " ^ client_fqdn_to_string s
   | Relay_agent_information s -> "Relay agent information " ^ s
   | Client_system s -> "Client system " ^ s
   | Client_ndi s -> "Client NDI " ^ s
@@ -859,6 +898,39 @@ let options_of_buf buf buf_len =
           else
             Id (htype, s)
       in
+      let get_client_fqdn () = if len < 4 then invalid_arg bad_len else
+          let rec parse_domain_name acc idx data =
+            let sl = String.length data in
+            if sl - idx = 0 then
+              Domain_name.of_strings (List.rev acc)
+            else
+              let l = String.get_uint8 data idx in
+              if l <= sl - idx - 1 then
+                let lbl = String.sub data (idx + 1) l in
+                parse_domain_name (lbl :: acc) (idx + l + 1) data
+              else
+                Error (`Msg "invalid length")
+          in
+          let flags =
+            let d = Cstruct.get_uint8 body 0 in
+            (if d land 0x1 > 0 then [ `Server_A ] else []) @
+            (if d land 0x2 > 0 then [ `Overriden ] else []) @
+            (if d land 0x4 > 0 then [ `Wire_encoding ] else []) @
+            (if d land 0x8 > 0 then [ `No_update ] else [])
+          in
+          let fqdn =
+            let d = Cstruct.to_string ~off:3 ~len:(len - 3) body in
+            match
+              if List.mem `Wire_encoding flags then
+                parse_domain_name [] 0 d
+              else
+                Domain_name.of_string d
+            with
+              | Ok n -> n
+              | Error `Msg s -> invalid_arg s
+          in
+          flags, fqdn
+      in
       match code with
       | 0 ->   padding ()
       | 1 ->   take (Subnet_mask (get_ip ()))
@@ -924,7 +996,7 @@ let options_of_buf buf buf_len =
       | 74 ->  take (Irc_servers (get_ip_list ()))
       | 77 ->  take (User_class (get_string ()))
       | 80 ->  take Rapid_commit
-      | 81 ->  take (Client_fqdn (get_string ()))
+      | 81 ->  take (Client_fqdn (get_client_fqdn ()))
       | 82 ->  take (Relay_agent_information (get_string ()))
       | 93 ->  take (Client_system (get_string ()))
       | 94 ->  take (Client_ndi (get_string ()))
@@ -1015,6 +1087,36 @@ let buf_of_options sbuf options =
     blit_from_string s 0 buf 0 len;
     shift buf len
   in
+  let put_client_fqdn code (flags, dn) buf =
+    let f =
+      (if List.mem `Server_A flags then 0x1 else 0) +
+      (if List.mem `Overriden flags then 0x2 else 0) +
+      (if List.mem `Wire_encoding flags then 0x4 else 0) +
+      (if List.mem `No_update flags then 0x8 else 0)
+    in
+    let encode_domain_name dn =
+      String.concat ""
+        (List.map (fun s ->
+             let l = String.length s in
+             let f = String.make 1 (char_of_int l) in
+             f ^ s)
+           (Domain_name.to_strings ~trailing:true dn))
+    in
+    let dn =
+      if List.mem `Wire_encoding flags then
+        encode_domain_name dn
+      else
+        Domain_name.to_string dn
+    in
+    let len = String.length dn in
+    (* the last two "put_8 0" are the RCODE, should be 0 for client, and 0xFF
+       for server - but should also be ignored by both sides *)
+    let buf =
+      put_code code buf |> put_len (len + 3) |> put_8 f |> put_8 0 |> put_8 0
+    in
+    blit_from_string dn 0 buf 0 len;
+    shift buf len
+  in
   let make_listf ?(min_len=1) f len code l buf =
     if (List.length l) < min_len then invalid_arg "Invalid option" else
     let buf = put_code code buf |> put_len (len * (List.length l)) in
@@ -1095,7 +1197,7 @@ let buf_of_options sbuf options =
     | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
     | User_class uc -> put_coded_bytes 77 uc buf              (* code 77 *)
     | Rapid_commit -> put_coded_bytes 80 "" buf               (* code 80 *)
-    | Client_fqdn dn -> put_coded_bytes 81 dn buf             (* code 81 *)
+    | Client_fqdn dn -> put_client_fqdn 81 dn buf             (* code 81 *)
     | Relay_agent_information ai -> put_coded_bytes 82 ai buf (* code 82 *)
     | Client_system cs -> put_coded_bytes 93 cs buf           (* code 93 *)
     | Client_ndi ndi -> put_coded_bytes 94 ndi buf            (* code 94 *)
