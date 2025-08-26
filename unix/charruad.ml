@@ -106,8 +106,8 @@ let rec input config db link gbcol =
       Logs.debug (fun m -> m "Received packet: %a" Dhcp_wire.pp_pkt pkt);
       match (input_pkt config db pkt (Int32.of_int now)) with
       | Silence -> return db
-      | Update db -> return db
-      | Reply (reply, db) ->
+      | Update (_lease, db) -> return db
+      | Reply (reply, _, db) ->
         Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply) >>= fun () ->
         Logs.debug (fun m -> m "Sent reply packet: %a" Dhcp_wire.pp_pkt reply);
         return db

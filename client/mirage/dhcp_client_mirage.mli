@@ -1,7 +1,7 @@
 module Make (Network : Mirage_net.S) : sig
   type t = (Ipaddr.V4.Prefix.t * Ipaddr.V4.t option) Lwt_stream.t
-  val connect : ?requests:Dhcp_wire.option_code list
-    -> Network.t -> t Lwt.t
+  val connect : ?options:Dhcp_wire.dhcp_option list ->
+    ?requests:Dhcp_wire.option_code list -> Network.t -> t Lwt.t
   (** [connect ?requests net] attempts to use [net] to obtain a valid
       DHCP lease containing the DHCP option codes listed in [request].
       If [request] is not specified, [connect] uses the default values

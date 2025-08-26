@@ -394,8 +394,8 @@ module Input = struct
 
   type result =
     | Silence
-    | Update of Lease.database
-    | Reply of Dhcp_wire.pkt * Lease.database
+    | Update of Lease.t option * Lease.database
+    | Reply of Dhcp_wire.pkt * (Lease.t * Dhcp_wire.dhcp_option list) option * Lease.database
     | Warning of string
     | Error of string
 
@@ -647,11 +647,13 @@ module Input = struct
           match lease with
           | None -> Silence (* lease is unowned, ignore *)
           | Some lease ->
-            Update (
+            let lease, db =
               if not fixed_lease then
-                Lease.remove lease db
-              else
-                db)
+                Some lease, Lease.remove lease db
+              else (* hannes: not yet entirely sure whether the caller wants to know this anyways *)
+                None, db
+            in
+            Update (lease, db)
 
   let input_release config db pkt now =
     let msgtype = match find_message_type pkt.options with
@@ -672,11 +674,13 @@ module Input = struct
         match lease with
         | None -> Silence (* lease is unowned, ignore *)
         | Some lease ->
-          Update
-            (if not fixed_lease && pkt.ciaddr = lease.addr then
-               Lease.remove lease db
-             else
-               db)
+          let lease, db =
+            if not fixed_lease && pkt.ciaddr = lease.addr then
+              Some lease, Lease.remove lease db
+            else (* hannes: not yet entirely sure whether the caller wants to know this anyways *)
+              None, db
+          in
+          Update (lease, db)
 
   let input_inform config db pkt =
     if pkt.ciaddr = Ipaddr.V4.unspecified then
@@ -697,7 +701,8 @@ module Input = struct
           ~ciaddr:pkt.ciaddr ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, db)
+      (* hannes: re-read the INFORM semantics, is this only about options? *)
+      Reply (pkt, None, db)
 
   let input_request config db pkt now =
     let client_id = client_id_of_pkt pkt in
@@ -720,7 +725,7 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:Ipaddr.V4.unspecified
           ~siaddr:Ipaddr.V4.unspecified ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, db)
+      Reply (pkt, None, db)
     in
     let ack lease =
       let open Util in
@@ -744,11 +749,15 @@ module Input = struct
           ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      if not fixed_lease then
-        let () = assert (lease.Lease.client_id = client_id) in
-        Reply (reply, Lease.replace lease db)
-      else
-        Reply (reply, db)
+      let lease, db =
+        if not fixed_lease then
+          let () = assert (lease.Lease.client_id = client_id) in
+          Some lease, Lease.replace lease db
+        else
+          (* hannes: even if we have a static lease, we may want to know and do something *)
+          None, db
+      in
+      Reply (reply, Option.map (fun l -> l, pkt.options) lease, db)
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -854,7 +863,7 @@ module Input = struct
           ~ciaddr:Ipaddr.V4.unspecified ~yiaddr:addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
       in
-      Reply (pkt, db)
+      Reply (pkt, None, db)
 
   let input_pkt config db pkt time =
     try
