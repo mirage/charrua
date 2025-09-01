@@ -61,8 +61,8 @@ let assert_reply p =
   match p with
   | Warning s | Error s -> Alcotest.fail s
   | Silence -> Alcotest.fail "Silence from the server in response to a request"
-  | Update _db -> Alcotest.fail "database update but no reply -- in our context this is likely a bug"
-  | Reply (pkt, db) -> (pkt, db)
+  | Update (_, _db) -> Alcotest.fail "database update but no reply -- in our context this is likely a bug"
+  | Reply (pkt, _, db) -> (pkt, db)
 
 let server_accepts_start_packet () =
   let open Defaults in
