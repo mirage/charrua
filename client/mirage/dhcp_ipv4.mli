@@ -19,5 +19,7 @@ module Make (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) : sig
   val connect : ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
     ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list ->
     Network.t -> E.t -> Arp.t -> t Lwt.t
-    (** Connect to an ipv4 device using information from a DHCP lease. *)
+  (** Connect to an ipv4 device using information from a DHCP lease.
+      If [cidr] is provided, no DHCP requests will be done, but instead a static
+      IPv4 (Tcpip.Ip.S) stack will be used. *)
 end
