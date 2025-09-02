@@ -1,3 +1,12 @@
+### v2.1.0 (2025-09-02)
+
+* Add support for client FQDN (RFC 4702) (#133 @hannesm)
+* Client: allow cidr, gateway, no_init being passed to connect. If passed,
+  no DHCP requests will be done. This enables MirageOS unikernels where the
+  decision whether to do DHCP or not is done at runtime (#135 @hannesm)
+* Client: pass options to be embedded in the DHCP request (#135 @hannesm)
+* server: extend Update and Reply with lease and DHCP options (#135 @hannesm)
+
 ### v2.0.0 (2025-02-11)
 
 * Adapt to tcpip 9.0.0 API changes (less functors) (#132 @hannesm)
