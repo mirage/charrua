@@ -8,9 +8,7 @@ module Make (Net : Mirage_net.S) = struct
 
   type t = lease Lwt_stream.t
 
-  let connect ?(renew = true)
-              ?xid
-              ?(requests : Dhcp_wire.option_code list option) net =
+  let connect ?(renew = true) ?xid ?options ?requests net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
     let sleep_interval = Duration.of_sec 4 in
@@ -21,7 +19,7 @@ module Make (Net : Mirage_net.S) = struct
       | None -> Randomconv.int32 Mirage_crypto_rng.generate
       | Some xid -> xid
     in
-    let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
+    let (client, dhcpdiscover) = Dhcp_client.create ?options ?requests xid (Net.mac net) in
     let c = ref client in
 
     let rec do_renew c t =

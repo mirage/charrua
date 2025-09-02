@@ -119,10 +119,12 @@ module Input : sig
 
   type result =
     | Silence (** Input packet didn't belong to us, normal nop event.*)
-    | Update of Lease.database (** Lease database update. *)
-    | Reply of Dhcp_wire.pkt * Lease.database
+    | Update of Lease.t option * Lease.database (** Lease database update. *)
+    (* hannes: in the Lease.t option we'll need information about which hostname / DNS FQDN was provisioned (maybe a list of Dhcp_wire.dhcp_option?) *)
+    | Reply of Dhcp_wire.pkt * (Lease.t * Dhcp_wire.dhcp_option list) option * Lease.database
     (** Reply packet to be sent back and the corresponding lease database to be
         used in case the sent of the reply pkt is successfull *)
+    (* hannes: the returned option list may involve the reply to be extended, and it may as well require a NAK being send (on error?) -- and the lease database update being discarded *)
     | Warning of string (** An odd event, could be logged. *)
     | Error of string (** Input packet is invalid, or some other error ocurred. *)
     (** The result of [input_pkt]. *)
