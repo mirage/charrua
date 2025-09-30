@@ -1,5 +1,8 @@
 open Lwt.Infix
 
+let src = Logs.Src.create "dhcp_client_mirage"
+module Log = (val Logs.src_log src : Logs.LOG)
+
 module Make (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) = struct
   (* for now, just wrap a static ipv4 *)
   module DHCP = Dhcp_client_mirage.Make(Network)
@@ -7,6 +10,9 @@ module Make (Network : Mirage_net.S) (E : Ethernet.S) (Arp : Arp.S) = struct
   let connect ?(no_init = false) ?cidr ?gateway ?options ?requests net ethernet arp =
     (match cidr, no_init with
      | None, false ->
+       Option.iter (fun g ->
+           Log.warn (fun m -> m "No CIDR provided, but a gateway %a, which will be ignored (requesting a DHCP lease)"
+                        Ipaddr.V4.pp g)) gateway;
        let requests = match requests with
          | None -> Dhcp_wire.[ SUBNET_MASK; ROUTERS ]
          | Some s -> s
