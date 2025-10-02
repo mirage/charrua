@@ -1,3 +1,12 @@
+### v2.1.1 (2025-10-02)
+
+* Log a warning when `gateway` but no `cidr` is passed to
+  `Dhcp_v4.Make.connect` as that is not currently handled. (#138 @hannesm @reynir)
+* Add a condition in `Dhcp_client_lwt.connect` in order to cancel the listener
+  earlier when we have a successful lease. This ensures this listener doesn't
+  "steal" packets from later installed listeners resulting in dropped packets
+  for about four seconds. (#137 @reynir @hannesm)
+
 ### v2.1.0 (2025-09-02)
 
 * Add support for client FQDN (RFC 4702) (#133 @hannesm)
