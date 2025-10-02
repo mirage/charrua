@@ -35,14 +35,17 @@ module Make (Net : Mirage_net.S) = struct
           | Ok () ->
             do_renew c t (* ideally t would come from the new lease... *)
     in
-    let rec get_lease push dhcpdiscover =
+    let rec get_lease cond push dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
       Net.write net ~size (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
       | Error e ->
         Log.err (fun f -> f "Failed to write initial lease discovery request: %a" Net.pp_error e);
         Lwt.return_unit
       | Ok () ->
-        Mirage_sleep.ns sleep_interval >>= fun () ->
+        Lwt.pick [
+          Lwt_condition.wait cond;
+          Mirage_sleep.ns sleep_interval;
+        ] >>= fun () ->
         match Dhcp_client.lease !c with
         | Some _lease -> Lwt.return_unit
         | None ->
@@ -51,9 +54,9 @@ module Make (Net : Mirage_net.S) = struct
           c := client;
           Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
           Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
-          get_lease push dhcpdiscover
+          get_lease cond push dhcpdiscover
     in
-    let listen push () =
+    let listen cond push () =
       Net.listen net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
@@ -77,6 +80,7 @@ module Make (Net : Mirage_net.S) = struct
                        (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
           push @@ Some l;
           c := s;
+          Lwt_condition.broadcast cond ();
           match renew with
           | true ->
             Mirage_sleep.ns @@ Duration.of_sec 1800 >>= fun () ->
@@ -87,11 +91,12 @@ module Make (Net : Mirage_net.S) = struct
       )
     in
     let lease_wrapper (push : Dhcp_wire.pkt option -> unit) () =
+      let cond = Lwt_condition.create () in
       Lwt.pick [
-        (listen push () >|= function
+        (listen cond push () >|= function
           | Error _ | Ok () -> push None (* if canceled, the stream should end *)
         );
-        get_lease push dhcpdiscover;
+        get_lease cond push dhcpdiscover;
       ]
     in
     let (s, push) = Lwt_stream.create () in
