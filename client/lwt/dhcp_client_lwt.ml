@@ -6,7 +6,14 @@ module Make (Net : Mirage_net.S) = struct
 
   type lease = Dhcp_wire.pkt
 
-  type t = lease Lwt_stream.t
+  type t = {
+    lease : lease Lwt_stream.t;
+    net : Net.t;
+    mutable listen : Cstruct.t -> unit Lwt.t;
+    stop_condition : (unit, Net.error) result Lwt_condition.t;
+  }
+
+  let lease_stream t = t.lease
 
   let connect ?(renew = true) ?xid ?options ?requests net =
     (* listener needs to occasionally check to see whether the state has advanced,
@@ -56,12 +63,14 @@ module Make (Net : Mirage_net.S) = struct
           Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
           get_lease cond push dhcpdiscover
     in
-    let listen cond push () =
-      Net.listen net ~header_size (fun buf ->
+    let listen t cond push =
+      Net.listen t.net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
           Log.debug (fun f -> f "No action! State is %a" Dhcp_client.pp !c);
           Lwt.return_unit
+        | `Not_dhcp ->
+          t.listen buf
         | `Response (s, action) -> begin
             Net.write net ~size (Dhcp_wire.pkt_into_buf action) >>= function
             | Error e ->
@@ -90,16 +99,35 @@ module Make (Net : Mirage_net.S) = struct
             Lwt.return_unit
       )
     in
-    let lease_wrapper (push : Dhcp_wire.pkt option -> unit) () =
+    let lease_wrapper t (push : Dhcp_wire.pkt option -> unit) () =
       let cond = Lwt_condition.create () in
-      Lwt.pick [
-        (listen cond push () >|= function
-          | Error _ | Ok () -> push None (* if canceled, the stream should end *)
-        );
-        get_lease cond push dhcpdiscover;
-      ]
+      Lwt.both
+        (listen t cond push >|= fun r ->
+         Lwt_condition.broadcast t.stop_condition r;
+         push None (* if canceled, the stream should end *))
+        (get_lease cond push dhcpdiscover)
+      >|= fun ((), ()) -> ()
     in
     let (s, push) = Lwt_stream.create () in
-    Lwt.async (fun () -> lease_wrapper push ());
-    Lwt.return s
+    let t = { lease = s; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
+    Lwt.async (fun () -> lease_wrapper t push ());
+    Lwt.return t
+
+  let listen' t fn =
+    t.listen <- fn;
+    Lwt_condition.wait t.stop_condition
+
+  let listen t ~header_size fn =
+    (* can this ever not be ethernet?! *)
+    assert (header_size = Ethernet.Packet.sizeof_ethernet);
+    listen' t fn
+
+  type error = Net.error
+  let pp_error = Net.pp_error
+  let disconnect t = Net.disconnect t.net
+  let write t = Net.write t.net
+  let mac t = Net.mac t.net
+  let mtu t = Net.mtu t.net
+  let get_stats_counters t = Net.get_stats_counters t.net
+  let reset_stats_counters t = Net.reset_stats_counters t.net
 end

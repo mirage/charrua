@@ -417,7 +417,7 @@ type pkt = {
 
 (** Conversions for {! pkt}. *)
 
-val pkt_of_buf : Cstruct.t -> int -> (pkt, string) result
+val pkt_of_buf : Cstruct.t -> int -> (pkt, [ `Msg of string | `Not_dhcp ]) result
 val buf_of_pkt : pkt -> Cstruct.t
 val pkt_into_buf : pkt -> Cstruct.t -> int
 

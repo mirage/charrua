@@ -1,3 +1,5 @@
+val config_of_lease : Dhcp_wire.pkt -> (Ipaddr.V4.Prefix.t * Ipaddr.V4.t option) option
+
 module Make (Network : Mirage_net.S) : sig
   type t = (Ipaddr.V4.Prefix.t * Ipaddr.V4.t option) Lwt_stream.t
   val connect : ?options:Dhcp_wire.dhcp_option list ->

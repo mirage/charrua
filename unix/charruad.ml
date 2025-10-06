@@ -99,7 +99,9 @@ let rec input config db link gbcol =
   maybe_gc db now gbcol
   >>= fun (db, gbcol) ->
   let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) with
-    | Error e -> Lwt_log.error e
+    | Error `Not_dhcp -> Lwt_log.error "packet is not ipv4" >>= fun () ->
+      return db
+    | Error (`Msg e) -> Lwt_log.error e
       >>= fun () ->
       return db
     | Ok pkt ->

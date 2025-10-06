@@ -1,7 +1,9 @@
 module Make (Net : Mirage_net.S) : sig
+  include Mirage_net.S
+
   type lease = Dhcp_wire.pkt
 
-  type t = lease Lwt_stream.t
+  val lease_stream : t -> lease Lwt_stream.t
 
   val connect : ?renew:bool -> ?xid:Cstruct.uint32 ->
     ?options:Dhcp_wire.dhcp_option list ->

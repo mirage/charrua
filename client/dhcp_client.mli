@@ -16,7 +16,7 @@ val create : ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_c
     DISCOVER and DHCP REQUEST.
  *)
 
-val input : t -> Cstruct.t -> [`Response of t * Dhcp_wire.pkt | `New_lease of t * Dhcp_wire.pkt | `Noop ]
+val input : t -> Cstruct.t -> [`Response of t * Dhcp_wire.pkt | `New_lease of t * Dhcp_wire.pkt | `Noop | `Not_dhcp ]
 (** [input t buf] attempts to advance the state of [t]
     with the contents of [buf].  If [buf] is invalid or not useful given
     the current state of [t], [`Noop] is returned indicating no action should be taken.

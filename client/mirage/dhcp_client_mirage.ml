@@ -29,6 +29,7 @@ module Make (Net : Mirage_net.S) = struct
 
   let connect ?options ?requests net =
     let module Lwt_client = Dhcp_client_lwt.Make(Net) in
-    Lwt_client.connect ~renew:false ?options ?requests net >>= fun lease_stream ->
+    Lwt_client.connect ~renew:false ?options ?requests net >>= fun t ->
+    let lease_stream = Lwt_client.lease_stream t in
     Lwt.return @@ Lwt_stream.filter_map config_of_lease lease_stream
 end
