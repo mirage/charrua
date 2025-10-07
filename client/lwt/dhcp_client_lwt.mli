@@ -3,7 +3,7 @@ module Make (Net : Mirage_net.S) : sig
 
   type lease = Dhcp_wire.pkt
 
-  val lease_stream : t -> lease Lwt_stream.t
+  val lease_mvar : t -> lease Lwt_mvar.t
 
   val connect : ?renew:bool -> ?xid:Cstruct.uint32 ->
     ?options:Dhcp_wire.dhcp_option list ->
@@ -18,4 +18,6 @@ module Make (Net : Mirage_net.S) : sig
       DHCP options sent by the client in the DHCP DISCOVER and DHCP REQUEST. The
       [requests] will be transmitted as DHCP parameter request also in the DHCP
       DISCOVER and DHCP REQUEST. *)
+
+  val connect_no_dhcp : Net.t -> t Lwt.t
 end

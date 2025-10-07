@@ -7,13 +7,13 @@ module Make (Net : Mirage_net.S) = struct
   type lease = Dhcp_wire.pkt
 
   type t = {
-    lease : lease Lwt_stream.t;
+    lease : lease Lwt_mvar.t;
     net : Net.t;
     mutable listen : Cstruct.t -> unit Lwt.t;
     stop_condition : (unit, Net.error) result Lwt_condition.t;
   }
 
-  let lease_stream t = t.lease
+  let lease_mvar t = t.lease
 
   let connect ?(renew = true) ?xid ?options ?requests net =
     (* listener needs to occasionally check to see whether the state has advanced,
@@ -42,7 +42,7 @@ module Make (Net : Mirage_net.S) = struct
           | Ok () ->
             do_renew c t (* ideally t would come from the new lease... *)
     in
-    let rec get_lease cond push dhcpdiscover =
+    let rec get_lease cond dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
       Net.write net ~size (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
       | Error e ->
@@ -61,9 +61,9 @@ module Make (Net : Mirage_net.S) = struct
           c := client;
           Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
           Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
-          get_lease cond push dhcpdiscover
+          get_lease cond dhcpdiscover
     in
-    let listen t cond push =
+    let listen t cond =
       Net.listen t.net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
@@ -87,30 +87,37 @@ module Make (Net : Mirage_net.S) = struct
           Log.info (fun f -> f "Lease obtained! IP: %a, routers: %a"
                        Ipaddr.V4.pp l.yiaddr
                        (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
-          push @@ Some l;
+          Lwt_mvar.put t.lease l >>= fun () ->
           c := s;
           Lwt_condition.broadcast cond ();
+          (* TODO think more abour renewal, adjust timeouts *)
           match renew with
           | true ->
             Mirage_sleep.ns @@ Duration.of_sec 1800 >>= fun () ->
             do_renew !c 1800
           | false ->
-            push None;
             Lwt.return_unit
       )
     in
-    let lease_wrapper t (push : Dhcp_wire.pkt option -> unit) () =
+    let lease_wrapper t () =
       let cond = Lwt_condition.create () in
       Lwt.both
-        (listen t cond push >|= fun r ->
-         Lwt_condition.broadcast t.stop_condition r;
-         push None (* if canceled, the stream should end *))
-        (get_lease cond push dhcpdiscover)
+        (listen t cond >|= fun r ->
+         Lwt_condition.broadcast t.stop_condition r)
+        (get_lease cond dhcpdiscover)
       >|= fun ((), ()) -> ()
     in
-    let (s, push) = Lwt_stream.create () in
-    let t = { lease = s; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
-    Lwt.async (fun () -> lease_wrapper t push ());
+    let lease = Lwt_mvar.create_empty () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
+    Lwt.async (fun () -> lease_wrapper t ());
+    Lwt.return t
+
+  let connect_no_dhcp net =
+    let lease = Lwt_mvar.create_empty () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
+    Lwt.async (fun () ->
+        Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet t.listen >|= fun r ->
+        Lwt_condition.broadcast t.stop_condition r);
     Lwt.return t
 
   let listen' t fn =

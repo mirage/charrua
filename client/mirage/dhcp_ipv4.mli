@@ -18,7 +18,7 @@ module Make (Network : Mirage_net.S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
   val connect : ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
     ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list ->
-    Network.t -> (t * Dhcp_wire.pkt) Lwt.t
+    Network.t -> t Lwt.t
   (** Connect to an ipv4 device using information from a DHCP lease.
       If [cidr] is provided, no DHCP requests will be done, but instead a static
       IPv4 (Tcpip.Ip.S) stack will be used. If [no_init] is provided and [true],
