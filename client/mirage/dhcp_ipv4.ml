@@ -20,6 +20,38 @@ let config_of_lease lease =
     | [] -> (network, None)
     | hd::_ -> (network, Some hd)
 
+module Registry : sig
+  type t
+  val create : unit -> t
+  val register : t -> (Dhcp_wire.dhcp_option list -> 'a) -> 'a Lwt.t
+  val notify : t -> Dhcp_wire.pkt -> unit
+end = struct
+
+  type t = {
+    mutable lease : Dhcp_wire.pkt option;
+    mutable waiters : Dhcp_wire.dhcp_option list Lwt.u list;
+  }
+
+  let create () =
+    { lease = None;
+      waiters = [] }
+
+  let register t fn =
+    match t.lease with
+    | None ->
+      let v, u = Lwt.wait () in
+      t.waiters <- u :: t.waiters;
+      v >|= fn
+    | Some lease ->
+      Lwt.return (fn lease.Dhcp_wire.options)
+
+  let notify t pkt =
+    t.lease <- Some pkt;
+    List.iter (fun u -> Lwt.wakeup_later u pkt.Dhcp_wire.options) t.waiters;
+    (* We can "free" up the list now *)
+    t.waiters <- []
+end
+
 module Make (Network : Mirage_net.S) = struct
   (* for now, just wrap a static ipv4 *)
   module DHCP = Dhcp_client_lwt.Make(Network)
