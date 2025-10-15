@@ -120,11 +120,11 @@ module Config = struct
             hw_addr = h.Ast.hw_addr;
           }) subnet.Ast.hosts
     in
-    let default_lease_time = Util.some_or_default
-        subnet.Ast.default_lease_time ast.Ast.default_lease_time
+    let default_lease_time = Option.value
+        subnet.Ast.default_lease_time ~default:ast.Ast.default_lease_time
     in
-    let max_lease_time = Util.some_or_default
-        subnet.Ast.max_lease_time ast.Ast.max_lease_time
+    let max_lease_time = Option.value
+        subnet.Ast.max_lease_time ~default:ast.Ast.max_lease_time
     in
     let network = subnet.Ast.network in
 
@@ -271,11 +271,11 @@ module Lease = struct
     in
     update_db lease_map addr_map |> sanity_check
 
-  let lease_of_client_id client_id db = Util.find_some @@ fun () ->
-    Lease_map.find client_id db.lease_map
+  let lease_of_client_id client_id db =
+    Lease_map.find_opt client_id db.lease_map
 
-  let lease_of_addr addr db = Util.find_some @@ fun () ->
-    Addr_map.find addr db.addr_map
+  let lease_of_addr addr db =
+    Addr_map.find_opt addr db.addr_map
 
   let remove lease db =
     update_db
@@ -336,7 +336,7 @@ module Lease = struct
     | None -> assert false
 
   let addr_allocated addr db =
-    Util.true_if_some @@ lease_of_addr addr db
+    Option.is_some @@ lease_of_addr addr db
 
   let addr_free addr db = not (addr_allocated addr db)
 
@@ -399,8 +399,8 @@ module Input = struct
     | Warning of string
     | Error of string
 
-  let host_of_mac config mac = Util.find_some @@
-    fun () -> List.find (fun host -> host.hw_addr = mac) config.hosts
+  let host_of_mac config mac =
+    List.find_opt (fun host -> host.hw_addr = mac) config.hosts
 
   let fixed_addr_of_mac config mac =
     match host_of_mac config mac with
@@ -615,7 +615,7 @@ module Input = struct
           unassigned_options
       | PAD | END -> None       (* Senseless *)
     in
-    Util.filter_map consider preqs
+    List.filter_map consider preqs
 
   let collect_replies config mac preqs =
     match host_of_mac config mac with
@@ -689,9 +689,9 @@ module Input = struct
       let ourip = config.ip_addr in
       let options =
         let open Util in
-        cons (Message_type DHCPACK) @@
-        cons (Server_identifier ourip) @@
-        cons_if_some_f (find_vendor_class_id pkt.options)
+        List.cons (Message_type DHCPACK) @@
+        List.cons (Server_identifier ourip) @@
+        Util.cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
         | Some preqs -> collect_replies config pkt.chaddr preqs
@@ -713,8 +713,8 @@ module Input = struct
     let nak ?msg () =
       let open Util in
       let options =
-        cons (Message_type DHCPNAK) @@
-        cons (Server_identifier ourip) @@
+        List.cons (Message_type DHCPNAK) @@
+        List.cons (Server_identifier ourip) @@
         cons_if_some_f msg (fun msg -> Message msg) @@
         cons_if_some_f (find_client_id pkt.options)
           (fun id -> Client_id id) @@
@@ -734,11 +734,11 @@ module Input = struct
         Lease.timeleft3 lease Config.t1_time_ratio Config.t2_time_ratio ~now
       in
       let options =
-        cons (Message_type DHCPACK) @@
-        cons (Ip_lease_time lease_time) @@
-        cons (Renewal_t1 t1) @@
-        cons (Rebinding_t2 t2) @@
-        cons (Server_identifier ourip) @@
+        List.cons (Message_type DHCPACK) @@
+        List.cons (Ip_lease_time lease_time) @@
+        List.cons (Renewal_t1 t1) @@
+        List.cons (Rebinding_t2 t2) @@
+        List.cons (Server_identifier ourip) @@
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
@@ -847,11 +847,11 @@ module Input = struct
       let t2 = Int32.of_float
           (Config.t2_time_ratio *. (Int32.to_float lease_time)) in
       let options =
-        cons (Message_type DHCPOFFER) @@
-        cons (Ip_lease_time lease_time) @@
-        cons (Renewal_t1 t1) @@
-        cons (Rebinding_t2 t2) @@
-        cons (Server_identifier ourip) @@
+        List.cons (Message_type DHCPOFFER) @@
+        List.cons (Ip_lease_time lease_time) @@
+        List.cons (Renewal_t1 t1) @@
+        List.cons (Rebinding_t2 t2) @@
+        List.cons (Server_identifier ourip) @@
         cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
