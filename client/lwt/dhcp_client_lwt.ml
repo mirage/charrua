@@ -11,7 +11,17 @@ module Make (Net : Mirage_net.S) = struct
   let connect ?(renew = true) ?xid ?options ?requests net =
     (* listener needs to occasionally check to see whether the state has advanced,
      * and if not, start a new attempt at a lease transaction *)
-    let sleep_interval = Duration.of_sec 4 in
+    let sleep_interval =
+      (* RFC suggests sleeping between 3 and 5 seconds (randomized). This
+       * generates a time between 3 and 5.147 seconds. *)
+      let v = ref 2 in
+      fun () ->
+        if !v < 64 then
+          v := 2 * !v;
+        Int64.add
+          (Duration.of_sec (pred !v))
+          (Int64.logand 0x7FFFFFFFL (Randomconv.int64 Mirage_crypto_rng.generate))
+    in
     let header_size = Ethernet.Packet.sizeof_ethernet in
     let size = Net.mtu net + header_size in
 
@@ -44,7 +54,7 @@ module Make (Net : Mirage_net.S) = struct
       | Ok () ->
         Lwt.pick [
           Lwt_condition.wait cond;
-          Mirage_sleep.ns sleep_interval;
+          Mirage_sleep.ns (sleep_interval ());
         ] >>= fun () ->
         match Dhcp_client.lease !c with
         | Some _lease -> Lwt.return_unit
