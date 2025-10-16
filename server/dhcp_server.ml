@@ -688,7 +688,6 @@ module Input = struct
     else
       let ourip = config.ip_addr in
       let options =
-        let open Util in
         List.cons (Message_type DHCPACK) @@
         List.cons (Server_identifier ourip) @@
         Util.cons_if_some_f (find_vendor_class_id pkt.options)
@@ -711,14 +710,13 @@ module Input = struct
     let reqip = find_request_ip pkt.options in
     let sidip = find_server_identifier pkt.options in
     let nak ?msg () =
-      let open Util in
       let options =
         List.cons (Message_type DHCPNAK) @@
         List.cons (Server_identifier ourip) @@
-        cons_if_some_f msg (fun msg -> Message msg) @@
-        cons_if_some_f (find_client_id pkt.options)
+        Util.cons_if_some_f msg (fun msg -> Message msg) @@
+        Util.cons_if_some_f (find_client_id pkt.options)
           (fun id -> Client_id id) @@
-        cons_if_some_f (find_vendor_class_id pkt.options)
+        Util.cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) []
       in
       let pkt = make_reply config pkt
@@ -728,7 +726,6 @@ module Input = struct
       Reply (pkt, None, db)
     in
     let ack lease =
-      let open Util in
       let lease = Lease.extend lease ~now in
       let lease_time, t1, t2 =
         Lease.timeleft3 lease Config.t1_time_ratio Config.t2_time_ratio ~now
@@ -739,7 +736,7 @@ module Input = struct
         List.cons (Renewal_t1 t1) @@
         List.cons (Rebinding_t2 t2) @@
         List.cons (Server_identifier ourip) @@
-        cons_if_some_f (find_vendor_class_id pkt.options)
+        Util.cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
         | Some preqs -> collect_replies config pkt.chaddr preqs
@@ -840,7 +837,6 @@ module Input = struct
     match addr with
     | None -> Warning "No ips left to offer"
     | Some addr ->
-      let open Util in
       (* Start building the options *)
       let t1 = Int32.of_float
           (Config.t1_time_ratio *. (Int32.to_float lease_time)) in
@@ -852,7 +848,7 @@ module Input = struct
         List.cons (Renewal_t1 t1) @@
         List.cons (Rebinding_t2 t2) @@
         List.cons (Server_identifier ourip) @@
-        cons_if_some_f (find_vendor_class_id pkt.options)
+        Util.cons_if_some_f (find_vendor_class_id pkt.options)
           (fun vid -> Vendor_class_id vid) @@
         match (find_parameter_requests pkt.options) with
         | Some preqs ->
