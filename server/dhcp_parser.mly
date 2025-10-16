@@ -67,13 +67,13 @@ main:
                     are allowed in the global section")
       statements
   in
-  let options = Util.filter_map (function
+  let options = List.filter_map (function
       | Dhcp_option o -> Some o
       | _ -> None)
       statements
   in
   let default_lease_time =
-    match (Util.find_map (function
+    match (List.find_map (function
         | Default_lease_time t -> Some t
         | _ -> None)
         statements)
@@ -81,7 +81,7 @@ main:
          | None -> Int32.of_int (60 * 60 * 60) (* 1h *)
   in
   let max_lease_time =
-    match (Util.find_map (function
+    match (List.find_map (function
         | Max_lease_time t -> Some t
         | _ -> None)
         statements)
@@ -132,7 +132,7 @@ subnet:
       statements
   in
   (* First find the range statement, XXX ignoring if multiple *)
-  let range = Util.find_map (function
+  let range = List.find_map (function
       | Range (v1, v2) -> Some (v1, v2)
       | _ -> None)
       statements |> (function
@@ -140,17 +140,17 @@ subnet:
       | None -> choke ("Missing `range` statement for subnet " ^
                        (Ipaddr.V4.to_string address)))
   in
-  let options = Util.filter_map (function
+  let options = List.filter_map (function
       | Dhcp_option o -> Some o
       | _ -> None)
       statements
   in
   let default_lease_time =
-    (Util.find_map (function Default_lease_time t -> Some t | _ -> None)
+    (List.find_map (function Default_lease_time t -> Some t | _ -> None)
         statements)
   in
   let max_lease_time =
-    (Util.find_map (function Max_lease_time t -> Some t | _ -> None)
+    (List.find_map (function Max_lease_time t -> Some t | _ -> None)
         statements)
   in
   { Ast.network; range = Some range; options; hosts; default_lease_time; max_lease_time }
@@ -167,17 +167,17 @@ host:
       | _ -> ())
       statements
   in
-  let options = Util.filter_map (function
+  let options = List.filter_map (function
       | Dhcp_option o -> Some o
       | _ -> None)
       statements
   in
-  let fixed_addr = Util.find_map (function
+  let fixed_addr = List.find_map (function
       | Fixed_addr fa -> Some fa
       | _ -> None)
       statements
   in
-  let hw_addr = Util.find_map (function
+  let hw_addr = List.find_map (function
       | Hw_eth he -> Some he
       | _ -> None)
       statements

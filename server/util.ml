@@ -14,39 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-let find_map f t =
-  let rec loop = function
-    | [] -> None
-    | x :: l ->
-      match f x with
-      | None -> loop l
-      | Some _ as r -> r
-  in
-  loop t
-
-let filter_map f l =
-  List.rev @@
-  List.fold_left (fun a v -> match f v with Some v' -> v'::a | None -> a) [] l
-
-let finalize f g =
-  try
-    let x = f () in
-    g ();
-    x
-  with exn ->
-    g ();
-    raise exn
-
-let some_or_default x d = match x with Some x -> x | None -> d
 let some_or_f x f = match x with Some x -> x | None -> f ()
-let some_or_invalid x s = some_or_f x (fun () -> invalid_arg s)
-let some_or_fail x s = some_or_f x (fun () -> failwith s)
-let find_some f = try Some (f ()) with Not_found -> None
-let true_if_some x = match x with Some _ -> true | None -> false
 
-let cons v tl = v :: tl
-let cons_if p v tl = if p then v :: tl else tl
-let cons_if_some v tl = match v with Some v -> v :: tl | None -> tl
 let cons_if_some_f v fnr tl = match v with Some x -> fnr x :: tl | None -> tl
 
 let addr_in_range addr range =

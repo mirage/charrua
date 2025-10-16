@@ -27,7 +27,7 @@ homepage: "https://github.com/mirage/charrua"
 doc: "https://mirage.github.io/charrua/"
 bug-reports: "https://github.com/mirage/charrua/issues"
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "4.10.0"}
   "dune" {>= "1.4.0"}
   "menhir" {build & >= "20181006"}
   "charrua" {= version}
