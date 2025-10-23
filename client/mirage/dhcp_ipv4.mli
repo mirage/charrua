@@ -14,16 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-module Registry : sig
-  type 'a t
-  val create : unit -> 'a t
-  val register : 'a t -> 'a Lwt.t
-  val notify : 'a t -> 'a -> unit
-end
-
 module Make (Network : Mirage_net.S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
-  val connect : ?registry:Dhcp_wire.dhcp_option list option Registry.t -> ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
+  val connect : ?registry:Dhcp_wire.dhcp_option list option Lwt.u -> ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
     ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list ->
     Network.t -> t Lwt.t
   (** Connect to an ipv4 device using information from a DHCP lease.
