@@ -22,10 +22,10 @@ let config_of_lease lease =
 
 module Make (Network : Mirage_net.S) = struct
   (* for now, just wrap a static ipv4 *)
-  module DHCP = Dhcp_client_lwt.Make(Network)
-  module Ethernet = Ethernet.Make(DHCP)
+  module Net = Dhcp_client_lwt.Make(Network)
+  module Ethernet = Ethernet.Make(Net)
   module Arp = Arp.Make(Ethernet)
-  include Static_ipv4.Make(Ethernet)(Arp)
+  module IPv4 = Static_ipv4.Make(Ethernet)(Arp)
 
   let connect ?registry ?(no_init = false) ?cidr ?gateway ?options ?requests net =
     (match no_init, cidr with
@@ -37,13 +37,13 @@ module Make (Network : Mirage_net.S) = struct
          | None -> Dhcp_wire.[ SUBNET_MASK; ROUTERS ]
          | Some s -> s
        in
-      DHCP.connect ?options ~requests net >>= fun dhcp ->
-      Lwt_mvar.take (DHCP.lease_mvar dhcp) >>= fun lease ->
+      Net.connect ?options ~requests net >>= fun dhcp ->
+      Lwt_mvar.take (Net.lease_mvar dhcp) >>= fun lease ->
       Option.iter (fun r -> Lwt.wakeup_later r (Some lease.options)) registry;
       let cidr, gateway = config_of_lease lease in
       Lwt.async (fun () -> 
           let rec read_lease () =
-            Lwt_mvar.take (DHCP.lease_mvar dhcp) >>= fun lease ->
+            Lwt_mvar.take (Net.lease_mvar dhcp) >>= fun lease ->
             let cidr', _gateway' = config_of_lease lease in
             (* TODO read up on renewal *)
             if Ipaddr.V4.Prefix.compare cidr cidr' = 0 then
@@ -54,14 +54,16 @@ module Make (Network : Mirage_net.S) = struct
           read_lease ());
       Lwt.return (dhcp, (cidr, gateway))
      | true, None ->
-       DHCP.connect_no_dhcp net >>= fun dhcp ->
+       Net.connect_no_dhcp net >>= fun dhcp ->
        Option.iter (fun r -> Lwt.wakeup_later r None) registry;
        Lwt.return (dhcp, (Ipaddr.V4.(Prefix.make 32 localhost), gateway))
      | _, Some cidr ->
-       DHCP.connect_no_dhcp net >>= fun dhcp ->
+       Net.connect_no_dhcp net >>= fun dhcp ->
        Option.iter (fun r -> Lwt.wakeup_later r None) registry;
        Lwt.return (dhcp, (cidr, gateway))) >>= fun (dhcp, (cidr, gateway)) ->
     Ethernet.connect dhcp >>= fun ethernet ->
     Arp.connect ethernet >>= fun arp ->
-    connect ~no_init ~cidr ?gateway ethernet arp
+    IPv4.connect ~no_init ~cidr ?gateway ethernet arp >>= fun ip ->
+    Lwt.return (dhcp, ethernet, arp, ip)
+
 end
