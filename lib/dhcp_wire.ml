@@ -1225,24 +1225,23 @@ let buf_of_options sbuf options =
     set_uint8 ebuf 0 (option_code_to_int END); shift ebuf 1
 
 let pkt_of_buf buf len =
-  let open Printf in
   let wrap () =
     let min_len = sizeof_dhcp + Ethernet.Packet.sizeof_ethernet +
                   Ipv4_wire.sizeof_ipv4 + Udp_wire.sizeof_udp
     in
     let* () =
-      guard (len >= min_len) (`Msg (sprintf "packet is too small: %d < %d" len min_len))
+      guard (len >= min_len) `Not_dhcp
     in
     (* Handle ethernet *)
     let* eth_header, eth_payload =
       Ethernet.Packet.of_cstruct buf
-      |> Result.map_error (fun s -> `Msg s) in
+      |> Result.map_error (Fun.const `Not_dhcp) in
     match eth_header.Ethernet.Packet.ethertype with
     | `ARP | `IPv6 -> Error `Not_dhcp
     | `IPv4 ->
       let* ipv4_header, ipv4_payload =
         Ipv4_packet.Unmarshal.of_cstruct eth_payload
-        |> Result.map_error (fun s -> `Msg s)
+        |> Result.map_error (Fun.const `Not_dhcp)
       in
       match Ipv4_packet.Unmarshal.int_to_protocol ipv4_header.Ipv4_packet.proto with
       | Some `ICMP | Some `TCP | None -> Error `Not_dhcp
@@ -1251,11 +1250,11 @@ let pkt_of_buf buf len =
           guard
             (Ipv4_packet.Unmarshal.verify_transport_checksum
                ~proto:`UDP ~ipv4_header ~transport_packet:ipv4_payload)
-            (`Msg "bad udp checksum")
+            `Not_dhcp
         in
         let* udp_header, udp_payload =
           Udp_packet.Unmarshal.of_cstruct ipv4_payload
-          |> Result.map_error (fun s -> `Msg s)
+          |> Result.map_error (Fun.const `Not_dhcp)
         in
         let op = int_to_op_exn (get_dhcp_op udp_payload) in
         let htype = if (get_dhcp_htype udp_payload) = 1 then
@@ -1278,7 +1277,7 @@ let pkt_of_buf buf len =
           if htype = Ethernet_10mb && hlen = 6 then
             Ok (Macaddr.of_octets_exn (String.sub (copy_dhcp_chaddr udp_payload) 0 6))
           else
-            Error (`Msg "Not a mac address.")
+            Error `Not_dhcp
         in
         let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
         let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
@@ -1292,7 +1291,7 @@ let pkt_of_buf buf len =
                     op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
                     siaddr; giaddr; chaddr; sname; file; options }
   in
-  try wrap () with | Invalid_argument e -> Error (`Msg e)
+  try wrap () with | Invalid_argument _ -> Error `Not_dhcp
 
 let pkt_into_buf pkt buf =
   let eth, rest = Cstruct.split buf Ethernet.Packet.sizeof_ethernet in

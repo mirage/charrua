@@ -67,7 +67,6 @@ module Make (Net : Mirage_net.S) = struct
       Net.listen t.net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
-          Log.debug (fun f -> f "No action! State is %a" Dhcp_client.pp !c);
           Lwt.return_unit
         | `Not_dhcp ->
           t.listen buf
