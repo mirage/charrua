@@ -13,18 +13,55 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
-
-module Make (Network : Mirage_net.S) : sig
+module type S = sig
   module Net : Mirage_net.S
   module Ethernet : Ethernet.S
   module Arp : Arp.S
-  module IPv4 : Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
-  val connect : ?registry:Dhcp_wire.dhcp_option list option Lwt.u -> ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
+  module Ipv4 : Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
+
+  type t
+
+  val lease : t -> Dhcp_wire.dhcp_option list option Lwt.t
+  val net : t -> Net.t
+  val ethernet : t -> Ethernet.t
+  val arp : t -> Arp.t
+  val ipv4 : t -> Ipv4.t
+end
+
+module type With_lease = sig
+  type t
+  val lease : t -> Dhcp_wire.dhcp_option list option Lwt.t
+end
+
+module Make (Network : Mirage_net.S) : sig
+  include S
+
+  val connect : ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
     ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list ->
-    Network.t -> (Net.t * Ethernet.t * Arp.t * IPv4.t) Lwt.t
+    Network.t -> t Lwt.t
   (** Connect to an ipv4 device using information from a DHCP lease.
       If [cidr] is provided, no DHCP requests will be done, but instead a static
       IPv4 (Tcpip.Ip.S) stack will be used. If [no_init] is provided and [true],
       nothing will be initialized (for dual IPv4 and IPv6 stack where only the
       IPv6 part should be used). *)
+end
+
+module Proj_net (T : S) : sig
+  include Mirage_net.S
+  val connect : T.t -> t
+end
+
+module Proj_ethernet (T : S) : sig
+  include Ethernet.S
+  val connect : T.t -> t
+end
+
+module Proj_arp (T : S) : sig
+  include Arp.S
+  val connect : T.t -> t
+end
+
+module Proj_ipv4 (T : S) : sig
+  include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
+  val connect : T.t -> t
 end
