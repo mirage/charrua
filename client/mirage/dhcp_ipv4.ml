@@ -117,3 +117,8 @@ module Proj_ipv4 (T : S) = struct
   include T.Ipv4
   let connect t = Lwt.return (T.ipv4 t)
 end
+
+module Proj_lease (T : With_lease) = struct
+  type t = Dhcp_wire.dhcp_option list option
+  let connect t = T.lease t
+end
