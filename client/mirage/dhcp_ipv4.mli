@@ -48,20 +48,20 @@ end
 
 module Proj_net (T : S) : sig
   include Mirage_net.S
-  val connect : T.t -> t
+  val connect : T.t -> t Lwt.t
 end
 
 module Proj_ethernet (T : S) : sig
   include Ethernet.S
-  val connect : T.t -> t
+  val connect : T.t -> t Lwt.t
 end
 
 module Proj_arp (T : S) : sig
   include Arp.S
-  val connect : T.t -> t
+  val connect : T.t -> t Lwt.t
 end
 
 module Proj_ipv4 (T : S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
-  val connect : T.t -> t
+  val connect : T.t -> t Lwt.t
 end
