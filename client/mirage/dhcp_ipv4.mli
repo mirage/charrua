@@ -65,3 +65,8 @@ module Proj_ipv4 (T : S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
   val connect : T.t -> t Lwt.t
 end
+
+module Proj_lease (T : With_lease) : sig
+  type t = Dhcp_wire.dhcp_option list option
+  val connect : T.t -> t Lwt.t
+end
