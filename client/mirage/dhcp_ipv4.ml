@@ -100,20 +100,20 @@ end
 
 module Proj_net (T : S) = struct
   include T.Net
-  let connect = Lwt.return T.net
+  let connect t = Lwt.return (T.net t)
 end
 
 module Proj_ethernet (T : S) = struct
   include T.Ethernet
-  let connect = Lwt.return T.ethernet
+  let connect t = Lwt.return (T.ethernet t)
 end
 
 module Proj_arp (T : S) = struct
   include T.Arp
-  let connect = Lwt.return T.arp
+  let connect t = Lwt.return (T.arp t)
 end
 
 module Proj_ipv4 (T : S) = struct
   include T.Ipv4
-  let connect = Lwt.return T.ipv4
+  let connect t = Lwt.return (T.ipv4 t)
 end
