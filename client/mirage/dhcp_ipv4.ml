@@ -104,7 +104,7 @@ module Proj_net (T : S) = struct
 end
 
 module Proj_ethernet (T : S) = struct
-  include T.Net
+  include T.Ethernet
   let connect = T.ethernet
 end
 
