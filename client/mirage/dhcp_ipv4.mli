@@ -15,16 +15,12 @@
  *)
 module type S = sig
   module Net : Mirage_net.S
-  module Ethernet : Ethernet.S
-  module Arp : Arp.S
   module Ipv4 : Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
 
   type t
 
   val lease : t -> Dhcp_wire.dhcp_option list option Lwt.t
   val net : t -> Net.t
-  val ethernet : t -> Ethernet.t
-  val arp : t -> Arp.t
   val ipv4 : t -> Ipv4.t
 end
 
@@ -33,12 +29,20 @@ module type With_lease = sig
   val lease : t -> Dhcp_wire.dhcp_option list option Lwt.t
 end
 
-module Make (Network : Mirage_net.S) : sig
+(** [Make(N)(E)(A)] instantiates a device that exposes a [Mirage_net.S]
+    interface as well as a [Tcpip.Ip.S] interface with ipv4. On
+    connection it either requests a DHCP lease or sets up a static IPv4
+    address. The exposed [Mirage_net.S] interface is [N] but with
+    incoming dhcp messages filtered out. It is expected that [E] and [A]
+    are instantiated with [N].
+
+    See the module's [connect] value for more details. *)
+module Make (Network : Mirage_net.S) (Ethernet : Ethernet.S) (Arp : Arp.S) : sig
   include S
 
   val connect : ?no_init:bool -> ?cidr:Ipaddr.V4.Prefix.t -> ?gateway:Ipaddr.V4.t ->
     ?options:Dhcp_wire.dhcp_option list -> ?requests:Dhcp_wire.option_code list ->
-    Network.t -> t Lwt.t
+    Network.t -> Ethernet.t -> Arp.t -> t Lwt.t
   (** Connect to an ipv4 device using information from a DHCP lease.
       If [cidr] is provided, no DHCP requests will be done, but instead a static
       IPv4 (Tcpip.Ip.S) stack will be used. If [no_init] is provided and [true],
@@ -46,26 +50,19 @@ module Make (Network : Mirage_net.S) : sig
       IPv6 part should be used). *)
 end
 
+(** Projection of the [Mirage_net.S] device. *)
 module Proj_net (T : S) : sig
   include Mirage_net.S
   val connect : T.t -> t Lwt.t
 end
 
-module Proj_ethernet (T : S) : sig
-  include Ethernet.S
-  val connect : T.t -> t Lwt.t
-end
-
-module Proj_arp (T : S) : sig
-  include Arp.S
-  val connect : T.t -> t Lwt.t
-end
-
+(** Projection of the IPv4 [Tcpip.Ip.S] device. *)
 module Proj_ipv4 (T : S) : sig
   include Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
   val connect : T.t -> t Lwt.t
 end
 
+(** Projection of the DHCP lease as a device. *)
 module Proj_lease (T : With_lease) : sig
   type t = Dhcp_wire.dhcp_option list option
   val connect : T.t -> t Lwt.t

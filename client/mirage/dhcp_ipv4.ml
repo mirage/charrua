@@ -2,16 +2,12 @@ open Lwt.Infix
 
 module type S = sig
   module Net : Mirage_net.S
-  module Ethernet : Ethernet.S
-  module Arp : Arp.S
   module Ipv4 : Tcpip.Ip.S with type ipaddr = Ipaddr.V4.t and type prefix = Ipaddr.V4.Prefix.t
 
   type t
 
   val lease : t -> Dhcp_wire.dhcp_option list option Lwt.t
   val net : t -> Net.t
-  val ethernet : t -> Ethernet.t
-  val arp : t -> Arp.t
   val ipv4 : t -> Ipv4.t
 end
 
@@ -40,18 +36,14 @@ let config_of_lease lease =
     | [] -> (network, None)
     | hd::_ -> (network, Some hd)
 
-module Make (Network : Mirage_net.S) = struct
+module Make (Network : Mirage_net.S) (Ethernet : Ethernet.S) (Arp : Arp.S) = struct
   (* for now, just wrap a static ipv4 *)
   module Net = Dhcp_client_lwt.Make(Network)
-  module Ethernet = Ethernet.Make(Net)
-  module Arp = Arp.Make(Ethernet)
   module Ipv4 = Static_ipv4.Make(Ethernet)(Arp)
 
-  type t =
-    Dhcp_wire.dhcp_option list option Lwt.t * Net.t * Ethernet.t * Arp.t *
-    Ipv4.t
+  type t = Dhcp_wire.dhcp_option list option Lwt.t * Net.t * Ipv4.t
 
-  let connect ?(no_init = false) ?cidr ?gateway ?options ?requests net =
+  let connect ?(no_init = false) ?cidr ?gateway ?options ?requests net ethernet arp =
     let lease_opt, registry = Lwt.wait () in
     (match no_init, cidr with
     | false, None ->
@@ -86,31 +78,17 @@ module Make (Network : Mirage_net.S) = struct
        Net.connect_no_dhcp net >>= fun dhcp ->
        Lwt.wakeup_later registry None;
        Lwt.return (dhcp, (cidr, gateway))) >>= fun (dhcp, (cidr, gateway)) ->
-    Ethernet.connect dhcp >>= fun ethernet ->
-    Arp.connect ethernet >>= fun arp ->
     Ipv4.connect ~no_init ~cidr ?gateway ethernet arp >>= fun ip ->
-    Lwt.return (lease_opt, dhcp, ethernet, arp, ip)
+    Lwt.return (lease_opt, dhcp, ip)
 
-  let lease (lease, _, _, _, _) = lease
-  let net (_, net, _, _, _) = net
-  let ethernet (_, _, ethernet, _, _) = ethernet
-  let arp (_, _, _, arp, _) = arp
-  let ipv4 (_, _, _, _, ipv4) = ipv4
+  let lease (lease, _, _) = lease
+  let net (_, net, _) = net
+  let ipv4 (_, _, ipv4) = ipv4
 end
 
 module Proj_net (T : S) = struct
   include T.Net
   let connect t = Lwt.return (T.net t)
-end
-
-module Proj_ethernet (T : S) = struct
-  include T.Ethernet
-  let connect t = Lwt.return (T.ethernet t)
-end
-
-module Proj_arp (T : S) = struct
-  include T.Arp
-  let connect t = Lwt.return (T.arp t)
 end
 
 module Proj_ipv4 (T : S) = struct
