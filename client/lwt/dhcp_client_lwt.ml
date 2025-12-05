@@ -11,6 +11,7 @@ module Make (Net : Mirage_net.S) = struct
     net : Net.t;
     mutable listen : Cstruct.t -> unit Lwt.t;
     stop_condition : (unit, Net.error) result Lwt_condition.t;
+    listener_condition : unit Lwt_condition.t;
   }
 
   let lease_mvar t = t.lease
@@ -107,20 +108,22 @@ module Make (Net : Mirage_net.S) = struct
       >|= fun ((), ()) -> ()
     in
     let lease = Lwt_mvar.create_empty () in
-    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create (); listener_condition = Lwt_condition.create () } in
     Lwt.async (fun () -> lease_wrapper t ());
     Lwt.return t
 
   let connect_no_dhcp net =
     let lease = Lwt_mvar.create_empty () in
-    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () } in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () ; listener_condition = Lwt_condition.create ()} in
     Lwt.async (fun () ->
+        Lwt_condition.wait t.listener_condition >>= fun () ->
         Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet t.listen >|= fun r ->
         Lwt_condition.broadcast t.stop_condition r);
     Lwt.return t
 
   let listen' t fn =
     t.listen <- fn;
+    Lwt_condition.broadcast t.listener_condition ();
     Lwt_condition.wait t.stop_condition
 
   let listen t ~header_size fn =
