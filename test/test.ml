@@ -136,7 +136,8 @@ let t_long_lists () =
   } in
   let serialized = buf_of_pkt pkt in
   match pkt_of_buf serialized (Cstruct.length serialized) with
-  | Error e -> failwith e
+  | Error `Msg e -> failwith e
+  | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
   | Ok deserialized -> assert (pkt = deserialized)
 
 let make_simple_config =
@@ -995,7 +996,8 @@ let dhcp_client_fqdn () =
   in
   let client_fqdn = [ `Server_A ; `Wire_encoding ], Domain_name.of_string_exn "my.example.com" in
   match Dhcp_wire.pkt_of_buf (Cstruct.of_string data) (String.length data) with
-  | Error s -> invalid_arg s
+  | Error `Msg s -> invalid_arg s
+  | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
   | Ok pkt ->
     match find_client_fqdn pkt.Dhcp_wire.options with
     | None -> invalid_arg "expected client fqdn being present"
@@ -1004,7 +1006,8 @@ let dhcp_client_fqdn () =
       assert (Domain_name.equal n (snd client_fqdn));
       let b = Dhcp_wire.buf_of_pkt pkt in
       match Dhcp_wire.pkt_of_buf b (Cstruct.length b) with
-      | Error s -> invalid_arg s
+      | Error `Msg s -> invalid_arg s
+      | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
       | Ok pkt' ->
         match find_client_fqdn pkt'.Dhcp_wire.options with
         | None -> invalid_arg "expected client fqdn being present"
