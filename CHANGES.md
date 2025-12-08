@@ -1,7 +1,19 @@
+### v3.0.0 (2025-12-08)
+
+`Dhcp_client_lwt` and `Dhcp_ipv4` have been reworked:
+
+* The lease is now available as a lwt task (`Dhcp_ipv4`) or a lwt mvar
+  (`Dhcp_client_lwt`) instead of a lwt stream (#142 @hannesm @reynir)
+* Both `Dhcp_client_lwt` and `Dhcp_ipv4` now expose a `Mirage_net.S` where DHCP
+  packets are filtered out. This is so the stack can be composed without
+  breaking DHCP renewals (#142 @reynir @hannesm)
+* A set of interfaces and functors are added in `Dhcp_ipv4` to make it easier
+  to work with in functoria/Mirage (#142 @reynir)
+
 ### v2.1.1 (2025-10-02)
 
 * Log a warning when `gateway` but no `cidr` is passed to
-  `Dhcp_v4.Make.connect` as that is not currently handled. (#138 @hannesm @reynir)
+  `Dhcp_ipv4.Make.connect` as that is not currently handled. (#138 @hannesm @reynir)
 * Add a condition in `Dhcp_client_lwt.connect` in order to cancel the listener
   earlier when we have a successful lease. This ensures this listener doesn't
   "steal" packets from later installed listeners resulting in dropped packets
