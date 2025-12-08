@@ -10,7 +10,7 @@ module Make (Net : Mirage_net.S) = struct
     lease : lease Lwt_mvar.t;
     net : Net.t;
     mutable listen : Cstruct.t -> unit Lwt.t;
-    stop_condition : (unit, Net.error) result Lwt_condition.t;
+    stop : (unit, Net.error) result Lwt.t;
     listener_condition : unit Lwt_condition.t;
   }
 
@@ -99,26 +99,28 @@ module Make (Net : Mirage_net.S) = struct
             Lwt.return_unit
       )
     in
-    let lease_wrapper t () =
+    let lease_wrapper t stop_waker =
       let cond = Lwt_condition.create () in
       Lwt.both
         (listen t cond >|= fun r ->
-         Lwt_condition.broadcast t.stop_condition r)
+         Lwt.wakeup_later stop_waker r)
         (get_lease cond dhcpdiscover)
       >|= fun ((), ()) -> ()
     in
     let lease = Lwt_mvar.create_empty () in
-    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create (); listener_condition = Lwt_condition.create () } in
-    Lwt.async (fun () -> lease_wrapper t ());
+    let stop, stop_waker = Lwt.task () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop; listener_condition = Lwt_condition.create () } in
+    Lwt.async (fun () -> lease_wrapper t stop_waker);
     Lwt.return t
 
   let connect_no_dhcp net =
     let lease = Lwt_mvar.create_empty () in
-    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop_condition = Lwt_condition.create () ; listener_condition = Lwt_condition.create ()} in
+    let stop, stop_waker = Lwt.task () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop ; listener_condition = Lwt_condition.create ()} in
     let task =
       Lwt_condition.wait t.listener_condition >>= fun () ->
       Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet t.listen >|= fun r ->
-      Lwt_condition.broadcast t.stop_condition r
+      Lwt.wakeup_later stop_waker r
     in
     Lwt.async (fun () -> task);
     Lwt.return t
@@ -126,7 +128,7 @@ module Make (Net : Mirage_net.S) = struct
   let listen' t fn =
     t.listen <- fn;
     Lwt_condition.broadcast t.listener_condition ();
-    Lwt_condition.wait t.stop_condition
+    t.stop
 
   let listen t ~header_size fn =
     (* can this ever not be ethernet?! *)
