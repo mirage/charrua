@@ -77,13 +77,15 @@ let sizeof_pcap_packet = 16
 
 let test_packet p len =
   match (Dhcp_wire.pkt_of_buf p len) with
-  | Error e -> failwith e
+  | Error `Msg e -> failwith e
+  | Error `Not_dhcp -> failwith "Not a DHCP message"
   | Ok pkt ->
     if verbose then
       Format.printf "DHCP: %a\n%!" Dhcp_wire.pp_pkt pkt;
     let buf = Dhcp_wire.buf_of_pkt pkt in
     match (Dhcp_wire.pkt_of_buf buf len) with
-    | Error e -> failwith e
+    | Error `Msg e -> failwith e
+    | Error `Not_dhcp -> failwith "Not a DHCP message"
     | Ok pkt2 ->
       if pkt2 <> pkt then begin
         printf "buffers differ !\n";
