@@ -6,7 +6,15 @@ module Make (Net : Mirage_net.S) = struct
 
   type lease = Dhcp_wire.pkt
 
-  type t = lease Lwt_stream.t
+  type t = {
+    lease : lease Lwt_mvar.t;
+    net : Net.t;
+    mutable listen : Cstruct.t -> unit Lwt.t;
+    stop : (unit, Net.error) result Lwt.t;
+    listener_condition : unit Lwt_condition.t;
+  }
+
+  let lease_mvar t = t.lease
 
   let connect ?(renew = true) ?xid ?options ?requests net =
     (* listener needs to occasionally check to see whether the state has advanced,
@@ -35,7 +43,7 @@ module Make (Net : Mirage_net.S) = struct
           | Ok () ->
             do_renew c t (* ideally t would come from the new lease... *)
     in
-    let rec get_lease cond push dhcpdiscover =
+    let rec get_lease cond dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
       Net.write net ~size (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
       | Error e ->
@@ -54,14 +62,15 @@ module Make (Net : Mirage_net.S) = struct
           c := client;
           Log.info (fun f -> f "Timeout expired without a usable lease!  Starting over...");
           Log.debug (fun f -> f "New lease attempt: %a" Dhcp_client.pp !c);
-          get_lease cond push dhcpdiscover
+          get_lease cond dhcpdiscover
     in
-    let listen cond push () =
-      Net.listen net ~header_size (fun buf ->
+    let listen t cond =
+      Net.listen t.net ~header_size (fun buf ->
         match Dhcp_client.input !c buf with
         | `Noop ->
-          Log.debug (fun f -> f "No action! State is %a" Dhcp_client.pp !c);
           Lwt.return_unit
+        | `Not_dhcp ->
+          t.listen buf
         | `Response (s, action) -> begin
             Net.write net ~size (Dhcp_wire.pkt_into_buf action) >>= function
             | Error e ->
@@ -78,28 +87,60 @@ module Make (Net : Mirage_net.S) = struct
           Log.info (fun f -> f "Lease obtained! IP: %a, routers: %a"
                        Ipaddr.V4.pp l.yiaddr
                        (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
-          push @@ Some l;
+          Lwt_mvar.put t.lease l >>= fun () ->
           c := s;
           Lwt_condition.broadcast cond ();
+          (* TODO think more abour renewal, adjust timeouts *)
           match renew with
           | true ->
             Mirage_sleep.ns @@ Duration.of_sec 1800 >>= fun () ->
             do_renew !c 1800
           | false ->
-            push None;
             Lwt.return_unit
       )
     in
-    let lease_wrapper (push : Dhcp_wire.pkt option -> unit) () =
+    let lease_wrapper t stop_waker =
       let cond = Lwt_condition.create () in
-      Lwt.pick [
-        (listen cond push () >|= function
-          | Error _ | Ok () -> push None (* if canceled, the stream should end *)
-        );
-        get_lease cond push dhcpdiscover;
-      ]
+      Lwt.both
+        (listen t cond >|= fun r ->
+         Lwt.wakeup_later stop_waker r)
+        (get_lease cond dhcpdiscover)
+      >|= fun ((), ()) -> ()
     in
-    let (s, push) = Lwt_stream.create () in
-    Lwt.async (fun () -> lease_wrapper push ());
-    Lwt.return s
+    let lease = Lwt_mvar.create_empty () in
+    let stop, stop_waker = Lwt.task () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop; listener_condition = Lwt_condition.create () } in
+    Lwt.async (fun () -> lease_wrapper t stop_waker);
+    Lwt.return t
+
+  let connect_no_dhcp net =
+    let lease = Lwt_mvar.create_empty () in
+    let stop, stop_waker = Lwt.task () in
+    let t = { lease; net; listen = Fun.const Lwt.return_unit; stop ; listener_condition = Lwt_condition.create ()} in
+    let task =
+      Lwt_condition.wait t.listener_condition >>= fun () ->
+      Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet t.listen >|= fun r ->
+      Lwt.wakeup_later stop_waker r
+    in
+    Lwt.async (fun () -> task);
+    Lwt.return t
+
+  let listen' t fn =
+    t.listen <- fn;
+    Lwt_condition.broadcast t.listener_condition ();
+    t.stop
+
+  let listen t ~header_size fn =
+    (* can this ever not be ethernet?! *)
+    assert (header_size = Ethernet.Packet.sizeof_ethernet);
+    listen' t fn
+
+  type error = Net.error
+  let pp_error = Net.pp_error
+  let disconnect t = Net.disconnect t.net
+  let write t = Net.write t.net
+  let mac t = Net.mac t.net
+  let mtu t = Net.mtu t.net
+  let get_stats_counters t = Net.get_stats_counters t.net
+  let reset_stats_counters t = Net.reset_stats_counters t.net
 end

@@ -34,13 +34,19 @@ let keep_trying () =
     let module Client = Dhcp_client_lwt.Make(No_net) in
     let net = No_net.connect ~mac:(Macaddr.of_string_exn "c0:ff:ee:c0:ff:ee") () in
     let test =
-      Client.connect net >>= Lwt_stream.get >|= function
-      | Some _ -> Alcotest.fail "got a lease from a nonfunctioning network somehow"
-      | None -> ()
+      Client.connect net >>= fun t ->
+      Lwt.pick [
+      (Client.listen t ~header_size:Ethernet.Packet.sizeof_ethernet
+        (fun _ -> Lwt.return_unit) >>= function
+       | Error e -> Alcotest.failf "Got unexpected error %a" Client.pp_error e
+       | Ok () -> Lwt.return_unit);
+      (Lwt_mvar.take (Client.lease_mvar t)>|= fun _ ->
+       Alcotest.fail "got a lease from a nonfunctioning network somehow");
+    ]
     in
     Lwt.pick [
       test;
-      Lwt.pause () >>= function () ->
+      Lwt.pause () >>= fun () ->
       (Alcotest.(check bool) "sent >1 packet" true (List.length (No_net.get_packets net) > 1); Lwt.return_unit)
     ]
   )
