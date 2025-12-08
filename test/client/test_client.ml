@@ -34,7 +34,7 @@ let rec no_result t n () =
     (* TODO: it would be better to randomize a valid DHCP message; currently
      * we're fuzz testing the Dhcp_wire parser's ability to handle random garbage *)
     let res = Dhcp_client.input t buf in
-    Alcotest.(check bool) "no action" true (res = `Noop);
+    Alcotest.(check bool) "no action" true (match res with `Noop | `Not_dhcp -> true | _ -> false);
     no_result t (n - 1) ()
   end
 
@@ -95,6 +95,7 @@ let client_asks_dhcprequest () =
   | Some DHCPOFFER -> begin
     match Dhcp_client.input s (Dhcp_wire.buf_of_pkt pkt) with
     | `Noop -> Alcotest.fail "response to DHCPOFFER was silence"
+    | `Not_dhcp -> Alcotest.fail "DHCP messaged deemed not a DHCP message"
     | `New_lease _ -> Alcotest.fail "thought a DHCPOFFER was a lease???"
     | `Response (_s, pkt) ->
       let buf = Dhcp_wire.buf_of_pkt pkt in
@@ -113,6 +114,7 @@ let server_gives_dhcpack () =
   let (dhcpoffer, db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0l in
   match Dhcp_client.input s (Dhcp_wire.buf_of_pkt dhcpoffer) with
   | `Noop -> Alcotest.fail "couldn't get client to respond to DHCPOFFER"
+  | `Not_dhcp -> Alcotest.fail "DHCP messaged deemed not a DHCP message"
   | `New_lease _-> Alcotest.fail "thought a DHCPOFFER was a lease"
   | `Response (_s, pkt) ->
     let buf = Dhcp_wire.buf_of_pkt pkt in
@@ -127,7 +129,7 @@ let client_returns_lease () =
   let (s, dhcpdiscover) = client_to_selecting () in
   let (dhcpoffer, db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0l in
   match Dhcp_client.input s (Dhcp_wire.buf_of_pkt dhcpoffer) with
-  | `Noop | `New_lease _ -> Alcotest.fail "incorrect response to DHCPOFFER"
+  | `Noop | `Not_dhcp | `New_lease _ -> Alcotest.fail "incorrect response to DHCPOFFER"
   | `Response (s, pkt) ->
     let buf = Dhcp_wire.buf_of_pkt pkt in
     let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
@@ -138,6 +140,7 @@ let client_returns_lease () =
     | `Response _ ->
 Alcotest.fail "client wanted to send more packets after receiving DHCPACK"
     | `Noop -> Alcotest.fail "client disregarded its lease"
+    | `Not_dhcp -> Alcotest.fail "DHCP messaged deemed not a DHCP message"
     | `New_lease (s, _l) ->
        Alcotest.(check (option pass)) "lease is held" (Some dhcpack) (Dhcp_client.lease s)
 
@@ -154,7 +157,7 @@ let random_requesting n =
   let (s, dhcpdiscover) = client_to_selecting () in
   let (pkt, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0l in
   match Dhcp_client.input s (Dhcp_wire.buf_of_pkt pkt) with
-  | `Noop | `New_lease _ -> Alcotest.fail "couldn't enter REQUESTING properly"
+  | `Noop | `Not_dhcp | `New_lease _ -> Alcotest.fail "couldn't enter REQUESTING properly"
 | `Response (s, _dhcprequest) ->
   "random buffer entry to REQUESTING client", `Quick, (no_result s n)
 
@@ -163,13 +166,13 @@ let random_bound n =
   let (s, dhcpdiscover) = client_to_selecting () in
   let (pkt, db) = assert_reply @@ Dhcp_server.Input.input_pkt config empty_db dhcpdiscover 0l in
   match Dhcp_client.input s (Dhcp_wire.buf_of_pkt pkt) with
-  | `Noop | `New_lease _ -> Alcotest.fail "couldn't enter REQUESTING properly"
+  | `Noop | `Not_dhcp | `New_lease _ -> Alcotest.fail "couldn't enter REQUESTING properly"
   | `Response (s, dhcprequest) ->
     let buf = Dhcp_wire.buf_of_pkt dhcprequest in
     let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
     let (dhcpack, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0l in
     match Dhcp_client.input s (Dhcp_wire.buf_of_pkt dhcpack) with
-    | `Noop | `Response _ -> Alcotest.fail "client did not recognize DHCPACK as
+    | `Noop | `Not_dhcp | `Response _ -> Alcotest.fail "client did not recognize DHCPACK as
 a new lease"
     | `New_lease (s, _response) ->
       "random buffer entry to BOUND client", `Quick, (no_result s n)
