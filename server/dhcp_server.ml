@@ -603,6 +603,7 @@ module Input = struct
       | SIP_SERVERS -> s find_sip_servers (fun x -> Sip_servers x)
       | CLASSLESS_STATIC_ROUTE ->
         s find_classless_static_route (fun x -> Classless_static_route x)
+      | VI_VENDOR_CLASS -> s find_vi_vendor_class (fun x -> Vi_vendor_class x)
       | VI_VENDOR_INFO -> s find_vi_vendor_info (fun x -> Vi_vendor_info x)
       | MISC_150 -> s find_misc_150 (fun x -> Misc_150 x)
       | WEB_PROXY_AUTO_DISC ->

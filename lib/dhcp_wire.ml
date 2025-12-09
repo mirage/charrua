@@ -286,6 +286,7 @@ type option_code =
   | DOMAIN_SEARCH [@id 119]
   | SIP_SERVERS [@id 120]
   | CLASSLESS_STATIC_ROUTE [@id 121]
+  | VI_VENDOR_CLASS [@id 124]
   | VI_VENDOR_INFO [@id 125]
   | MISC_150 [@id 150]
   | PRIVATE_CLASSLESS_STATIC_ROUTE [@id 249]
@@ -368,6 +369,7 @@ let option_code_to_string = function
   | DOMAIN_SEARCH -> "Domain search"
   | SIP_SERVERS -> "SIP servers"
   | CLASSLESS_STATIC_ROUTE -> "Classless static route"
+  | VI_VENDOR_CLASS -> "VI vendor class"
   | VI_VENDOR_INFO -> "VI vendor info"
   | MISC_150 -> "Misc 150"
   | PRIVATE_CLASSLESS_STATIC_ROUTE -> "Private classless static route"
@@ -450,6 +452,7 @@ let int_to_option_code = function
   | 119 -> Some DOMAIN_SEARCH
   | 120 -> Some SIP_SERVERS
   | 121 -> Some CLASSLESS_STATIC_ROUTE
+  | 124 -> Some VI_VENDOR_CLASS
   | 125 -> Some VI_VENDOR_INFO
   | 150 -> Some MISC_150
   | 249 -> Some PRIVATE_CLASSLESS_STATIC_ROUTE
@@ -534,6 +537,7 @@ let option_code_to_int = function
   | DOMAIN_SEARCH -> 119
   | SIP_SERVERS -> 120
   | CLASSLESS_STATIC_ROUTE -> 121
+  | VI_VENDOR_CLASS -> 124
   | VI_VENDOR_INFO -> 125
   | MISC_150 -> 150
   | PRIVATE_CLASSLESS_STATIC_ROUTE -> 249
@@ -693,6 +697,7 @@ type dhcp_option =
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
+  | Vi_vendor_class of string               (* code 124 *)
   | Vi_vendor_info of string                (* code 125 *)
   | Misc_150 of string                      (* code 150 *)
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
@@ -775,6 +780,7 @@ let dhcp_option_to_string = function
   | Domain_search s -> "Domain search " ^ s
   | Sip_servers s -> "SIP servers " ^ s
   | Classless_static_route s -> "Classless static route " ^ s
+  | Vi_vendor_class s -> "VI vendor class " ^ s
   | Vi_vendor_info s -> "VI vendor info " ^ s
   | Misc_150 s -> "Misc 150 " ^ s
   | Private_classless_static_route s -> "Private classless static route " ^ s
@@ -1008,6 +1014,7 @@ let options_of_buf buf buf_len =
       | 119 -> take (Domain_search (get_string ()))
       | 120 -> take (Sip_servers (get_string ()))
       | 121 -> take (Classless_static_route (get_string ()))
+      | 124 -> take (Vi_vendor_class (get_string ()))
       | 125 -> take (Vi_vendor_info (get_string ()))
       | 150 -> take (Misc_150 (get_string ()))
       | 249 -> take (Private_classless_static_route (get_string ()))
@@ -1209,6 +1216,7 @@ let buf_of_options sbuf options =
     | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
     | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
     | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
+    | Vi_vendor_class vi -> put_coded_bytes 124 vi buf        (* code 124 *)
     | Vi_vendor_info vi -> put_coded_bytes 125 vi buf         (* code 125 *)
     | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
@@ -1553,6 +1561,8 @@ let find_sip_servers =
   find_option (function Sip_servers x -> Some x | _ -> None)
 let find_classless_static_route =
   find_option (function Classless_static_route x -> Some x | _ -> None)
+let find_vi_vendor_class =
+  find_option (function Vi_vendor_class x -> Some x | _ -> None)
 let find_vi_vendor_info =
   find_option (function Vi_vendor_info x -> Some x | _ -> None)
 let find_misc_150 =
