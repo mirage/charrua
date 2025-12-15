@@ -1015,6 +1015,47 @@ let dhcp_client_fqdn () =
           assert (flags = fst client_fqdn);
           assert (Domain_name.equal n (snd client_fqdn))
 
+let vi_vendor_class_parse () =
+  (* Test from https://github.com/insomniacslk/dhcp/blob/master/dhcpv4/option_vivc_test.go#L10-L21 *)
+  let data =
+    (* DHCP options magic
+       VI_VENDOR_CLASS 44 bytes
+       enterprise number 9
+       length 15
+       data
+       enterprise number 18
+       length 19
+       data
+       END option *)
+    "\x63\x82\x53\x63\
+     \124\044\
+     \x00\x00\x00\x09\
+     \x0f\
+     CiscoIdentifier\
+     \x00\x00\x00\x12\
+     \x13\
+     WellfleetIdentifier\
+     \255"
+  in
+  let options =
+    Dhcp_wire.options_of_buf (Cstruct.of_string data) (String.length data)
+  in
+  match options with
+  | [ Vi_vendor_class [ (9l, cisco); (18l, wellfleet) ] ] ->
+    if not (String.equal cisco "CiscoIdentifier") then
+      Alcotest.failf "Expected CiscoIdentifier, got %S" cisco;
+    if not (String.equal wellfleet "WellfleetIdentifier") then
+      Alcotest.failf "Expected WellfleetIdentifier, got %S" wellfleet;
+    ()
+  | [ Vi_vendor_class [ (not_cisco, _); (not_wellfleet, _) ] ] ->
+    Alcotest.failf "Expected enterprise numbers 9, 18; got %lu, %lu" not_cisco not_wellfleet
+  | [ Vi_vendor_class vi_vendor_class ] ->
+    Alcotest.failf "Expected 2 V-I vendor class items, got %u" (List.length vi_vendor_class)
+  | _ ->
+    Alcotest.failf "Expected exactly one V-I vendor class option, got %a"
+      Fmt.(Dump.list (of_to_string Dhcp_wire.dhcp_option_to_string))
+      options
+
 let to_alco test () =
   try
     test ();
@@ -1036,6 +1077,7 @@ let alco_tests () =
       "host options", `Quick, to_alco t_host_options;
       "lease database serialization", `Quick, to_alco t_db_serialization;
       "DHCP client FQDN", `Quick, to_alco dhcp_client_fqdn;
+      "VI vendor class option", `Quick, vi_vendor_class_parse;
     ];
     "state progression", [
       "discover->offer", `Quick, to_alco t_discover_range;

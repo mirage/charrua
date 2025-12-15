@@ -697,8 +697,8 @@ type dhcp_option =
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
-  | Vi_vendor_class of string               (* code 124 *)
-  | Vi_vendor_info of string                (* code 125 *)
+  | Vi_vendor_class of (int32 * string) list(* code 124 *)
+  | Vi_vendor_info of (int32 * string) list (* code 125 *) (* XXX current, use better type *)
   | Misc_150 of string                      (* code 150 *)
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
@@ -780,8 +780,8 @@ let dhcp_option_to_string = function
   | Domain_search s -> "Domain search " ^ s
   | Sip_servers s -> "SIP servers " ^ s
   | Classless_static_route s -> "Classless static route " ^ s
-  | Vi_vendor_class s -> "VI vendor class " ^ s
-  | Vi_vendor_info s -> "VI vendor info " ^ s
+  | Vi_vendor_class _s -> "VI vendor class" (*^ s (* FIXME *)*)
+  | Vi_vendor_info _s -> "VI vendor info"
   | Misc_150 s -> "Misc 150 " ^ s
   | Private_classless_static_route s -> "Private classless static route " ^ s
   | Web_proxy_auto_disc s -> "Web proxy auto discovery " ^ s
@@ -937,6 +937,23 @@ let options_of_buf buf buf_len =
           in
           flags, fqdn
       in
+      let get_vi_vendor_thing () =
+        if len < 5 then invalid_arg bad_len;
+        let[@tail_mod_cons] rec loop offset =
+          if offset = len then []
+          else if len < offset + 5 then
+            invalid_arg bad_len
+          else
+            let pen = Cstruct.BE.get_uint32 body offset in
+            let data_len = Cstruct.get_uint8 body (offset + 4) in
+            if len < offset + 5 + data_len then
+              invalid_arg bad_len
+            else
+              let data = Cstruct.to_string body ~off:(offset + 5) ~len:data_len in
+              (pen, data) :: (loop[@tailcall]) (offset + 5 + data_len)
+        in
+        loop 0
+      in
       match code with
       | 0 ->   padding ()
       | 1 ->   take (Subnet_mask (get_ip ()))
@@ -1014,8 +1031,8 @@ let options_of_buf buf buf_len =
       | 119 -> take (Domain_search (get_string ()))
       | 120 -> take (Sip_servers (get_string ()))
       | 121 -> take (Classless_static_route (get_string ()))
-      | 124 -> take (Vi_vendor_class (get_string ()))
-      | 125 -> take (Vi_vendor_info (get_string ()))
+      | 124 -> take (Vi_vendor_class (get_vi_vendor_thing ()))
+      | 125 -> take (Vi_vendor_info (get_vi_vendor_thing ()))
       | 150 -> take (Misc_150 (get_string ()))
       | 249 -> take (Private_classless_static_route (get_string ()))
       | 252 -> take (Web_proxy_auto_disc (get_string ()))
@@ -1039,14 +1056,14 @@ let options_of_buf buf buf_len =
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
-  if buf_len = sizeof_dhcp then
+  if buf_len = 0 then
     []
   else
     (* Look for magic cookie *)
-    let cookie = Cstruct.BE.get_uint32 buf sizeof_dhcp in
+    let cookie = Cstruct.BE.get_uint32 buf 0 in
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
-    let options_start = Cstruct.shift buf (sizeof_dhcp + 4) in
+    let options_start = Cstruct.shift buf 4 in
     (* Jump over cookie and start options, also extend them if necessary *)
     collect options_start [] |>
     extend buf |>
@@ -1138,6 +1155,20 @@ let buf_of_options sbuf options =
     make_listf ?min_len (fun buf x -> put_prefix x buf) 8 in
   let put_coded_ip_tuple_list ?min_len =
     make_listf ?min_len (fun buf x -> put_ip_tuple x buf) 8 in
+  let put_coded_vendor_thing code items buf =
+    if items = [] then invalid_arg "Invalid option";
+    let len =
+      List.fold_left (fun acc (_ent, data) -> acc + 4 + 1 + String.length data) 0 items
+    in
+    let buf = put_code code buf |> put_len len in
+    List.fold_left (fun buf (ent, data) ->
+        let buf = put_32 ent buf in
+        let len = String.length data in
+        let buf = put_len len buf in
+        blit_from_string data 0 buf 0 len;
+        shift buf len)
+      buf items
+  in
   let buf_of_option buf option =
     match option with
     | Pad -> buf (* we don't pad *)                           (* code 0 *)
@@ -1216,8 +1247,8 @@ let buf_of_options sbuf options =
     | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
     | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
     | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
-    | Vi_vendor_class vi -> put_coded_bytes 124 vi buf        (* code 124 *)
-    | Vi_vendor_info vi -> put_coded_bytes 125 vi buf         (* code 125 *)
+    | Vi_vendor_class vi -> put_coded_vendor_thing 124 vi buf (* code 124 *)
+    | Vi_vendor_info vi -> put_coded_vendor_thing 125 vi buf  (* code 125 *)
     | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf (* code 252 *)
@@ -1289,7 +1320,9 @@ let pkt_of_buf buf len =
         in
         let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
         let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
-        let options = options_of_buf udp_payload len in
+        let options =
+          options_of_buf (Cstruct.shift udp_payload sizeof_dhcp) (len - sizeof_dhcp)
+        in
         Ok { srcmac = eth_header.Ethernet.Packet.source;
                     dstmac = eth_header.Ethernet.Packet.destination;
                     srcip = ipv4_header.Ipv4_packet.src;
