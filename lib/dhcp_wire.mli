@@ -286,8 +286,13 @@ type dhcp_option =
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
-  | Vi_vendor_class of (int32 * string) list(* code 124 *)
-  | Vi_vendor_info of (int32 * string) list (* code 125 *)
+  | Vi_vendor_class of                      (* code 124 *)
+      (int32 * string) list
+  | Vi_vendor_info of                       (* code 125 *)
+      (int32 * (int * string) list) list
+  (** Vendor-identifying vendor information. It's a non-empty list of pairs of
+      enterprise numbers and suboptions. The sub options is a pair of a u8
+      (0-255) and sub-option data *)
   | Misc_150 of string                      (* code 150 *)
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)

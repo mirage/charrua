@@ -697,8 +697,10 @@ type dhcp_option =
   | Domain_search of string                 (* code 119 *)
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
-  | Vi_vendor_class of (int32 * string) list(* code 124 *)
-  | Vi_vendor_info of (int32 * string) list (* code 125 *) (* XXX current, use better type *)
+  | Vi_vendor_class of                      (* code 124 *)
+      (int32 * string) list
+  | Vi_vendor_info of                       (* code 125 *)
+      (int32 * (int * string) list) list
   | Misc_150 of string                      (* code 150 *)
   | Private_classless_static_route of string(* code 249 *) (* XXX current, use better type *)
   | Web_proxy_auto_disc of string           (* code 252 *)
@@ -954,6 +956,27 @@ let options_of_buf buf buf_len =
         in
         loop 0
       in
+      let get_vi_vendor_info () =
+        List.map (fun (pen, data) ->
+            let[@tail_mod_cons] rec go offset =
+              let bad_len len =
+                Fmt.kstr invalid_arg
+                  "Malformed len %d in vendor-identifying vendor information sub-option"
+                  len
+              in
+              if String.length data - offset < 2 then bad_len (String.length data - offset);
+              let code = String.get_uint8 data offset in
+              let len = String.get_uint8 data (offset + 1) in
+              if String.length data - offset <> 2 + len then bad_len (String.length data - offset - 2);
+              let sub_option = (code, String.sub data (offset + 2) len) in
+              if offset = String.length data then
+                []
+              else
+                sub_option :: (go[@tailcall]) (offset + 2 + len)
+            in
+            (pen, go 0))
+          (get_vi_vendor_thing ())
+      in
       match code with
       | 0 ->   padding ()
       | 1 ->   take (Subnet_mask (get_ip ()))
@@ -1032,7 +1055,7 @@ let options_of_buf buf buf_len =
       | 120 -> take (Sip_servers (get_string ()))
       | 121 -> take (Classless_static_route (get_string ()))
       | 124 -> take (Vi_vendor_class (get_vi_vendor_thing ()))
-      | 125 -> take (Vi_vendor_info (get_vi_vendor_thing ()))
+      | 125 -> take (Vi_vendor_info (get_vi_vendor_info ()))
       | 150 -> take (Misc_150 (get_string ()))
       | 249 -> take (Private_classless_static_route (get_string ()))
       | 252 -> take (Web_proxy_auto_disc (get_string ()))
@@ -1155,7 +1178,7 @@ let buf_of_options sbuf options =
     make_listf ?min_len (fun buf x -> put_prefix x buf) 8 in
   let put_coded_ip_tuple_list ?min_len =
     make_listf ?min_len (fun buf x -> put_ip_tuple x buf) 8 in
-  let put_coded_vendor_thing code items buf =
+  let put_coded_vi_vendor_thing code items buf =
     if items = [] then invalid_arg "Invalid option";
     let len =
       List.fold_left (fun acc (_ent, data) -> acc + 4 + 1 + String.length data) 0 items
@@ -1168,6 +1191,21 @@ let buf_of_options sbuf options =
         blit_from_string data 0 buf 0 len;
         shift buf len)
       buf items
+  in
+  let put_coded_vi_vendor_info code items buf =
+    let items =
+      List.map (fun (pen, sub_options) ->
+          let sub_option (code, data) =
+            let b = Bytes.create (2 + String.length data) in
+            Bytes.set_uint8 b 0 code;
+            Bytes.set_uint8 b 1 (String.length data);
+            Bytes.blit_string data 0 b 2 (String.length data);
+            Bytes.unsafe_to_string b
+          in
+          (pen, String.concat "" (List.map sub_option sub_options)))
+        items
+    in
+    put_coded_vi_vendor_thing code items buf
   in
   let buf_of_option buf option =
     match option with
@@ -1247,8 +1285,8 @@ let buf_of_options sbuf options =
     | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
     | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
     | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
-    | Vi_vendor_class vi -> put_coded_vendor_thing 124 vi buf (* code 124 *)
-    | Vi_vendor_info vi -> put_coded_vendor_thing 125 vi buf  (* code 125 *)
+    | Vi_vendor_class vi -> put_coded_vi_vendor_thing 124 vi buf (* code 124 *)
+    | Vi_vendor_info vi -> put_coded_vi_vendor_info 125 vi buf (* code 125 *)
     | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
     | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf (* code 252 *)
