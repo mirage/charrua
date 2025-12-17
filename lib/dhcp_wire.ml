@@ -1632,10 +1632,10 @@ let find_sip_servers =
   find_option (function Sip_servers x -> Some x | _ -> None)
 let find_classless_static_route =
   find_option (function Classless_static_route x -> Some x | _ -> None)
-let find_vi_vendor_class =
-  find_option (function Vi_vendor_class x -> Some x | _ -> None)
-let find_vi_vendor_info =
-  find_option (function Vi_vendor_info x -> Some x | _ -> None)
+let collect_vi_vendor_class =
+  collect_options (function Vi_vendor_class x -> Some x | _ -> None)
+let collect_vi_vendor_info =
+  collect_options (function Vi_vendor_info x -> Some x | _ -> None)
 let find_misc_150 =
   find_option (function Misc_150 x -> Some x | _ -> None)
 let find_web_proxy_auto_disc =
