@@ -967,7 +967,7 @@ let options_of_buf buf buf_len =
               if String.length data - offset < 2 then bad_len (String.length data - offset);
               let code = String.get_uint8 data offset in
               let len = String.get_uint8 data (offset + 1) in
-              if String.length data - offset <> 2 + len then bad_len (String.length data - offset - 2);
+              if String.length data - offset < 2 + len then bad_len (String.length data - offset - 2);
               let sub_option = (code, String.sub data (offset + 2) len) in
               if offset = String.length data then
                 []
