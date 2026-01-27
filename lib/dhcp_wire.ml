@@ -1196,10 +1196,13 @@ let buf_of_options sbuf options =
     let items =
       List.map (fun (pen, sub_options) ->
           let sub_option (code, data) =
+            let len = String.length data in
+            if len > 255 then
+              invalid_arg ("suboption len is too big: " ^ string_of_int len);
             let b = Bytes.create (2 + String.length data) in
             Bytes.set_uint8 b 0 code;
-            Bytes.set_uint8 b 1 (String.length data);
-            Bytes.blit_string data 0 b 2 (String.length data);
+            Bytes.set_uint8 b 1 len;
+            Bytes.blit_string data 0 b 2 len;
             Bytes.unsafe_to_string b
           in
           (pen, String.concat "" (List.map sub_option sub_options)))
