@@ -971,7 +971,7 @@ let options_of_buf buf buf_len =
               let sub_option = (code, String.sub data (offset + 2) len) in
               let offset = offset + 2 + len in
               if offset = String.length data then
-                []
+                [sub_option]
               else
                 sub_option :: (go[@tailcall]) offset
             in
