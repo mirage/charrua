@@ -969,10 +969,11 @@ let options_of_buf buf buf_len =
               let len = String.get_uint8 data (offset + 1) in
               if String.length data - offset < 2 + len then bad_len (String.length data - offset - 2);
               let sub_option = (code, String.sub data (offset + 2) len) in
+              let offset = offset + 2 + len in
               if offset = String.length data then
                 []
               else
-                sub_option :: (go[@tailcall]) (offset + 2 + len)
+                sub_option :: (go[@tailcall]) offset
             in
             (pen, go 0))
           (get_vi_vendor_thing ())
