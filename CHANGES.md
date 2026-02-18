@@ -1,3 +1,7 @@
+### V3.1.0 (2026-02-18)
+
+* Implement RFC 3925 (Vendor-identifying vendor options) (#144 with fixes in #145, #147 @reynir review @hannesm)
+
 ### v3.0.0 (2025-12-08)
 
 `Dhcp_client_lwt` and `Dhcp_ipv4` have been reworked:

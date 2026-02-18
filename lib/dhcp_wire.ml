@@ -988,7 +988,6 @@ let options_of_buf buf buf_len =
               in
               if String.length datas - offset < 1 then bad_len (String.length datas - offset);
               let len = String.get_uint8 datas offset in
-              Printf.eprintf "Data is %S\n%!" (String.sub datas (offset + 1) len);
               if String.length datas - offset < 1 + len then bad_len len;
               let data = String.sub datas (offset + 1) len in
               let offset = offset + 1 + len in
