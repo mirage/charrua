@@ -1016,24 +1016,29 @@ let dhcp_client_fqdn () =
           assert (Domain_name.equal n (snd client_fqdn))
 
 let vi_vendor_class_parse () =
-  (* Test from https://github.com/insomniacslk/dhcp/blob/master/dhcpv4/option_vivc_test.go#L10-L21 *)
+  (* Test from https://github.com/insomniacslk/dhcp/blob/master/dhcpv4/option_vivc_test.go#L10-L21
+     except fixed - the above does not have a length for each vendor data sub data *)
   let data =
     (* DHCP options magic
-       VI_VENDOR_CLASS 44 bytes
+       VI_VENDOR_CLASS 46 bytes
        enterprise number 9
+       length 16
        length 15
        data
        enterprise number 18
+       length 20
        length 19
        data
        END option *)
     "\x63\x82\x53\x63\
-     \124\044\
+     \124\046\
      \x00\x00\x00\x09\
-     \x0f\
+     \016\
+     \015\
      CiscoIdentifier\
      \x00\x00\x00\x12\
-     \x13\
+     \020\
+     \019\
      WellfleetIdentifier\
      \255"
   in
@@ -1042,10 +1047,10 @@ let vi_vendor_class_parse () =
   in
   match options with
   | [ Vi_vendor_class [ (9l, cisco); (18l, wellfleet) ] ] ->
-    if not (String.equal cisco "CiscoIdentifier") then
-      Alcotest.failf "Expected CiscoIdentifier, got %S" cisco;
-    if not (String.equal wellfleet "WellfleetIdentifier") then
-      Alcotest.failf "Expected WellfleetIdentifier, got %S" wellfleet;
+    if not (List.equal String.equal cisco ["CiscoIdentifier"]) then
+      Alcotest.failf "Expected CiscoIdentifier, got %a" Fmt.Dump.(list string) cisco;
+    if not (List.equal String.equal wellfleet ["WellfleetIdentifier"]) then
+      Alcotest.failf "Expected WellfleetIdentifier, got %a" Fmt.Dump.(list string) wellfleet;
     ()
   | [ Vi_vendor_class [ (not_cisco, _); (not_wellfleet, _) ] ] ->
     Alcotest.failf "Expected enterprise numbers 9, 18; got %lu, %lu" not_cisco not_wellfleet

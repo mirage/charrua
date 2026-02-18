@@ -287,7 +287,7 @@ type dhcp_option =
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
   | Vi_vendor_class of                      (* code 124 *)
-      (int32 * string) list
+      (int32 * string list) list
   | Vi_vendor_info of                       (* code 125 *)
       (int32 * (int * string) list) list
   (** Vendor-identifying vendor information. It's a non-empty list of pairs of
@@ -390,7 +390,7 @@ val find_user_class : dhcp_option list -> string option
 val find_uuid_guid : dhcp_option list -> string option
 val find_vendor_class_id : dhcp_option list -> string option
 val find_vendor_specific : dhcp_option list -> string option
-val collect_vi_vendor_class : dhcp_option list -> (int32 * string) list
+val collect_vi_vendor_class : dhcp_option list -> (int32 * string list) list
 val collect_vi_vendor_info : dhcp_option list -> (int32 * (int * string) list) list
 val find_web_proxy_auto_disc : dhcp_option list -> string option
 val find_private_classless_static_route : dhcp_option list -> string option

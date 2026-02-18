@@ -698,7 +698,7 @@ type dhcp_option =
   | Sip_servers of string                   (* code 120 *)
   | Classless_static_route of string        (* code 121 *) (* XXX current, use better type *)
   | Vi_vendor_class of                      (* code 124 *)
-      (int32 * string) list
+      (int32 * string list) list
   | Vi_vendor_info of                       (* code 125 *)
       (int32 * (int * string) list) list
   | Misc_150 of string                      (* code 150 *)
@@ -978,6 +978,28 @@ let options_of_buf buf buf_len =
             (pen, go 0))
           (get_vi_vendor_thing ())
       in
+      let get_vi_vendor_class () =
+        List.map (fun (pen, datas) ->
+            let[@tail_mod_cons] rec go offset =
+              let bad_len len =
+                Fmt.kstr invalid_arg
+                  "Malformed len %d in vendor-identifying vendor class data"
+                  len
+              in
+              if String.length datas - offset < 1 then bad_len (String.length datas - offset);
+              let len = String.get_uint8 datas offset in
+              Printf.eprintf "Data is %S\n%!" (String.sub datas (offset + 1) len);
+              if String.length datas - offset < 1 + len then bad_len len;
+              let data = String.sub datas (offset + 1) len in
+              let offset = offset + 1 + len in
+              if offset = String.length datas then
+                [data]
+              else
+                data :: (go[@tailcall]) offset
+            in
+            (pen, go 0))
+          (get_vi_vendor_thing ())
+      in
       match code with
       | 0 ->   padding ()
       | 1 ->   take (Subnet_mask (get_ip ()))
@@ -1055,7 +1077,7 @@ let options_of_buf buf buf_len =
       | 119 -> take (Domain_search (get_string ()))
       | 120 -> take (Sip_servers (get_string ()))
       | 121 -> take (Classless_static_route (get_string ()))
-      | 124 -> take (Vi_vendor_class (get_vi_vendor_thing ()))
+      | 124 -> take (Vi_vendor_class (get_vi_vendor_class ()))
       | 125 -> take (Vi_vendor_info (get_vi_vendor_info ()))
       | 150 -> take (Misc_150 (get_string ()))
       | 249 -> take (Private_classless_static_route (get_string ()))
@@ -1200,13 +1222,31 @@ let buf_of_options sbuf options =
             let len = String.length data in
             if len > 255 then
               invalid_arg ("suboption len is too big: " ^ string_of_int len);
-            let b = Bytes.create (2 + String.length data) in
+            let b = Bytes.create (2 + len) in
             Bytes.set_uint8 b 0 code;
             Bytes.set_uint8 b 1 len;
             Bytes.blit_string data 0 b 2 len;
             Bytes.unsafe_to_string b
           in
           (pen, String.concat "" (List.map sub_option sub_options)))
+        items
+    in
+    put_coded_vi_vendor_thing code items buf
+  in
+  let put_coded_vi_vendor_class code items buf =
+    let items =
+      List.map (fun (pen, datas) ->
+          pen,
+          String.concat ""
+            (List.map (fun data ->
+                 let len = String.length data in
+                 if len > 255 then
+                   invalid_arg ("V-I vendor class data is too big: " ^ string_of_int len);
+                 let b = Bytes.create (1 + len) in
+                 Bytes.set_uint8 b 0 len;
+                 Bytes.blit_string data 0 b 1 len;
+                 Bytes.unsafe_to_string b)
+                datas))
         items
     in
     put_coded_vi_vendor_thing code items buf
@@ -1289,7 +1329,7 @@ let buf_of_options sbuf options =
     | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
     | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
     | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
-    | Vi_vendor_class vi -> put_coded_vi_vendor_thing 124 vi buf (* code 124 *)
+    | Vi_vendor_class vi -> put_coded_vi_vendor_class 124 vi buf (* code 124 *)
     | Vi_vendor_info vi -> put_coded_vi_vendor_info 125 vi buf (* code 125 *)
     | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
     | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
