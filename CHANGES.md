@@ -1,3 +1,9 @@
+### v3.1.1 (2026-03-11)
+
+* **BUGFIX**: fix cancellation semantics of the result of listen so its
+  semantics align more closely with e.g. mirage-net-solo5 (#151 @reynir review
+  @hannesm)
+
 ### V3.1.0 (2026-02-18)
 
 * Implement RFC 3925 (Vendor-identifying vendor options)
