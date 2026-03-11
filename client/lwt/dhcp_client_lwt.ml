@@ -119,7 +119,8 @@ module Make (Net : Mirage_net.S) = struct
     let t = { lease; net; listen = Fun.const Lwt.return_unit; stop ; listener_condition = Lwt_condition.create ()} in
     let task =
       Lwt_condition.wait t.listener_condition >>= fun () ->
-      Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet t.listen >|= fun r ->
+      let listen frame = t.listen frame in
+      Net.listen t.net ~header_size:Ethernet.Packet.sizeof_ethernet listen >|= fun r ->
       Lwt.wakeup_later stop_waker r
     in
     Lwt.async (fun () -> task);
