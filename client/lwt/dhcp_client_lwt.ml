@@ -131,8 +131,7 @@ module Make (Net : Mirage_net.S) = struct
     Lwt_condition.broadcast t.listener_condition ();
     (* Callers of listen don't expect cancelling to cancel all other calls on
        listen. So we return a [_ Lwt.t] that can't cancel [t.stop]. *)
-    Lwt.no_cancel t.stop >|= fun r ->
-    r
+    Lwt.protected t.stop
 
   let listen t ~header_size fn =
     (* can this ever not be ethernet?! *)
