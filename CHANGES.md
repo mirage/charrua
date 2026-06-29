@@ -1,3 +1,8 @@
+### v3.1.2 (2026-06-29)
+
+* server: stop the lease scan at pool top (was only tested with /24 networks)
+  (#154 @samoht, review: @haesbaert @hannesm)
+
 ### v3.1.1 (2026-03-11)
 
 * **BUGFIX**: fix cancellation semantics of the result of listen so its
