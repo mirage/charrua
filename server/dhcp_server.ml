@@ -374,7 +374,7 @@ module Lease = struct
       let ip = Ipaddr.V4.of_int32 (Int32.add low_32 off) in
       if addr_free ip db then
         Some ip
-      else if off = high_32 then
+      else if ip = high_ip then
         None
       else
         linear_loop (Int32.succ off)
