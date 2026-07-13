@@ -75,7 +75,7 @@ module Lease : sig
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
-    options    : Dhcp_wire.dhcp_option list;
+    client_requested_options : Dhcp_wire.dhcp_option list;
   }
 
   val make : Dhcp_wire.client_id -> Ipaddr.V4.t -> Dhcp_wire.dhcp_option list -> duration:int32 -> now:int32 -> t
