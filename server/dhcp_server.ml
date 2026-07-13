@@ -741,13 +741,6 @@ module Input = struct
       in
       Reply (pkt, None, db)
     in
-    let opts =
-      Util.cons_if_some_f (find_vendor_class_id pkt.options)
-        (fun vid -> Vendor_class_id vid) @@
-      match (find_parameter_requests pkt.options) with
-      | Some preqs -> collect_replies config pkt.chaddr preqs
-      | None -> []
-    in
     let ack lease =
       let lease = Lease.extend lease ~now in
       let lease_time, t1, t2 =
@@ -759,8 +752,13 @@ module Input = struct
         List.cons (Renewal_t1 t1) @@
         List.cons (Rebinding_t2 t2) @@
         List.cons (Server_identifier ourip) @@
-        opts
+        Util.cons_if_some_f (find_vendor_class_id pkt.options)
+          (fun vid -> Vendor_class_id vid) @@
+        match (find_parameter_requests pkt.options) with
+        | Some preqs -> collect_replies config pkt.chaddr preqs
+        | None -> []
       in
+      let lease = { lease with options } in
       let reply = make_reply config pkt
           ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
           ~siaddr:ourip ~giaddr:pkt.giaddr options
@@ -794,7 +792,7 @@ module Input = struct
            if (Lease.addr_allocated reqip db) then
              nak ~msg:"Requested address is allocated" ()
            else
-             ack (Lease.make client_id reqip opts
+             ack (Lease.make client_id reqip []
                     ~duration:config.default_lease_time ~now))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)
