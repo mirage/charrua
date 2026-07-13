@@ -85,7 +85,7 @@ let maybe_gc db now gbcol =
   let open Lwt in
   if (now - gbcol) >= 60 then
     Lwt_log.debug "Garbage collecting..." >>= fun () ->
-    return (Dhcp_server.Lease.garbage_collect db ~now:(Int32.of_int now), now + 60)
+    return (fst (Dhcp_server.Lease.garbage_collect db ~now:(Int32.of_int now)), now + 60)
   else
     return (db, gbcol)
 

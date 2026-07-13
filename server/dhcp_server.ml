@@ -194,6 +194,7 @@ module Lease = struct
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
+    options    : Dhcp_wire.dhcp_option list;
   }
 
   let to_string lease =
@@ -220,13 +221,13 @@ module Lease = struct
     &&
     (Addr_map.equal (fun a1 a2 -> a1 = a2) db1.addr_map db2.addr_map)
 
-  let make client_id addr ~duration ~now =
+  let make client_id addr options ~duration ~now =
     let tm_start = now in
     let tm_end = Int32.add tm_start duration in
-    { tm_start; tm_end; addr; client_id }
+    { tm_start; tm_end; addr; client_id; options }
 
-  let make_fixed mac addr ~duration ~now =
-    make (Dhcp_wire.Hwaddr mac) addr ~duration ~now
+  let make_fixed mac addr options ~duration ~now =
+    make (Dhcp_wire.Hwaddr mac) addr options ~duration ~now
 
   let timeleft lease ~now =
     let left = Int32.sub lease.tm_end now in
@@ -244,7 +245,7 @@ module Lease = struct
 
   let extend lease ~now =
     let original = Int32.sub lease.tm_end lease.tm_start in
-    make lease.client_id lease.addr ~duration:original ~now
+    make lease.client_id lease.addr lease.options ~duration:original ~now
 
   let expired lease ~now = timeleft lease ~now = Int32.zero
 
@@ -261,7 +262,7 @@ module Lease = struct
     db
 
   let garbage_collect db ~now =
-    let lease_map = Lease_map.filter
+    let lease_map, leases_tbr = Lease_map.partition
         (fun _ lease -> not (expired lease ~now))
         db.lease_map
     in
@@ -269,7 +270,8 @@ module Lease = struct
         (fun _ client_id -> Lease_map.mem client_id lease_map)
         db.addr_map
     in
-    update_db lease_map addr_map |> sanity_check
+    let db' = update_db lease_map addr_map |> sanity_check in
+    db', List.map snd (Lease_map.bindings leases_tbr)
 
   let lease_of_client_id client_id db =
     Lease_map.find_opt client_id db.lease_map
@@ -294,15 +296,28 @@ module Lease = struct
       (Addr_map.add lease.addr lease.client_id db.addr_map)
 
   let lease_to_string l =
+    let opts = Cstruct.create 1500 in
+    let opt_end = Dhcp_wire.buf_of_options opts l.options in
+    let opts = Cstruct.sub opts 0 (Cstruct.length opts - Cstruct.length opt_end) in
     Int32.to_string l.tm_start ^ "," ^ Int32.to_string l.tm_end ^ "," ^
-    Ipaddr.V4.to_string l.addr ^ "," ^ Dhcp_wire.client_id_to_string l.client_id
+    Ipaddr.V4.to_string l.addr ^ "," ^ Dhcp_wire.client_id_to_string l.client_id ^ "," ^
+    Ohex.encode (Cstruct.to_string opts)
 
   let lease_of_string s =
     match String.split_on_char ',' s with
+    | tm_start :: tm_end :: addr :: client_id :: options ->
+      (let opts = Ohex.decode (String.concat "," options) |> Cstruct.of_string in
+       match Dhcp_wire.options_of_buf opts (Cstruct.length opts) with
+       | exception Invalid_argument _ -> None
+       | options ->
+         (match Int32.of_string_opt tm_start, Int32.of_string_opt tm_end, Ipaddr.V4.of_string addr, Dhcp_wire.string_to_client_id client_id with
+          | Some tm_start, Some tm_end, Ok addr, Some client_id ->
+            Some { tm_start ; tm_end ; addr ; client_id ; options }
+          | _ -> None))
     | tm_start :: tm_end :: addr :: client_id ->
       (match Int32.of_string_opt tm_start, Int32.of_string_opt tm_end, Ipaddr.V4.of_string addr, Dhcp_wire.string_to_client_id (String.concat "," client_id) with
        | Some tm_start, Some tm_end, Ok addr, Some client_id ->
-         Some { tm_start ; tm_end ; addr ; client_id }
+         Some { tm_start ; tm_end ; addr ; client_id ; options = [] }
        | _ -> None)
     | _ -> None
 
@@ -395,30 +410,30 @@ module Input = struct
   type result =
     | Silence
     | Update of Lease.t option * Lease.database
-    | Reply of Dhcp_wire.pkt * (Lease.t * Dhcp_wire.dhcp_option list) option * Lease.database
+    | Reply of Dhcp_wire.pkt * Lease.t option * Lease.database
     | Warning of string
     | Error of string
 
   let host_of_mac config mac =
-    List.find_opt (fun host -> host.hw_addr = mac) config.hosts
+    List.find_opt (fun host -> Macaddr.compare host.hw_addr mac = 0) config.hosts
 
   let fixed_addr_of_mac config mac =
     match host_of_mac config mac with
     | Some host -> host.fixed_addr
     | None -> None
 
-  let _options_of_mac config mac =
+  let options_of_mac config mac =
     match host_of_mac config mac with
     | Some host -> host.options
     | None -> []
 
   let find_lease config client_id mac db ~now =
-    match (fixed_addr_of_mac config mac) with
-    | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr ~duration:config.default_lease_time ~now), true
+    match fixed_addr_of_mac config mac with
+    | Some fixed_addr -> Some (Lease.make_fixed mac fixed_addr (options_of_mac config mac) ~duration:config.default_lease_time ~now), true
     | None -> Lease.lease_of_client_id client_id db, false
 
   let good_address config mac addr _db =
-    match (fixed_addr_of_mac config mac) with
+    match fixed_addr_of_mac config mac with
       (* If this is a fixed address, it's good if mac matches ip. *)
     | Some fixed_addr -> addr = fixed_addr
     | None -> (match config.range with
@@ -726,6 +741,13 @@ module Input = struct
       in
       Reply (pkt, None, db)
     in
+    let opts =
+      Util.cons_if_some_f (find_vendor_class_id pkt.options)
+        (fun vid -> Vendor_class_id vid) @@
+      match (find_parameter_requests pkt.options) with
+      | Some preqs -> collect_replies config pkt.chaddr preqs
+      | None -> []
+    in
     let ack lease =
       let lease = Lease.extend lease ~now in
       let lease_time, t1, t2 =
@@ -737,11 +759,7 @@ module Input = struct
         List.cons (Renewal_t1 t1) @@
         List.cons (Rebinding_t2 t2) @@
         List.cons (Server_identifier ourip) @@
-        Util.cons_if_some_f (find_vendor_class_id pkt.options)
-          (fun vid -> Vendor_class_id vid) @@
-        match (find_parameter_requests pkt.options) with
-        | Some preqs -> collect_replies config pkt.chaddr preqs
-        | None -> []
+        opts
       in
       let reply = make_reply config pkt
           ~ciaddr:pkt.ciaddr ~yiaddr:lease.Lease.addr
@@ -755,7 +773,7 @@ module Input = struct
           (* hannes: even if we have a static lease, we may want to know and do something *)
           None, db
       in
-      Reply (reply, Option.map (fun l -> l, pkt.options) lease, db)
+      Reply (reply, lease, db)
     in
     match sidip, reqip, lease with
     | Some sidip, Some reqip, _ -> (* DHCPREQUEST generated during SELECTING state *)
@@ -776,7 +794,7 @@ module Input = struct
            if (Lease.addr_allocated reqip db) then
              nak ~msg:"Requested address is allocated" ()
            else
-             ack (Lease.make client_id reqip
+             ack (Lease.make client_id reqip opts
                     ~duration:config.default_lease_time ~now))
     | None, Some reqip, Some lease ->   (* DHCPREQUEST @ INIT-REBOOT state *)
       if pkt.ciaddr <> Ipaddr.V4.unspecified then (* violates RFC2131 4.3.2 *)

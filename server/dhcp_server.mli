@@ -75,10 +75,11 @@ module Lease : sig
     tm_end     : int32;
     addr       : Ipaddr.V4.t;
     client_id  : Dhcp_wire.client_id;
+    options    : Dhcp_wire.dhcp_option list;
   }
 
-  val make : Dhcp_wire.client_id -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
-  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> duration:int32 -> now:int32 -> t
+  val make : Dhcp_wire.client_id -> Ipaddr.V4.t -> Dhcp_wire.dhcp_option list -> duration:int32 -> now:int32 -> t
+  val make_fixed : Macaddr.t -> Ipaddr.V4.t -> Dhcp_wire.dhcp_option list -> duration:int32 -> now:int32 -> t
   val timeleft : t -> now:int32 -> int32
   val timeleft_exn : t -> now:int32 -> int32
   val timeleft3 : t -> float -> float -> now:int32 -> int32 * int32 * int32
@@ -93,7 +94,7 @@ module Lease : sig
   val db_of_string : string -> database
   val db_to_list : database -> t list
   val db_equal : database -> database -> bool
-  val garbage_collect : database -> now:int32 -> database
+  val garbage_collect : database -> now:int32 -> database * t list
   val remove : t -> database -> database
   val replace : t -> database -> database
   val lease_of_client_id : Dhcp_wire.client_id -> database -> t option
@@ -120,8 +121,7 @@ module Input : sig
   type result =
     | Silence (** Input packet didn't belong to us, normal nop event.*)
     | Update of Lease.t option * Lease.database (** Lease database update. *)
-    (* hannes: in the Lease.t option we'll need information about which hostname / DNS FQDN was provisioned (maybe a list of Dhcp_wire.dhcp_option?) *)
-    | Reply of Dhcp_wire.pkt * (Lease.t * Dhcp_wire.dhcp_option list) option * Lease.database
+    | Reply of Dhcp_wire.pkt * Lease.t option * Lease.database
     (** Reply packet to be sent back and the corresponding lease database to be
         used in case the sent of the reply pkt is successfull *)
     (* hannes: the returned option list may involve the reply to be extended, and it may as well require a NAK being send (on error?) -- and the lease database update being discarded *)
