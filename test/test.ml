@@ -958,11 +958,11 @@ let t_request_no_range_fixed () =
 
 let t_db_serialization () =
   let lease2 = Lease.make
-      (Id (0, "Duderino")) ip2_t ~duration:(Int32.of_int 60) ~now in
+      (Id (0, "Duderino")) ip2_t [ Hostname "duderino" ] ~duration:(Int32.of_int 60) ~now in
   let lease3 = Lease.make
-      (Id (0, "Walter")) ip3_t ~duration:(Int32.of_int 60) ~now in
+      (Id (0, "Walter")) ip3_t [ Hostname "walter"] ~duration:(Int32.of_int 60) ~now in
   let lease4 = Lease.make
-      (Id (0, "Donnie")) ip4_t ~duration:(Int32.of_int 60) ~now in
+      (Id (0, "Donnie")) ip4_t [ Hostname "donnie" ] ~duration:(Int32.of_int 60) ~now in
   let db0 = List.fold_left
       (fun db lease -> Lease.replace lease db)
       (Lease.make_db ()) [ lease2; lease3; lease4 ]
