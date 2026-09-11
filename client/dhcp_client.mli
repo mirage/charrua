@@ -37,3 +37,6 @@ val renew : t -> [`Response of t * Dhcp_wire.pkt | `Noop]
 (** [renew t] returns either a [`Response] with the next state and suggested action
     of the client attempting to renew [t]'s lease,
     or [`Noop] if [t] does not have a lease and therefore can't be renewed. *)
+
+val rebind : t -> [`Response of t * Dhcp_wire.pkt | `Noop]
+(** [rebind t] is much like [renew t] except for rebinding instead of renewing. *)

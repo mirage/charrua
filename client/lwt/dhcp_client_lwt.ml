@@ -30,18 +30,94 @@ module Make (Net : Mirage_net.S) = struct
     let (client, dhcpdiscover) = Dhcp_client.create ?options ?requests xid (Net.mac net) in
     let c = ref client in
 
-    let rec do_renew c t =
-      Mirage_sleep.ns @@ Duration.of_sec t >>= fun () ->
-      match Dhcp_client.renew c with
-      | `Noop -> Log.debug (fun f -> f "Can't renew this lease; won't try");  Lwt.return_unit
-      | `Response (c, pkt) ->
-        Log.debug (fun f -> f "attempted to renew lease: %a" Dhcp_client.pp c);
-        Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
+    let cond = Lwt_condition.create () in
+
+    let rec do_renew lease =
+      let renewal =
+        Dhcp_wire.find_renewal_t1 lease.Dhcp_wire.options
+        |> Option.value ~default:1800l
+        |> Int32.unsigned_to_int
+        |> Option.value ~default:Int.max_int
+      in
+      let t2 (* rebinding *) =
+        Dhcp_wire.find_rebinding_t2 lease.Dhcp_wire.options
+        |> Option.value ~default:75600l (* 21h = (7/8)*24h *)
+        |> Int32.unsigned_to_int
+        |> Option.value ~default:Int.max_int
+      in
+      let expiry =
+        Dhcp_wire.find_ip_lease_time lease.Dhcp_wire.options
+        |> Option.value ~default:86400l (* 24h *)
+        |> Int32.unsigned_to_int
+        |> Option.value ~default:Int.max_int
+      in
+      let t2 = Mirage_sleep.ns @@ Duration.of_sec t2 in
+      let expiry = Mirage_sleep.ns @@ Duration.of_sec expiry in
+      let new_lease = Lwt_condition.wait cond >|= fun lease -> `Lease lease in
+      Mirage_sleep.ns @@ Duration.of_sec renewal >>= fun () ->
+      let rec send_renewal () =
+        match Dhcp_client.renew !c with
+        | `Noop -> 
+          Lwt.return `Can't_renew
+        | `Response (updated_c, pkt) ->
+          c := updated_c;
+          Log.debug (fun f -> f "attempted to renew lease: %a" Dhcp_client.pp updated_c);
+          Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
           | Error e ->
-            Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
-            Lwt.return_unit
+            Lwt.return (`Failed_to_write e)
           | Ok () ->
-            do_renew c t (* ideally t would come from the new lease... *)
+            Mirage_sleep.ns sleep_interval >>= send_renewal
+      in
+      Lwt.pick [
+        new_lease;
+        send_renewal ();
+        (t2 >|= fun () -> `T2_rebinding);
+        (expiry >|= fun () -> `Expired);
+      ] >>= function
+      | `Lease lease ->
+        do_renew lease
+      | `Can't_renew ->
+        Log.debug (fun f -> f "Can't renew this lease; won't try");
+        Lwt.return_unit
+      | `T2_rebinding ->
+        do_rebind expiry
+      | `Expired ->
+        Log.warn (fun f -> f "Lease expired before we could renew");
+        failwith "DHCP lease expired"
+      | `Failed_to_write e ->
+        Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
+        Lwt.return_unit
+    and do_rebind expiry =
+      let new_lease = Lwt_condition.wait cond >|= fun lease -> `Lease lease in
+      let rec send_rebind () =
+        match Dhcp_client.rebind !c with
+        | `Noop ->
+          Lwt.return `Can't_renew
+        | `Response (updated_c, pkt) ->
+          c := updated_c;
+          Log.debug (fun f -> f "attempted to rebind lease: %a" Dhcp_client.pp updated_c);
+          Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
+          | Error e ->
+            Lwt.return (`Failed_to_write e)
+          | Ok () ->
+            Mirage_sleep.ns sleep_interval >>= send_rebind
+      in
+      Lwt.pick [
+        new_lease;
+        send_rebind ();
+        (expiry >|= fun () -> `Expired);
+      ] >>= function
+      | `Lease lease ->
+        do_renew lease
+      | `Can't_renew ->
+        Log.debug (fun f -> f "Can't renew this lease; won't try");
+        Lwt.return_unit
+      | `Expired ->
+        Log.warn (fun f -> f "Lease expired before we could renew");
+        failwith "DHCP lease expired"
+      | `Failed_to_write e ->
+        Log.err (fun f -> f "Failed to write lease renewal request: %a" Net.pp_error e);
+        Lwt.return_unit
     in
     let rec get_lease cond dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
@@ -51,12 +127,14 @@ module Make (Net : Mirage_net.S) = struct
         Lwt.return_unit
       | Ok () ->
         Lwt.pick [
-          Lwt_condition.wait cond;
-          Mirage_sleep.ns sleep_interval;
-        ] >>= fun () ->
-        match Dhcp_client.lease !c with
-        | Some _lease -> Lwt.return_unit
-        | None ->
+          (Lwt_condition.wait cond >|= fun lease -> `Lease lease);
+          (Mirage_sleep.ns sleep_interval >|= fun () -> `Timeout);
+        ] >>= function
+        | `Lease lease ->
+          if renew then
+            do_renew lease
+          else Lwt.return_unit
+        | `Timeout ->
           let xid = Randomconv.int32 Mirage_crypto_rng.generate in
           let (client, dhcpdiscover) = Dhcp_client.create ?requests xid (Net.mac net) in
           c := client;
@@ -89,23 +167,18 @@ module Make (Net : Mirage_net.S) = struct
                        (Fmt.list Ipaddr.V4.pp) (collect_routers l.options));
           Lwt_mvar.put t.lease l >>= fun () ->
           c := s;
-          Lwt_condition.broadcast cond ();
-          (* TODO think more abour renewal, adjust timeouts *)
-          match renew with
-          | true ->
-            Mirage_sleep.ns @@ Duration.of_sec 1800 >>= fun () ->
-            do_renew !c 1800
-          | false ->
-            Lwt.return_unit
+          Lwt_condition.broadcast cond l;
+          Lwt.return_unit
       )
     in
     let lease_wrapper t stop_waker =
-      let cond = Lwt_condition.create () in
-      Lwt.both
+      Lwt.all
+        [
         (listen t cond >|= fun r ->
-         Lwt.wakeup_later stop_waker r)
-        (get_lease cond dhcpdiscover)
-      >|= fun ((), ()) -> ()
+         Lwt.wakeup_later stop_waker r);
+        (get_lease cond dhcpdiscover);
+      ]
+      >|= fun _units -> ()
     in
     let lease = Lwt_mvar.create_empty () in
     let stop, stop_waker = Lwt.task () in
