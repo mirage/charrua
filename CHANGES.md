@@ -1,3 +1,10 @@
+### v3.2.1 (2026-09-11)
+
+* dhcp-client: Use DHCPOFFER server-id if available when replying to an
+  incoming DHCPOFFER (#157 @reynir review @hannesm)
+* dhcp-client.lwt/dhcp-client.mirage: fix renewal logic (#158 @reynir review
+  @hannesm report by @PizieDust)
+
 ### v3.2.0 (2026-07-02)
 
 * Remove ethernet and tcpip dependencies from the core charrua (#155 @dinosaure)
