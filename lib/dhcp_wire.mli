@@ -304,8 +304,8 @@ type dhcp_option =
 
 val dhcp_option_to_string : dhcp_option -> string
 
-val buf_of_options : Cstruct.t -> dhcp_option list -> Cstruct.t
-val options_of_buf : Cstruct.t -> int -> dhcp_option list
+val buf_of_options : bytes -> dhcp_option list -> bytes
+val options_of_buf : string -> int -> dhcp_option list
 
 val find_option : (dhcp_option -> 'b option) -> dhcp_option list -> 'b option
 (** [find_option f l] finds the first option where [f] evaluates to [Some] value
@@ -425,9 +425,9 @@ type pkt = {
 
 (** Conversions for {! pkt}. *)
 
-val pkt_of_buf : Cstruct.t -> int -> (pkt, [ `Msg of string | `Not_dhcp ]) result
-val buf_of_pkt : pkt -> Cstruct.t
-val pkt_into_buf : pkt -> Cstruct.t -> int
+val pkt_of_buf : string -> int -> (pkt, [ `Msg of string | `Not_dhcp ]) result
+val buf_of_pkt : pkt -> string
+val pkt_into_buf : pkt -> bytes -> int
 
 val pp_pkt : pkt Fmt.t
 
@@ -435,6 +435,6 @@ val client_id_of_pkt : pkt -> client_id
 
 (** Helpers. *)
 
-val is_dhcp : Cstruct.t -> int -> bool
+val is_dhcp : string -> int -> bool
 (** [is_dhcp buf len] is true if [buf] is an Ethernet frame containing an IPv4
     header, UDP header, and DHCP packet. *)
