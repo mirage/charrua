@@ -76,11 +76,11 @@ type dhcp = {
 
 module Chk = struct
   let add chk cs =
-    let len = Cstruct.length cs in
+    let len = String.length cs in
     let rec go chk idx =
       let chk = (chk land 0xffff) + (chk lsr 16) in
-      if idx + 1 < len then go (chk + Cstruct.BE.get_uint16 cs idx) (idx + 2)
-      else if idx < len then go (chk + Cstruct.get_uint8 cs idx lsl 8) (idx + 1)
+      if idx + 1 < len then go (chk + String.get_uint16_be cs idx) (idx + 2)
+      else if idx < len then go (chk + String.get_uint8 cs idx lsl 8) (idx + 1)
       else chk in
     go chk 0
 
@@ -90,50 +90,50 @@ module Chk = struct
     (lnot chk) land 0xffff
 end
 
-let get_dhcp_op cs = Cstruct.get_uint8 cs 0
-let set_dhcp_op cs v = Cstruct.set_uint8 cs 0 v
+let get_dhcp_op cs off = String.get_uint8 cs off
+let set_dhcp_op cs off v = Bytes.set_uint8 cs off v
 
-let get_dhcp_htype cs = Cstruct.get_uint8 cs 1
-let set_dhcp_htype cs v = Cstruct.set_uint8 cs 1 v
+let get_dhcp_htype cs off = String.get_uint8 cs (off + 1)
+let set_dhcp_htype cs off v = Bytes.set_uint8 cs (off + 1) v
 
-let get_dhcp_hlen cs = Cstruct.get_uint8 cs 2
-let set_dhcp_hlen cs v = Cstruct.set_uint8 cs 2 v
+let get_dhcp_hlen cs off = String.get_uint8 cs (off + 2)
+let set_dhcp_hlen cs off v = Bytes.set_uint8 cs (off + 2) v
 
-let get_dhcp_hops cs = Cstruct.get_uint8 cs 3
-let set_dhcp_hops cs v = Cstruct.set_uint8 cs 3 v
+let get_dhcp_hops cs off = String.get_uint8 cs (off + 3)
+let set_dhcp_hops cs off v = Bytes.set_uint8 cs (off + 3) v
 
-let get_dhcp_xid cs = Cstruct.BE.get_uint32 cs 4
-let set_dhcp_xid cs v = Cstruct.BE.set_uint32 cs 4 v
+let get_dhcp_xid cs off = String.get_int32_be cs (off + 4)
+let set_dhcp_xid cs off v = Bytes.set_int32_be cs (off + 4) v
 
-let get_dhcp_secs cs = Cstruct.BE.get_uint16 cs 8
-let set_dhcp_secs cs v = Cstruct.BE.set_uint16 cs 8 v
+let get_dhcp_secs cs off = String.get_uint16_be cs (off + 8)
+let set_dhcp_secs cs off v = Bytes.set_uint16_be cs (off + 8) v
 
-let get_dhcp_flags cs = Cstruct.BE.get_uint16 cs 10
-let set_dhcp_flags cs v = Cstruct.BE.set_uint16 cs 10 v
+let get_dhcp_flags cs off = String.get_uint16_be cs (off + 10)
+let set_dhcp_flags cs off v = Bytes.set_uint16_be cs (off + 10) v
 
-let get_dhcp_ciaddr cs = Cstruct.BE.get_uint32 cs 12
-let set_dhcp_ciaddr cs v = Cstruct.BE.set_uint32 cs 12 v
+let get_dhcp_ciaddr cs off = String.get_int32_be cs (off + 12)
+let set_dhcp_ciaddr cs off v = Bytes.set_int32_be cs (off + 12) v
 
-let get_dhcp_yiaddr cs = Cstruct.BE.get_uint32 cs 16
-let set_dhcp_yiaddr cs v = Cstruct.BE.set_uint32 cs 16 v
+let get_dhcp_yiaddr cs off = String.get_int32_be cs (off + 16)
+let set_dhcp_yiaddr cs off v = Bytes.set_int32_be cs (off + 16) v
 
-let get_dhcp_siaddr cs = Cstruct.BE.get_uint32 cs 20
-let set_dhcp_siaddr cs v = Cstruct.BE.set_uint32 cs 20 v
+let get_dhcp_siaddr cs off = String.get_int32_be cs (off + 20)
+let set_dhcp_siaddr cs off v = Bytes.set_int32_be cs (off + 20) v
 
-let get_dhcp_giaddr cs = Cstruct.BE.get_uint32 cs 24
-let set_dhcp_giaddr cs v = Cstruct.BE.set_uint32 cs 24 v
+let get_dhcp_giaddr cs off = String.get_int32_be cs (off + 24)
+let set_dhcp_giaddr cs off v = Bytes.set_int32_be cs (off + 24) v
 
-let _get_dhcp_chaddr cs = Cstruct.sub cs 28 16
-let copy_dhcp_chaddr cs = Cstruct.to_string ~off:28 ~len:16 cs
-let set_dhcp_chaddr src srcoff cs = Cstruct.blit_from_string src srcoff cs 28 16
+let get_dhcp_chaddr cs off = String.sub cs (off + 28) 16
+let copy_dhcp_chaddr cs off = get_dhcp_chaddr cs off
+let set_dhcp_chaddr src srcoff cs off = Bytes.blit_string src srcoff cs (off + 28) 16
 
-let get_dhcp_sname cs = Cstruct.sub cs 44 64
-let copy_dhcp_sname cs = Cstruct.to_string ~off:44 ~len:64 cs
-let set_dhcp_sname src srcoff cs = Cstruct.blit_from_string src srcoff cs 44 64
+let get_dhcp_sname cs off = String.sub cs (off + 44) 64
+let copy_dhcp_sname cs off = get_dhcp_sname cs off
+let set_dhcp_sname src srcoff cs off = Bytes.blit_string src srcoff cs (off + 44) 64
 
-let get_dhcp_file cs = Cstruct.sub cs 108 128
-let copy_dhcp_file cs = Cstruct.to_string ~off:108 ~len:128 cs
-let set_dhcp_file src srcoff cs = Cstruct.blit_from_string src srcoff cs 108 128
+let get_dhcp_file cs off = String.sub cs (off + 108) 128
+let copy_dhcp_file cs off = get_dhcp_file cs off
+let set_dhcp_file src srcoff cs off = Bytes.blit_string src srcoff cs (off + 108) 128
 
 let sizeof_ethernet = 14
 let sizeof_ipv4 = 20
@@ -843,31 +843,30 @@ let pp_pkt ppf pkt =
 let client_port = 68
 let server_port = 67
 
-let options_of_buf buf buf_len =
-  let rec collect buf options =
-    let code = Cstruct.get_uint8 buf 0 in
-    let padding () = collect (Cstruct.shift buf 1) options in
+let options_of_buf buf off buf_len =
+  let rec collect buf off options =
+    let code = String.get_uint8 buf off in
+    let padding () = collect buf (off + 1) options in
     (* Make sure we never shift into an unexisting body *)
     match int_to_option_code_exn code with
     | PAD -> padding ()
-    | END -> options
+    | END -> off, options
     | _ -> (* Has len:body, generate the get functions *)
-      let len = Cstruct.get_uint8 buf 1 in
-      let body = Cstruct.shift buf 2 in
-      let bad_len = Printf.sprintf "Malformed len %d in option %d" len code in
+      let len = String.get_uint8 buf (off + 1) in
+      let bad_len () = Printf.sprintf "Malformed len %d in option %d" len code in
       (* discard discards the option from the resulting list *)
-      let discard () = collect (Cstruct.shift body len) options in
+      let discard () = collect buf (off + len + 2) options in
       (* take includes the option in the resulting list *)
-      let take op = collect (Cstruct.shift body len) (op :: options) in
-      let get_8 () = if len <> 1 then invalid_arg bad_len else
-          Cstruct.get_uint8 body 0 in
+      let take op = collect buf (off + len + 2) (op :: options) in
+      let get_8 () = if len <> 1 then invalid_arg (bad_len ()) else
+          String.get_uint8 buf (off + 2) in
       let get_8_list ?(min_len=1) () =
         let rec loop offset octets =
           if offset = len then octets else
-            let octet = Cstruct.get_uint8 body offset in
+            let octet = String.get_uint8 buf (off + 2 + offset) in
             loop (succ offset) (octet :: octets)
         in
-        if len < min_len then invalid_arg bad_len else
+        if len < min_len then invalid_arg (bad_len ()) else
           List.rev (loop 0 [])
       in
       let get_bool () = match (get_8 ()) with
@@ -875,21 +874,21 @@ let options_of_buf buf buf_len =
         | 0 -> false
         | v -> invalid_arg ("invalid value for bool: " ^ string_of_int v)
       in
-      let get_16 () = if len <> 2 then invalid_arg bad_len else
-          Cstruct.BE.get_uint16 body 0 in
-      let get_32 () = if len <> 4 then invalid_arg bad_len else
-          Cstruct.BE.get_uint32 body 0 in
+      let get_16 () = if len <> 2 then invalid_arg (bad_len ()) else
+          String.get_uint16_be buf (off + 2) in
+      let get_32 () = if len <> 4 then invalid_arg (bad_len ()) else
+          String.get_int32_be buf (off + 2) in
       let get_32_list ?(min_len=4) () =
         let rec loop offset longs =
           if offset = len then longs else
-            let long = Cstruct.BE.get_uint32 body offset in
+            let long = String.get_int32_be buf (off + 2 + offset) in
             loop (offset + 4) (long :: longs)
         in
-        if ((len mod 4) <> 0) || len < min_len then invalid_arg bad_len else
+        if ((len mod 4) <> 0) || len < min_len then invalid_arg (bad_len ()) else
           List.rev (loop 0 [])
       in
       (* Fetch ipv4s from options *)
-      let get_ip () = if len <> 4 then invalid_arg bad_len else
+      let get_ip () = if len <> 4 then invalid_arg (bad_len ()) else
           Ipaddr.V4.of_int32 (get_32 ()) in
       let get_ip_list ?(min_len=4) () =
         List.map Ipaddr.V4.of_int32 (get_32_list ~min_len:min_len ())
@@ -897,7 +896,7 @@ let options_of_buf buf buf_len =
       let get_ip_tuple_list _ =
         let rec loop ips tuples = match ips with
           | ip1 :: ip2 :: tl -> loop tl ((ip1, ip2) :: tuples)
-          | _ip :: [] -> invalid_arg bad_len
+          | _ip :: [] -> invalid_arg (bad_len ())
           | [] -> List.rev tuples
         in
         loop (get_ip_list ~min_len:8 ()) []
@@ -905,7 +904,7 @@ let options_of_buf buf buf_len =
       (* Get a list of ip pairs *)
       let get_prefix_list ?(min_len=8) () =
         if ((len mod 8) <> 0) || len < min_len then
-          invalid_arg bad_len
+          invalid_arg (bad_len ())
         else
           List.map (function
               | address, netmask -> try
@@ -914,18 +913,18 @@ let options_of_buf buf buf_len =
                   Ipaddr.Parse_error (a, b) -> invalid_arg (a ^ ": " ^ b))
             (get_ip_tuple_list ())
       in
-      let get_string () =  if len < 1 then invalid_arg bad_len else
-          Cstruct.to_string ~len body
+      let get_string () =  if len < 1 then invalid_arg (bad_len ()) else
+          String.sub buf (off + 2) len
       in
-      let get_client_id () =  if len < 2 then invalid_arg bad_len else
-          let s = Cstruct.to_string ~off:1 ~len:(len - 1) body in
-          let htype = Cstruct.get_uint8 body 0 in
+      let get_client_id () =  if len < 2 then invalid_arg (bad_len ()) else
+          let htype = String.get_uint8 buf (off + 2) in
+          let s = String.sub buf (off + 3) (len - 1) in
           if htype = 1 && len = 7 then
             Hwaddr (Macaddr.of_octets_exn s)
           else
             Id (htype, s)
       in
-      let get_client_fqdn () = if len < 4 then invalid_arg bad_len else
+      let get_client_fqdn () = if len < 4 then invalid_arg (bad_len ()) else
           let rec parse_domain_name acc idx data =
             let sl = String.length data in
             if sl - idx = 0 then
@@ -939,14 +938,14 @@ let options_of_buf buf buf_len =
                 Error (`Msg "invalid length")
           in
           let flags =
-            let d = Cstruct.get_uint8 body 0 in
+            let d = String.get_uint8 buf (off + 2) in
             (if d land 0x1 > 0 then [ `Server_A ] else []) @
             (if d land 0x2 > 0 then [ `Overriden ] else []) @
             (if d land 0x4 > 0 then [ `Wire_encoding ] else []) @
             (if d land 0x8 > 0 then [ `No_update ] else [])
           in
           let fqdn =
-            let d = Cstruct.to_string ~off:3 ~len:(len - 3) body in
+            let d = String.sub buf (off + 2 + 3) (len - 3) in
             match
               if List.mem `Wire_encoding flags then
                 parse_domain_name [] 0 d
@@ -959,18 +958,18 @@ let options_of_buf buf buf_len =
           flags, fqdn
       in
       let get_vi_vendor_thing () =
-        if len < 5 then invalid_arg bad_len;
+        if len < 5 then invalid_arg (bad_len ());
         let[@tail_mod_cons] rec loop offset =
           if offset = len then []
           else if len < offset + 5 then
-            invalid_arg bad_len
+            invalid_arg (bad_len ())
           else
-            let pen = Cstruct.BE.get_uint32 body offset in
-            let data_len = Cstruct.get_uint8 body (offset + 4) in
+            let pen = String.get_int32_be buf (off + 2 + offset) in
+            let data_len = String.get_uint8 buf (off + 2 + offset + 4) in
             if len < offset + 5 + data_len then
-              invalid_arg bad_len
+              invalid_arg (bad_len ())
             else
-              let data = Cstruct.to_string body ~off:(offset + 5) ~len:data_len in
+              let data = String.sub buf (off + 2 + offset + 5) data_len in
               (pen, data) :: (loop[@tailcall]) (offset + 5 + data_len)
         in
         loop 0
@@ -1103,7 +1102,7 @@ let options_of_buf buf buf_len =
       | _code -> discard ()
   in
   (* Extends options if it finds an Option_overload *)
-  let extend buf options =
+  let extend buf (off, options) =
     let rec search = function
       | [] -> None
       | opt :: tl -> match opt with
@@ -1113,10 +1112,16 @@ let options_of_buf buf buf_len =
     match search options with
     | None -> options           (* Nothing to do, identity function *)
     | Some v -> match v with
-      | 1 -> collect (get_dhcp_file buf) options    (* It's in file *)
-      | 2 -> collect (get_dhcp_sname buf) options   (* It's in sname *)
-      | 3 -> collect (get_dhcp_file buf) options |> (* OMG both *)
-             collect (get_dhcp_sname buf)
+      | 1 -> snd (collect (get_dhcp_file buf off) 0 options)    (* It's in file *)
+      | 2 -> snd (collect (get_dhcp_sname buf off) 0 options)   (* It's in sname *)
+      | 3 ->
+        let _off, options =
+          collect (get_dhcp_file buf off) 0 options (* OMG both *)
+        in
+        let _off', options =
+          collect (get_dhcp_sname buf off) 0 options
+        in
+        options
       | _ -> invalid_arg ("Invalid overload code: " ^ string_of_int v)
   in
   (* Handle a pkt with no options *)
@@ -1124,58 +1129,56 @@ let options_of_buf buf buf_len =
     []
   else
     (* Look for magic cookie *)
-    let cookie = Cstruct.BE.get_uint32 buf 0 in
+    let cookie = String.get_int32_be buf off in
     if cookie <> 0x63825363l then
       invalid_arg "Invalid cookie";
-    let options_start = Cstruct.shift buf 4 in
     (* Jump over cookie and start options, also extend them if necessary *)
-    collect options_start [] |>
+    collect buf (off + 4) [] |>
     extend buf |>
     List.rev
 
 let buf_of_options sbuf options =
-  let open Cstruct in
-  let put_code code buf = set_uint8 buf 0 code; shift buf 1 in
-  let put_len len buf = if len > 255 then
+  let put_code code buf off = Bytes.set_uint8 buf off code; off + 1 in
+  let put_len len buf off = if len > 255 then
       invalid_arg ("option len is too big: " ^ (string_of_int len));
-    set_uint8 buf 0 len; shift buf 1
+    Bytes.set_uint8 buf off len; off + 1
   in
-  let put_8 v buf = set_uint8 buf 0 v; shift buf 1 in
-  let put_16 v buf = BE.set_uint16 buf 0 v; shift buf 2 in
-  let put_32 v buf = BE.set_uint32 buf 0 v; shift buf 4 in
-  let put_ip ip buf = put_32 (Ipaddr.V4.to_int32 ip) buf in
-  let put_prefix prefix buf =
-    put_ip (Ipaddr.V4.Prefix.network prefix) buf |>
-    put_ip (Ipaddr.V4.Prefix.netmask prefix)
+  let put_8 v buf off = Bytes.set_uint8 buf off v; off + 1 in
+  let put_16 v buf off = Bytes.set_uint16_be buf off v; off + 2 in
+  let put_32 v buf off = Bytes.set_int32_be buf off v; off + 4 in
+  let put_ip ip buf off = put_32 (Ipaddr.V4.to_int32 ip) buf off in
+  let put_prefix prefix buf off =
+    put_ip (Ipaddr.V4.Prefix.network prefix) buf off |>
+    put_ip (Ipaddr.V4.Prefix.netmask prefix) buf
   in
-  let put_ip_tuple tuple buf = match tuple with
-    a, b -> put_ip a buf |> put_ip b
+  let put_ip_tuple tuple buf off = match tuple with
+    a, b -> put_ip a buf off |> put_ip b buf
   in
-  let put_coded_8 code v buf = put_code code buf |> put_len 1 |> put_8 v in
-  let put_coded_16 code v buf = put_code code buf |> put_len 2 |> put_16 v in
-  let put_coded_32 code v buf = put_code code buf |> put_len 4 |> put_32 v in
-  let put_coded_ip code ip buf = put_code code buf |> put_len 4 |> put_ip ip in
+  let put_coded_8 code v buf off = put_code code buf off |> put_len 1 buf |> put_8 v buf in
+  let put_coded_16 code v buf off = put_code code buf off |> put_len 2 buf |> put_16 v buf in
+  let put_coded_32 code v buf off = put_code code buf off |> put_len 4 buf |> put_32 v buf in
+  let put_coded_ip code ip buf off = put_code code buf off |> put_len 4 buf |> put_ip ip buf in
   (* let put_coded_prefix code prefix buf = *)
   (*   put_code code buf |> put_len 8 |> put_prefix prefix in *)
-  let put_coded_bool code v buf =
-    put_coded_8 code (match v with true -> 1 | false -> 0) buf in
-  let put_coded_bytes code v buf =
+  let put_coded_bool code v buf off =
+    put_coded_8 code (match v with true -> 1 | false -> 0) buf off in
+  let put_coded_bytes code v buf off =
     let len = (String.length v) in
-    let buf = put_code code buf |> put_len len in
-    blit_from_string v 0 buf 0 len;
-    shift buf len
+    let off = put_code code buf off |> put_len len buf in
+    Bytes.blit_string v 0 buf off len;
+    off + len
   in
-  let put_client_id code v buf =
+  let put_client_id code v buf off =
     let htype, s = match v with
       | Hwaddr mac -> (1, Macaddr.to_octets mac)
       | Id (htype, id) -> (htype, id)
     in
     let len = String.length s in
-    let buf = put_code code buf |> put_len (succ len) |> put_8 htype in
-    blit_from_string s 0 buf 0 len;
-    shift buf len
+    let off = put_code code buf off |> put_len (succ len) buf |> put_8 htype buf in
+    Bytes.blit_string s 0 buf off len;
+    off + len
   in
-  let put_client_fqdn code (flags, dn) buf =
+  let put_client_fqdn code (flags, dn) buf off =
     let f =
       (if List.mem `Server_A flags then 0x1 else 0) +
       (if List.mem `Overriden flags then 0x2 else 0) +
@@ -1199,41 +1202,41 @@ let buf_of_options sbuf options =
     let len = String.length dn in
     (* the last two "put_8 0" are the RCODE, should be 0 for client, and 0xFF
        for server - but should also be ignored by both sides *)
-    let buf =
-      put_code code buf |> put_len (len + 3) |> put_8 f |> put_8 0 |> put_8 0
+    let off =
+      put_code code buf off |> put_len (len + 3) buf |> put_8 f buf |> put_8 0 buf |> put_8 0 buf
     in
-    blit_from_string dn 0 buf 0 len;
-    shift buf len
+    Bytes.blit_string dn 0 buf off len;
+    off + len
   in
-  let make_listf ?(min_len=1) f len code l buf =
+  let make_listf ?(min_len=1) f len code l (buf : bytes) (off : int) =
     if (List.length l) < min_len then invalid_arg "Invalid option" else
-    let buf = put_code code buf |> put_len (len * (List.length l)) in
-    List.fold_left f buf l
+    let off = put_code code buf off |> put_len (len * (List.length l)) buf in
+    List.fold_left f off l
   in
-  let put_coded_8_list ?min_len =
-    make_listf ?min_len (fun buf x -> put_8 x buf) 1 in
+  let put_coded_8_list ?min_len code l buf off =
+    make_listf ?min_len (fun off x -> put_8 x buf off) 1 code l buf off in
   (* let put_coded_32_list = make_listf (fun buf x -> put_32 x buf) 4 in *)
-  let put_coded_ip_list ?min_len =
-    make_listf ?min_len (fun buf x -> put_ip x buf) 4 in
-  let put_coded_prefix_list ?min_len =
-    make_listf ?min_len (fun buf x -> put_prefix x buf) 8 in
-  let put_coded_ip_tuple_list ?min_len =
-    make_listf ?min_len (fun buf x -> put_ip_tuple x buf) 8 in
-  let put_coded_vi_vendor_thing code items buf =
+  let put_coded_ip_list ?min_len code l buf off =
+    make_listf ?min_len (fun off x -> put_ip x buf off) 4 code l buf off in
+  let put_coded_prefix_list ?min_len code l buf off =
+    make_listf ?min_len (fun off x -> put_prefix x buf off) 8 code l buf off in
+  let put_coded_ip_tuple_list ?min_len code l buf off =
+    make_listf ?min_len (fun off x -> put_ip_tuple x buf off) 8 code l buf off in
+  let put_coded_vi_vendor_thing code items buf off =
     if items = [] then invalid_arg "Invalid option";
     let len =
       List.fold_left (fun acc (_ent, data) -> acc + 4 + 1 + String.length data) 0 items
     in
-    let buf = put_code code buf |> put_len len in
-    List.fold_left (fun buf (ent, data) ->
-        let buf = put_32 ent buf in
+    let off = put_code code buf off |> put_len len buf in
+    List.fold_left (fun off (ent, data) ->
+        let off = put_32 ent buf off in
         let len = String.length data in
-        let buf = put_len len buf in
-        blit_from_string data 0 buf 0 len;
-        shift buf len)
-      buf items
+        let off = put_len len buf off in
+        Bytes.blit_string data 0 buf off len;
+        off + len)
+      off items
   in
-  let put_coded_vi_vendor_info code items buf =
+  let put_coded_vi_vendor_info code items buf off =
     let items =
       List.map (fun (pen, sub_options) ->
           let sub_option (code, data) =
@@ -1249,9 +1252,9 @@ let buf_of_options sbuf options =
           (pen, String.concat "" (List.map sub_option sub_options)))
         items
     in
-    put_coded_vi_vendor_thing code items buf
+    put_coded_vi_vendor_thing code items buf off
   in
-  let put_coded_vi_vendor_class code items buf =
+  let put_coded_vi_vendor_class code items buf off =
     let items =
       List.map (fun (pen, datas) ->
           pen,
@@ -1267,169 +1270,169 @@ let buf_of_options sbuf options =
                 datas))
         items
     in
-    put_coded_vi_vendor_thing code items buf
+    put_coded_vi_vendor_thing code items buf off
   in
-  let buf_of_option buf option =
+  let buf_of_option buf off option =
     match option with
-    | Pad -> buf (* we don't pad *)                           (* code 0 *)
-    | Subnet_mask mask -> put_coded_ip 1 mask buf             (* code 1 *)
-    | Time_offset toff -> put_coded_32 2 toff buf             (* code 2 *)
-    | Routers ips -> put_coded_ip_list 3 ips buf              (* code 3 *)
-    | Dns_servers ips -> put_coded_ip_list 6 ips buf          (* code 6 *)
-    | Log_servers ips -> put_coded_ip_list 7 ips buf          (* code 7 *)
-    | Lpr_servers ips -> put_coded_ip_list 9 ips buf          (* code 9 *)
-    | Hostname h -> put_coded_bytes 12 h buf                  (* code 12 *)
-    | Bootfile_size bs -> put_coded_16 13 bs buf              (* code 13 *)
-    | Domain_name dn -> put_coded_bytes 15 dn buf             (* code 15 *)
-    | Swap_server ss -> put_coded_ip 16 ss buf                (* code 16 *)
-    | Root_path rp -> put_coded_bytes 17 rp buf               (* code 17 *)
-    | Extension_path ep -> put_coded_bytes 18 ep buf          (* code 18 *)
-    | Ipforwarding b -> put_coded_bool 19 b buf               (* code 19 *)
-    | Nlsr b -> put_coded_bool 20 b buf                       (* code 20 *)
-    | Policy_filters pf -> put_coded_prefix_list 21 pf buf    (* code 21 *)
-    | Max_datagram md -> put_coded_16 22 md buf               (* code 22 *)
-    | Default_ip_ttl dit -> put_coded_8 23 dit buf            (* code 23 *)
-    | Interface_mtu im -> put_coded_16 26 im buf              (* code 26 *)
-    | All_subnets_local b -> put_coded_bool 27 b buf          (* code 27 *)
-    | Broadcast_addr ba -> put_coded_ip 28 ba buf             (* code 28 *)
-    | Perform_router_disc b -> put_coded_bool 31 b buf        (* code 31 *)
-    | Router_sol_addr rsa -> put_coded_ip 32 rsa buf          (* code 32 *)
-    | Static_routes srs -> put_coded_ip_tuple_list 33 srs buf (* code 33 *)
-    | Trailer_encapsulation b -> put_coded_bool 34 b buf      (* code 34 *)
-    | Arp_cache_timo act -> put_coded_32 35 act buf           (* code 35 *)
-    | Ethernet_encapsulation b -> put_coded_bool 36 b buf     (* code 36 *)
-    | Tcp_default_ttl tdt -> put_coded_8 37 tdt buf           (* code 37 *)
-    | Tcp_keepalive_interval tki -> put_coded_32 38 tki buf   (* code 38 *)
-    | Nis_domain nd -> put_coded_bytes 40 nd buf              (* code 40 *)
-    | Nis_servers ips -> put_coded_ip_list 41 ips buf         (* code 41 *)
-    | Ntp_servers ips -> put_coded_ip_list 42 ips buf         (* code 42 *)
-    | Vendor_specific vs -> put_coded_bytes 43 vs buf         (* code 43 *)
-    | Netbios_name_servers ips -> put_coded_ip_list 44 ips buf(* code 44 *)
-    | Netbios_datagram_distrib_servers ips -> put_coded_ip_list 45 ips buf (* code 45 *)
-    | Netbios_node nn -> put_coded_8 46 nn buf                (* code 46 *)
-    | Netbios_scope ns -> put_coded_bytes 47 ns buf           (* code 47 *)
-    | Xwindow_font_servers ips -> put_coded_ip_list 48 ips buf(* code 48 *)
-    | Xwindow_display_managers ips -> put_coded_ip_list 49 ips buf (* code 49 *)
-    | Request_ip rip -> put_coded_ip 50 rip buf               (* code 50 *)
-    | Ip_lease_time ilt -> put_coded_32 51 ilt buf            (* code 51 *)
-    | Option_overload oo -> put_coded_8 52 oo buf             (* code 52 *)
-    | Message_type mt -> put_coded_8 53 (msgtype_to_int mt) buf (* code 53 *)
-    | Server_identifier si -> put_coded_ip 54 si buf          (* code 54 *)
+    | Pad -> off (* we don't pad *)                           (* code 0 *)
+    | Subnet_mask mask -> put_coded_ip 1 mask buf off             (* code 1 *)
+    | Time_offset toff -> put_coded_32 2 toff buf off             (* code 2 *)
+    | Routers ips -> put_coded_ip_list 3 ips buf off              (* code 3 *)
+    | Dns_servers ips -> put_coded_ip_list 6 ips buf off          (* code 6 *)
+    | Log_servers ips -> put_coded_ip_list 7 ips buf off          (* code 7 *)
+    | Lpr_servers ips -> put_coded_ip_list 9 ips buf off          (* code 9 *)
+    | Hostname h -> put_coded_bytes 12 h buf off                  (* code 12 *)
+    | Bootfile_size bs -> put_coded_16 13 bs buf off              (* code 13 *)
+    | Domain_name dn -> put_coded_bytes 15 dn buf off             (* code 15 *)
+    | Swap_server ss -> put_coded_ip 16 ss buf off                (* code 16 *)
+    | Root_path rp -> put_coded_bytes 17 rp buf off               (* code 17 *)
+    | Extension_path ep -> put_coded_bytes 18 ep buf off          (* code 18 *)
+    | Ipforwarding b -> put_coded_bool 19 b buf off               (* code 19 *)
+    | Nlsr b -> put_coded_bool 20 b buf off                       (* code 20 *)
+    | Policy_filters pf -> put_coded_prefix_list 21 pf buf off    (* code 21 *)
+    | Max_datagram md -> put_coded_16 22 md buf off               (* code 22 *)
+    | Default_ip_ttl dit -> put_coded_8 23 dit buf off            (* code 23 *)
+    | Interface_mtu im -> put_coded_16 26 im buf off              (* code 26 *)
+    | All_subnets_local b -> put_coded_bool 27 b buf off          (* code 27 *)
+    | Broadcast_addr ba -> put_coded_ip 28 ba buf off             (* code 28 *)
+    | Perform_router_disc b -> put_coded_bool 31 b buf off        (* code 31 *)
+    | Router_sol_addr rsa -> put_coded_ip 32 rsa buf off          (* code 32 *)
+    | Static_routes srs -> put_coded_ip_tuple_list 33 srs buf off (* code 33 *)
+    | Trailer_encapsulation b -> put_coded_bool 34 b buf off      (* code 34 *)
+    | Arp_cache_timo act -> put_coded_32 35 act buf off           (* code 35 *)
+    | Ethernet_encapsulation b -> put_coded_bool 36 b buf off     (* code 36 *)
+    | Tcp_default_ttl tdt -> put_coded_8 37 tdt buf off           (* code 37 *)
+    | Tcp_keepalive_interval tki -> put_coded_32 38 tki buf off   (* code 38 *)
+    | Nis_domain nd -> put_coded_bytes 40 nd buf off              (* code 40 *)
+    | Nis_servers ips -> put_coded_ip_list 41 ips buf off         (* code 41 *)
+    | Ntp_servers ips -> put_coded_ip_list 42 ips buf off         (* code 42 *)
+    | Vendor_specific vs -> put_coded_bytes 43 vs buf off         (* code 43 *)
+    | Netbios_name_servers ips -> put_coded_ip_list 44 ips buf off(* code 44 *)
+    | Netbios_datagram_distrib_servers ips -> put_coded_ip_list 45 ips buf off (* code 45 *)
+    | Netbios_node nn -> put_coded_8 46 nn buf off                (* code 46 *)
+    | Netbios_scope ns -> put_coded_bytes 47 ns buf off           (* code 47 *)
+    | Xwindow_font_servers ips -> put_coded_ip_list 48 ips buf off(* code 48 *)
+    | Xwindow_display_managers ips -> put_coded_ip_list 49 ips buf off (* code 49 *)
+    | Request_ip rip -> put_coded_ip 50 rip buf off               (* code 50 *)
+    | Ip_lease_time ilt -> put_coded_32 51 ilt buf off            (* code 51 *)
+    | Option_overload oo -> put_coded_8 52 oo buf off             (* code 52 *)
+    | Message_type mt -> put_coded_8 53 (msgtype_to_int mt) buf off (* code 53 *)
+    | Server_identifier si -> put_coded_ip 54 si buf off          (* code 54 *)
     | Parameter_requests pr ->
       put_coded_8_list 55
-        (List.map option_code_to_int pr) buf                  (* code 55 *)
-    | Message m -> put_coded_bytes 56 m buf                   (* code 56 *)
-    | Max_message mm -> put_coded_16 57 mm buf                (* code 57 *)
-    | Renewal_t1 rt -> put_coded_32 58 rt buf                 (* code 58 *)
-    | Rebinding_t2 rt -> put_coded_32 59 rt buf               (* code 59 *)
-    | Vendor_class_id vci -> put_coded_bytes 60 vci buf       (* code 60 *)
-    | Client_id id -> put_client_id 61 id buf                 (* code 61 *)
-    | Nis_plus_domain npd -> put_coded_bytes 64 npd buf       (* code 64 *)
-    | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf    (* code 65 *)
-    | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf      (* code 66 *)
-    | Bootfile_name bn -> put_coded_bytes 67 bn buf           (* code 67 *)
-    | Mobile_ip_home_agent ips -> put_coded_ip_list ~min_len:0 68 ips buf (* code 68 *)
-    | Smtp_servers ips -> put_coded_ip_list 69 ips buf        (* code 69 *)
-    | Pop3_servers ips -> put_coded_ip_list 70 ips buf        (* code 70 *)
-    | Nntp_servers ips -> put_coded_ip_list 71 ips buf        (* code 71 *)
-    | Irc_servers ips -> put_coded_ip_list 74 ips buf         (* code 74 *)
-    | User_class uc -> put_coded_bytes 77 uc buf              (* code 77 *)
-    | Rapid_commit -> put_coded_bytes 80 "" buf               (* code 80 *)
-    | Client_fqdn dn -> put_client_fqdn 81 dn buf             (* code 81 *)
-    | Relay_agent_information ai -> put_coded_bytes 82 ai buf (* code 82 *)
-    | Client_system cs -> put_coded_bytes 93 cs buf           (* code 93 *)
-    | Client_ndi ndi -> put_coded_bytes 94 ndi buf            (* code 94 *)
-    | Uuid_guid u -> put_coded_bytes 97 u buf                 (* code 97 *)
-    | Pcode p -> put_coded_bytes 100 p buf                    (* code 100 *)
-    | Tcode t -> put_coded_bytes 101 t buf                    (* code 101 *)
-    | IPv6_only ts -> put_coded_32 108 ts buf                 (* code 108 *)
-    | Subnet_selection ip -> put_coded_ip 118 ip buf          (* code 118 *)
-    | Domain_search s -> put_coded_bytes 119 s buf            (* code 119 *)
-    | Sip_servers ss -> put_coded_bytes 120 ss buf            (* code 120 *)
-    | Classless_static_route r -> put_coded_bytes 121 r buf   (* code 121 *) (* XXX current, use better type *)
-    | Vi_vendor_class vi -> put_coded_vi_vendor_class 124 vi buf (* code 124 *)
-    | Vi_vendor_info vi -> put_coded_vi_vendor_info 125 vi buf (* code 125 *)
-    | Misc_150 s -> put_coded_bytes 150 s buf                 (* code 150 *)
-    | Private_classless_static_route r -> put_coded_bytes 249 r buf (* code 249 *) (* XXX current, use better type *)
-    | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf (* code 252 *)
-    | Other (code, s) -> put_coded_bytes code s buf (* unassigned *)
-    | End -> buf (* discard, we add ourselves *)              (* code 255 *)
+        (List.map option_code_to_int pr) buf off                  (* code 55 *)
+    | Message m -> put_coded_bytes 56 m buf off                   (* code 56 *)
+    | Max_message mm -> put_coded_16 57 mm buf off                (* code 57 *)
+    | Renewal_t1 rt -> put_coded_32 58 rt buf off                 (* code 58 *)
+    | Rebinding_t2 rt -> put_coded_32 59 rt buf off               (* code 59 *)
+    | Vendor_class_id vci -> put_coded_bytes 60 vci buf off       (* code 60 *)
+    | Client_id id -> put_client_id 61 id buf off                 (* code 61 *)
+    | Nis_plus_domain npd -> put_coded_bytes 64 npd buf off       (* code 64 *)
+    | Nis_plus_servers ips -> put_coded_ip_list 65 ips buf off    (* code 65 *)
+    | Tftp_server_name tsn -> put_coded_bytes 66 tsn buf off      (* code 66 *)
+    | Bootfile_name bn -> put_coded_bytes 67 bn buf off           (* code 67 *)
+    | Mobile_ip_home_agent ips -> put_coded_ip_list ~min_len:0 68 ips buf off (* code 68 *)
+    | Smtp_servers ips -> put_coded_ip_list 69 ips buf off        (* code 69 *)
+    | Pop3_servers ips -> put_coded_ip_list 70 ips buf off        (* code 70 *)
+    | Nntp_servers ips -> put_coded_ip_list 71 ips buf off        (* code 71 *)
+    | Irc_servers ips -> put_coded_ip_list 74 ips buf off         (* code 74 *)
+    | User_class uc -> put_coded_bytes 77 uc buf off              (* code 77 *)
+    | Rapid_commit -> put_coded_bytes 80 "" buf off               (* code 80 *)
+    | Client_fqdn dn -> put_client_fqdn 81 dn buf off             (* code 81 *)
+    | Relay_agent_information ai -> put_coded_bytes 82 ai buf off (* code 82 *)
+    | Client_system cs -> put_coded_bytes 93 cs buf off           (* code 93 *)
+    | Client_ndi ndi -> put_coded_bytes 94 ndi buf off            (* code 94 *)
+    | Uuid_guid u -> put_coded_bytes 97 u buf off                 (* code 97 *)
+    | Pcode p -> put_coded_bytes 100 p buf off                    (* code 100 *)
+    | Tcode t -> put_coded_bytes 101 t buf off                    (* code 101 *)
+    | IPv6_only ts -> put_coded_32 108 ts buf off                 (* code 108 *)
+    | Subnet_selection ip -> put_coded_ip 118 ip buf off          (* code 118 *)
+    | Domain_search s -> put_coded_bytes 119 s buf off            (* code 119 *)
+    | Sip_servers ss -> put_coded_bytes 120 ss buf off            (* code 120 *)
+    | Classless_static_route r -> put_coded_bytes 121 r buf off   (* code 121 *) (* XXX current, use better type *)
+    | Vi_vendor_class vi -> put_coded_vi_vendor_class 124 vi buf off (* code 124 *)
+    | Vi_vendor_info vi -> put_coded_vi_vendor_info 125 vi buf off (* code 125 *)
+    | Misc_150 s -> put_coded_bytes 150 s buf off                 (* code 150 *)
+    | Private_classless_static_route r -> put_coded_bytes 249 r buf off (* code 249 *) (* XXX current, use better type *)
+    | Web_proxy_auto_disc wpad -> put_coded_bytes 252 wpad buf off (* code 252 *)
+    | Other (code, s) -> put_coded_bytes code s buf off (* unassigned *)
+    | End -> off (* discard, we add ourselves *)              (* code 255 *)
   in
   match options with
   | [] -> invalid_arg "Invalid options"
   | _ ->
-    let () = BE.set_uint32 sbuf 0 0x63825363l in       (* put cookie *)
-    let sbuf = shift sbuf 4 in
-    let ebuf = List.fold_left buf_of_option sbuf options in
-    set_uint8 ebuf 0 (option_code_to_int END); shift ebuf 1
+    let () = Bytes.set_int32_be sbuf 0 0x63825363l in       (* put cookie *)
+    let off' = List.fold_left (buf_of_option sbuf) 4 options in
+    Bytes.set_uint8 sbuf off' (option_code_to_int END);
+    off' + 1
 
 let pkt_of_buf buf len =
   let wrap () =
     let test = len >= sizeof_ethernet + sizeof_ipv4 + sizeof_udp + sizeof_dhcp in
     let* () = guard test `Not_dhcp in
     (* check if it's IPv4 protocol ([0x0800]) *)
-    let* () = guard (Cstruct.BE.get_uint16 buf 12 = 0x0800) `Not_dhcp in
+    let* () = guard (String.get_uint16_be buf 12 = 0x0800) `Not_dhcp in
     (* Ethernet layer *)
-    let dstmac = Macaddr.of_octets_exn (Cstruct.to_string ~off:0 ~len:6 buf) in
-    let srcmac = Macaddr.of_octets_exn (Cstruct.to_string ~off:6 ~len:6 buf) in
+    let dstmac = Macaddr.of_octets_exn (String.sub buf 0 6) in
+    let srcmac = Macaddr.of_octets_exn (String.sub buf 6 6) in
     (* IP layer *)
-    let ihl = Cstruct.get_uint8 buf sizeof_ethernet land 0x0f in
+    let ihl = String.get_uint8 buf sizeof_ethernet land 0x0f in
     let* () = guard (ihl >= 5) `Not_dhcp in
     let ip_hdr_len = ihl * 4 in
     (* check if it's UDP protocol ([17]) *)
-    let* () = guard (Cstruct.get_uint8 buf (sizeof_ethernet + 9) = 17) `Not_dhcp in
-    let srcip = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 buf (sizeof_ethernet + 12)) in
-    let dstip = Ipaddr.V4.of_int32 (Cstruct.BE.get_uint32 buf (sizeof_ethernet + 16)) in
+    let* () = guard (String.get_uint8 buf (sizeof_ethernet + 9) = 17) `Not_dhcp in
+    let srcip = Ipaddr.V4.of_int32 (String.get_int32_be buf (sizeof_ethernet + 12)) in
+    let dstip = Ipaddr.V4.of_int32 (String.get_int32_be buf (sizeof_ethernet + 16)) in
     (* UDP layer *)
     let udp_off = sizeof_ethernet + ip_hdr_len in
-    let srcport = Cstruct.BE.get_uint16 buf (udp_off + 0) in
-    let dstport = Cstruct.BE.get_uint16 buf (udp_off + 2) in
-    let udp_len = Cstruct.BE.get_uint16 buf (udp_off + 4) in
-    let chk = Cstruct.BE.get_uint16 buf (udp_off + 6) in
+    let srcport = String.get_uint16_be buf (udp_off + 0) in
+    let dstport = String.get_uint16_be buf (udp_off + 2) in
+    let udp_len = String.get_uint16_be buf (udp_off + 4) in
+    let chk = String.get_uint16_be buf (udp_off + 6) in
     (* NOTE(dinosaure): compute the checksum only if [chk <> 0]. *)
     let* () = if chk = 0 then Ok ()
       else begin
-        let ph = Cstruct.create 12 in
-        Cstruct.BE.set_uint32 ph 0 (Ipaddr.V4.to_int32 srcip);
-        Cstruct.BE.set_uint32 ph 4 (Ipaddr.V4.to_int32 dstip);
-        Cstruct.set_uint8 ph 8 0;
-        Cstruct.set_uint8 ph 9 17;
-        Cstruct.BE.set_uint16 ph 10 udp_len;
-        let seg = Cstruct.sub buf udp_off udp_len in
+        let ph = Bytes.create 12 in
+        Bytes.set_int32_be ph 0 (Ipaddr.V4.to_int32 srcip);
+        Bytes.set_int32_be ph 4 (Ipaddr.V4.to_int32 dstip);
+        Bytes.set_uint8 ph 8 0;
+        Bytes.set_uint8 ph 9 17;
+        Bytes.set_uint16_be ph 10 udp_len;
+        let seg = String.sub buf udp_off udp_len in
         let chk' = 0 in
-        let chk' = Chk.add chk' ph in
+        let chk' = Chk.add chk' (Bytes.unsafe_to_string ph) in
         let chk' = Chk.add chk' seg in
         guard (Chk.get chk' = 0) `Not_dhcp
       end in
-    let udp_payload = Cstruct.shift buf (udp_off + sizeof_udp) in
+    let dhcp_off = udp_off + sizeof_udp in
     (* DHCP layer *)
-    let* op = int_to_op (get_dhcp_op udp_payload) |> Option.to_result ~none:`Not_dhcp in
-    let htype = if (get_dhcp_htype udp_payload) = 1 then
+    let* op = int_to_op (get_dhcp_op buf dhcp_off) |> Option.to_result ~none:`Not_dhcp in
+    let htype = if (get_dhcp_htype buf dhcp_off) = 1 then
         Ethernet_10mb
       else
         Other
     in
-    let hlen = get_dhcp_hlen udp_payload in
-    let hops = get_dhcp_hops udp_payload in
-    let xid = get_dhcp_xid udp_payload in
-    let secs = get_dhcp_secs udp_payload in
+    let hlen = get_dhcp_hlen buf dhcp_off in
+    let hops = get_dhcp_hops buf dhcp_off in
+    let xid = get_dhcp_xid buf dhcp_off in
+    let secs = get_dhcp_secs buf dhcp_off in
     let flags =
-      if ((get_dhcp_flags udp_payload) land 0x8000) <> 0 then Broadcast else Unicast
+      if ((get_dhcp_flags buf dhcp_off) land 0x8000) <> 0 then Broadcast else Unicast
     in
-    let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr udp_payload) in
-    let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr udp_payload) in
-    let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr udp_payload) in
-    let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr udp_payload) in
+    let ciaddr = Ipaddr.V4.of_int32 (get_dhcp_ciaddr buf dhcp_off) in
+    let yiaddr = Ipaddr.V4.of_int32 (get_dhcp_yiaddr buf dhcp_off) in
+    let siaddr = Ipaddr.V4.of_int32 (get_dhcp_siaddr buf dhcp_off) in
+    let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf dhcp_off) in
     let* chaddr =
       if htype = Ethernet_10mb && hlen = 6 then
-        Ok (Macaddr.of_octets_exn (String.sub (copy_dhcp_chaddr udp_payload) 0 6))
+        Ok (Macaddr.of_octets_exn (copy_dhcp_chaddr buf dhcp_off))
       else
         Error `Not_dhcp
     in
-    let sname = cstruct_copy_normalized copy_dhcp_sname udp_payload in
-    let file = cstruct_copy_normalized copy_dhcp_file udp_payload in
+    let sname = cstruct_copy_normalized (copy_dhcp_sname buf) dhcp_off in
+    let file = cstruct_copy_normalized (copy_dhcp_file buf) dhcp_off in
     let options =
-      options_of_buf (Cstruct.shift udp_payload sizeof_dhcp) (Cstruct.length udp_payload - sizeof_dhcp)
+      options_of_buf buf (dhcp_off + sizeof_dhcp) (String.length buf - (dhcp_off + sizeof_dhcp))
     in
     Ok { srcmac; dstmac; srcip; dstip; srcport; dstport;
          op; htype; hlen; hops; xid; secs; flags; ciaddr; yiaddr;
@@ -1438,29 +1441,28 @@ let pkt_of_buf buf len =
   try wrap () with | Invalid_argument _ -> Error `Not_dhcp
 
 let pkt_into_buf pkt buf =
-  let eth = Cstruct.sub buf 0 sizeof_ethernet in
-  let ip = Cstruct.sub buf sizeof_ethernet sizeof_ipv4 in
-  let udp = Cstruct.sub buf (sizeof_ethernet + sizeof_ipv4) sizeof_udp in
-  let dhcp = Cstruct.shift buf (sizeof_ethernet + sizeof_ipv4 + sizeof_udp) in
-  set_dhcp_op dhcp (op_to_int pkt.op);
-  set_dhcp_htype dhcp
+  let ip_off = sizeof_ethernet in
+  let udp_off = sizeof_ethernet + sizeof_ipv4 in
+  let dhcp_off = sizeof_ethernet + sizeof_ipv4 + sizeof_udp in
+  set_dhcp_op buf dhcp_off (op_to_int pkt.op);
+  set_dhcp_htype buf dhcp_off
     (if pkt.htype = Ethernet_10mb then
        1
      else
        invalid_arg "Can only build Ethernet_10mb");
-  set_dhcp_hlen dhcp pkt.hlen;
-  set_dhcp_hops dhcp pkt.hops;
-  set_dhcp_xid dhcp pkt.xid;
-  set_dhcp_secs dhcp pkt.secs;
-  set_dhcp_flags dhcp (if pkt.flags = Broadcast then 0x8000 else 0);
-  set_dhcp_ciaddr dhcp (Ipaddr.V4.to_int32 pkt.ciaddr);
-  set_dhcp_yiaddr dhcp (Ipaddr.V4.to_int32 pkt.yiaddr);
-  set_dhcp_siaddr dhcp (Ipaddr.V4.to_int32 pkt.siaddr);
-  set_dhcp_giaddr dhcp (Ipaddr.V4.to_int32 pkt.giaddr);
-  set_dhcp_chaddr (string_extend_if_le (Macaddr.to_octets pkt.chaddr) 16) 0 dhcp;
-  set_dhcp_sname (string_extend_if_le pkt.sname 64) 0 dhcp;
-  set_dhcp_file (string_extend_if_le pkt.file 128) 0 dhcp;
-  let options_start = Cstruct.shift dhcp sizeof_dhcp in
+  set_dhcp_hlen buf dhcp_off pkt.hlen;
+  set_dhcp_hops buf dhcp_off pkt.hops;
+  set_dhcp_xid buf dhcp_off pkt.xid;
+  set_dhcp_secs buf dhcp_off pkt.secs;
+  set_dhcp_flags buf dhcp_off (if pkt.flags = Broadcast then 0x8000 else 0);
+  set_dhcp_ciaddr buf dhcp_off (Ipaddr.V4.to_int32 pkt.ciaddr);
+  set_dhcp_yiaddr buf dhcp_off (Ipaddr.V4.to_int32 pkt.yiaddr);
+  set_dhcp_siaddr buf dhcp_off (Ipaddr.V4.to_int32 pkt.siaddr);
+  set_dhcp_giaddr buf dhcp_off (Ipaddr.V4.to_int32 pkt.giaddr);
+  set_dhcp_chaddr (string_extend_if_le (Macaddr.to_octets pkt.chaddr) 16) 0 buf dhcp_off;
+  set_dhcp_sname (string_extend_if_le pkt.sname 64) 0 buf dhcp_off;
+  set_dhcp_file (string_extend_if_le pkt.file 128) 0 buf dhcp_off;
+  let options_start = String.sub buf (dhcp_off + sizeof_dhcp) (String.length buf - (dhcp_off + sizeof_dhcp)) in
   let options_end = buf_of_options options_start pkt.options in
   let partial_len = Cstruct.length dhcp - Cstruct.length options_end in
   let buf_end =
@@ -1513,20 +1515,20 @@ let pkt_into_buf pkt buf =
 
 let buf_of_pkt pkg =
   (* TODO mtu *)
-  let dhcp = Cstruct.create 2048 in
+  let dhcp = Bytes.create 2048 in
   let l = pkt_into_buf pkg dhcp in
-  Cstruct.sub dhcp 0 l
+  Bytes.sub_string dhcp 0 l
 
 let is_dhcp buf _len =
   try
-    if Cstruct.BE.get_uint16 buf 12 <> 0x0800 then false
+    if String.get_uint16_be buf 12 <> 0x0800 then false
     else
-      if Cstruct.get_uint8 buf (sizeof_ethernet + 9) <> 17 then false
+      if String.get_uint8 buf (sizeof_ethernet + 9) <> 17 then false
       else
-        let ihl = Cstruct.get_uint8 buf sizeof_ethernet land 0x0f in
+        let ihl = String.get_uint8 buf sizeof_ethernet land 0x0f in
         let udp_off = sizeof_ethernet + (ihl * 4) in
-        let srcport = Cstruct.BE.get_uint16 buf (udp_off + 0) in
-        let dstport = Cstruct.BE.get_uint16 buf (udp_off + 2) in
+        let srcport = String.get_uint16_be buf (udp_off + 0) in
+        let dstport = String.get_uint16_be buf (udp_off + 2) in
         (dstport = server_port || dstport = client_port)
         && (srcport = server_port || srcport = client_port)
   with Invalid_argument _ -> false
