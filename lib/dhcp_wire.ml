@@ -1137,7 +1137,7 @@ let options_of_buf buf off buf_len =
     extend buf |>
     List.rev
 
-let buf_of_options sbuf options =
+let buf_of_options sbuf off options =
   let put_code code buf off = Bytes.set_uint8 buf off code; off + 1 in
   let put_len len buf off = if len > 255 then
       invalid_arg ("option len is too big: " ^ (string_of_int len));
@@ -1361,8 +1361,8 @@ let buf_of_options sbuf options =
   match options with
   | [] -> invalid_arg "Invalid options"
   | _ ->
-    let () = Bytes.set_int32_be sbuf 0 0x63825363l in       (* put cookie *)
-    let off' = List.fold_left (buf_of_option sbuf) 4 options in
+    let () = Bytes.set_int32_be sbuf off 0x63825363l in       (* put cookie *)
+    let off' = List.fold_left (buf_of_option sbuf) (off + 4) options in
     Bytes.set_uint8 sbuf off' (option_code_to_int END);
     off' + 1
 
@@ -1425,7 +1425,7 @@ let pkt_of_buf buf len =
     let giaddr = Ipaddr.V4.of_int32 (get_dhcp_giaddr buf dhcp_off) in
     let* chaddr =
       if htype = Ethernet_10mb && hlen = 6 then
-        Ok (Macaddr.of_octets_exn (copy_dhcp_chaddr buf dhcp_off))
+        Ok (Macaddr.of_octets_exn (String.sub (copy_dhcp_chaddr buf dhcp_off) 0 6))
       else
         Error `Not_dhcp
     in
@@ -1462,55 +1462,53 @@ let pkt_into_buf pkt buf =
   set_dhcp_chaddr (string_extend_if_le (Macaddr.to_octets pkt.chaddr) 16) 0 buf dhcp_off;
   set_dhcp_sname (string_extend_if_le pkt.sname 64) 0 buf dhcp_off;
   set_dhcp_file (string_extend_if_le pkt.file 128) 0 buf dhcp_off;
-  let options_start = String.sub buf (dhcp_off + sizeof_dhcp) (String.length buf - (dhcp_off + sizeof_dhcp)) in
-  let options_end = buf_of_options options_start pkt.options in
-  let partial_len = Cstruct.length dhcp - Cstruct.length options_end in
+  let options_start = dhcp_off + sizeof_dhcp in
+  let options_end = buf_of_options buf options_start pkt.options in
+  let partial_len = options_end - dhcp_off in
   let buf_end =
     let pad_len = 300 - partial_len in
     if pad_len > 0 then begin
       for i = 0 to pad_len do
-        Cstruct.set_uint8 options_end i 0
+        Bytes.set_uint8 buf (options_end + i) 0
       done;
-      Cstruct.shift options_end pad_len
+      options_end + pad_len
     end else
       options_end
   in
-  let dhcp = Cstruct.sub dhcp 0 (Cstruct.length dhcp - Cstruct.length buf_end) in
-  let dhcp_len = Cstruct.length dhcp in
+  let dhcp_len = buf_end - dhcp_off in
   (* Ethernet *)
-  Cstruct.blit_from_string (Macaddr.to_octets pkt.dstmac) 0 eth 0 6;
-  Cstruct.blit_from_string (Macaddr.to_octets pkt.srcmac) 0 eth 6 6;
-  Cstruct.BE.set_uint16 eth 12 0x0800; (* IPv4 protocol *)
+  Bytes.blit_string (Macaddr.to_octets pkt.dstmac) 0 buf 0 6;
+  Bytes.blit_string (Macaddr.to_octets pkt.srcmac) 0 buf 6 6;
+  Bytes.set_uint16_be buf 12 0x0800; (* IPv4 protocol *)
   (* UDP *)
-  Cstruct.BE.set_uint16 udp 0 pkt.srcport;
-  Cstruct.BE.set_uint16 udp 2 pkt.dstport;
-  Cstruct.BE.set_uint16 udp 4 (sizeof_udp + dhcp_len);
-  Cstruct.BE.set_uint16 udp 6 0;
+  Bytes.set_uint16_be buf (udp_off + 0) pkt.srcport;
+  Bytes.set_uint16_be buf (udp_off + 2) pkt.dstport;
+  Bytes.set_uint16_be buf (udp_off + 4) (sizeof_udp + dhcp_len);
+  Bytes.set_uint16_be buf (udp_off + 6) 0;
   (* IP *)
-  Cstruct.set_uint8 ip 0 0x45; (* IHL = (version 4) | (len = 5) *)
-  Cstruct.set_uint8 ip 1 0;
-  Cstruct.BE.set_uint16 ip 2 (sizeof_ipv4 + sizeof_udp + dhcp_len);
-  Cstruct.BE.set_uint16 ip 4 0;
-  Cstruct.BE.set_uint16 ip 6 0;
-  Cstruct.set_uint8 ip 8 255; (* TTL *)
-  Cstruct.set_uint8 ip 9 17; (* UDP protocol *)
-  Cstruct.BE.set_uint16 ip 10 0;
-  Cstruct.BE.set_uint32 ip 12 (Ipaddr.V4.to_int32 pkt.srcip);
-  Cstruct.BE.set_uint32 ip 16 (Ipaddr.V4.to_int32 pkt.dstip);
-  Cstruct.BE.set_uint16 ip 10 (Chk.get (Chk.add 0 ip));
+  Bytes.set_uint8 buf (ip_off + 0) 0x45; (* IHL = (version 4) | (len = 5) *)
+  Bytes.set_uint8 buf (ip_off + 1) 0;
+  Bytes.set_uint16_be buf (ip_off + 2) (sizeof_ipv4 + sizeof_udp + dhcp_len);
+  Bytes.set_uint16_be buf (ip_off + 4) 0;
+  Bytes.set_uint16_be buf (ip_off + 6) 0;
+  Bytes.set_uint8 buf (ip_off + 8) 255; (* TTL *)
+  Bytes.set_uint8 buf (ip_off + 9) 17; (* UDP protocol *)
+  Bytes.set_uint16_be buf (ip_off + 10) 0;
+  Bytes.set_int32_be buf (ip_off + 12) (Ipaddr.V4.to_int32 pkt.srcip);
+  Bytes.set_int32_be buf (ip_off + 16) (Ipaddr.V4.to_int32 pkt.dstip);
+  Bytes.set_uint16_be buf (ip_off + 10) (Chk.get (Chk.add 0 (Bytes.sub_string buf ip_off sizeof_ipv4)));
   (* UDP checksum *)
-  let ph = Cstruct.create 12 in
-  Cstruct.BE.set_uint32 ph 0 (Ipaddr.V4.to_int32 pkt.srcip);
-  Cstruct.BE.set_uint32 ph 4 (Ipaddr.V4.to_int32 pkt.dstip);
-  Cstruct.set_uint8 ph 8 0;
-  Cstruct.set_uint8 ph 9 17; (* UDP protocol *)
-  Cstruct.BE.set_uint16 ph 10 (sizeof_udp + dhcp_len);
+  let ph = Bytes.create 12 in
+  Bytes.set_int32_be ph 0 (Ipaddr.V4.to_int32 pkt.srcip);
+  Bytes.set_int32_be ph 4 (Ipaddr.V4.to_int32 pkt.dstip);
+  Bytes.set_uint8 ph 8 0;
+  Bytes.set_uint8 ph 9 17; (* UDP protocol *)
+  Bytes.set_uint16_be ph 10 (sizeof_udp + dhcp_len);
   let chk = 0 in
-  let chk = Chk.add chk ph in
-  let chk = Chk.add chk udp in
-  let chk = Chk.add chk dhcp in
+  let chk = Chk.add chk (Bytes.unsafe_to_string ph) in
+  let chk = Chk.add chk (Bytes.sub_string buf udp_off (sizeof_udp + dhcp_len)) in
   let chk = Chk.get chk in
-  Cstruct.BE.set_uint16 udp 6 chk;
+  Bytes.set_uint16_be buf (udp_off + 6) chk;
   sizeof_ethernet + sizeof_ipv4 + sizeof_udp + dhcp_len
 
 let buf_of_pkt pkg =

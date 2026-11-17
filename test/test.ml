@@ -90,13 +90,12 @@ let t_csum () =
   (* Corrupt every byte of the packet and assert that csum fails *)
   let buf = buf_of_pkt pkt in
   (* Skip ethernet + upper ip header *)
-  for off = (14 + 12) to pred (Cstruct.length buf) do
-    let evilbyte = Cstruct.get_uint8 buf off in
+  for off = (14 + 12) to pred (String.length buf) do
+    let evilbyte = String.get_uint8 buf off in
     (* Corrupt payload *)
-    Cstruct.set_uint8 buf off (succ evilbyte);
-    assert_error (pkt_of_buf buf (Cstruct.length buf));
-    (* Put back *)
-    Cstruct.set_uint8 buf off evilbyte;
+    let b = Bytes.of_string buf in
+    Bytes.set_uint8 b off (succ evilbyte);
+    assert_error (pkt_of_buf (Bytes.unsafe_to_string b) (Bytes.length b));
   done
 
 let t_long_lists () =
@@ -135,7 +134,7 @@ let t_long_lists () =
     ]
   } in
   let serialized = buf_of_pkt pkt in
-  match pkt_of_buf serialized (Cstruct.length serialized) with
+  match pkt_of_buf serialized (String.length serialized) with
   | Error `Msg e -> failwith e
   | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
   | Ok deserialized -> assert (pkt = deserialized)
@@ -995,7 +994,7 @@ let dhcp_client_fqdn () =
   00 00 00 00 00 00 |}
   in
   let client_fqdn = [ `Server_A ; `Wire_encoding ], Domain_name.of_string_exn "my.example.com" in
-  match Dhcp_wire.pkt_of_buf (Cstruct.of_string data) (String.length data) with
+  match Dhcp_wire.pkt_of_buf data (String.length data) with
   | Error `Msg s -> invalid_arg s
   | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
   | Ok pkt ->
@@ -1005,7 +1004,7 @@ let dhcp_client_fqdn () =
       assert (flags = fst client_fqdn);
       assert (Domain_name.equal n (snd client_fqdn));
       let b = Dhcp_wire.buf_of_pkt pkt in
-      match Dhcp_wire.pkt_of_buf b (Cstruct.length b) with
+      match Dhcp_wire.pkt_of_buf b (String.length b) with
       | Error `Msg s -> invalid_arg s
       | Error `Not_dhcp -> failwith "DHCP messaged deemed not a DHCP message"
       | Ok pkt' ->
@@ -1043,7 +1042,7 @@ let vi_vendor_class_parse () =
      \255"
   in
   let options =
-    Dhcp_wire.options_of_buf (Cstruct.of_string data) (String.length data)
+    Dhcp_wire.options_of_buf data 0 (String.length data)
   in
   match options with
   | [ Vi_vendor_class [ (9l, cisco); (18l, wellfleet) ] ] ->

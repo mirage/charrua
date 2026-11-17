@@ -296,18 +296,18 @@ module Lease = struct
       (Addr_map.add lease.addr lease.client_id db.addr_map)
 
   let lease_to_string l =
-    let opts = Cstruct.create 1500 in
-    let opt_end = Dhcp_wire.buf_of_options opts l.client_requested_options in
-    let opts = Cstruct.sub opts 0 (Cstruct.length opts - Cstruct.length opt_end) in
+    let opts = Bytes.create 1500 in
+    let opt_end = Dhcp_wire.buf_of_options opts 0 l.client_requested_options in
+    let opts = Bytes.sub_string opts 0 opt_end in
     Int32.to_string l.tm_start ^ "," ^ Int32.to_string l.tm_end ^ "," ^
     Ipaddr.V4.to_string l.addr ^ "," ^ Dhcp_wire.client_id_to_string l.client_id ^ "," ^
-    Ohex.encode (Cstruct.to_string opts)
+    Ohex.encode opts
 
   let lease_of_string s =
     match String.split_on_char ',' s with
     | tm_start :: tm_end :: addr :: client_id :: options ->
-      (let opts = Ohex.decode (String.concat "," options) |> Cstruct.of_string in
-       match Dhcp_wire.options_of_buf opts (Cstruct.length opts) with
+      (let opts = Ohex.decode (String.concat "," options) in
+       match Dhcp_wire.options_of_buf opts 0 (String.length opts) with
        | exception Invalid_argument _ -> None
        | client_requested_options ->
          (match Int32.of_string_opt tm_start, Int32.of_string_opt tm_end, Ipaddr.V4.of_string addr, Dhcp_wire.string_to_client_id client_id with

@@ -304,8 +304,8 @@ type dhcp_option =
 
 val dhcp_option_to_string : dhcp_option -> string
 
-val buf_of_options : bytes -> dhcp_option list -> bytes
-val options_of_buf : string -> int -> dhcp_option list
+val buf_of_options : bytes -> int -> dhcp_option list -> int
+val options_of_buf : string -> int -> int -> dhcp_option list
 
 val find_option : (dhcp_option -> 'b option) -> dhcp_option list -> 'b option
 (** [find_option f l] finds the first option where [f] evaluates to [Some] value

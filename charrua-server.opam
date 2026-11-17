@@ -31,10 +31,8 @@ depends: [
   "dune" {>= "1.4.0"}
   "menhir" {build & >= "20181006"}
   "charrua" {= version}
-  "cstruct" {>= "6.0.0"}
   "ipaddr" {>= "5.0.0"}
   "macaddr" {>= "4.0.0"}
-  "cstruct-unix" {with-test}
   "tcpip" {>= "9.0.0" & with-test}
   "alcotest" {with-test & >= "1.4.0"}
 ]

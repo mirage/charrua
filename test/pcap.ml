@@ -32,25 +32,25 @@ let verbose = (Array.length Sys.argv) = 2 && Sys.argv.(1) = "-v"
   } *)
 
 let get_pcap_header_magic_number cs =
-  Cstruct.LE.get_uint32 cs 0
+  String.get_int32_le cs 0
 
 let get_pcap_header_version_major cs =
-  Cstruct.LE.get_uint16 cs 4
+  String.get_uint16_le cs 4
 
 let get_pcap_header_version_minor cs =
-  Cstruct.LE.get_uint16 cs 6
+  String.get_uint16_le cs 6
 
 let get_pcap_header_thiszone cs =
-  Cstruct.LE.get_uint32 cs 8
+  String.get_int32_le cs 8
 
 let get_pcap_header_sigfigs cs =
-  Cstruct.LE.get_uint32 cs 12
+  String.get_int32_le cs 12
 
 let get_pcap_header_snaplen cs =
-  Cstruct.LE.get_uint32 cs 16
+  String.get_int32_le cs 16
 
 let get_pcap_header_network cs =
-  Cstruct.LE.get_uint32 cs 20
+  String.get_int32_le cs 20
 
 let sizeof_pcap_header = 24
 
@@ -62,16 +62,16 @@ let sizeof_pcap_header = 24
    } *)
 
 let get_pcap_packet_ts_sec cs =
-  Cstruct.LE.get_uint32 cs 0
+  String.get_int32_le cs 0
 
 let get_pcap_packet_ts_usec cs =
-  Cstruct.LE.get_uint32 cs 4
+  String.get_int32_le cs 4
 
 let get_pcap_packet_incl_len cs =
-  Cstruct.LE.get_uint32 cs 8
+  String.get_int32_le cs 8
 
 let get_pcap_packet_orig_len cs =
-  Cstruct.LE.get_uint32 cs 12
+  String.get_int32_le cs 12
 
 let sizeof_pcap_packet = 16
 
@@ -89,10 +89,8 @@ let test_packet p len =
     | Ok pkt2 ->
       if pkt2 <> pkt then begin
         printf "buffers differ !\n";
-        printf "pcap buf:";
-        Cstruct.hexdump p;
-        printf "our buf:";
-        Cstruct.hexdump buf;
+        Format.printf "pcap buf:@.%a@." (Ohex.pp_hexdump ()) p;
+        Format.printf "our buf:@.%a@." (Ohex.pp_hexdump ()) buf;
         Format.printf "generated pkt:\n%a\n" Dhcp_wire.pp_pkt pkt2;
         failwith "Serialization bug found !"
   end
@@ -131,28 +129,44 @@ let test_pcap_header buf =
     printf "lltype %lx\n%!" header_network
   end
 
+let mmap file =
+  let ic = open_in file in
+  let ln = in_channel_length ic in
+  let rs = Bytes.create ln in
+  really_input ic rs 0 ln;
+  close_in ic;
+  Bytes.unsafe_to_string rs
+
 let parse file =
   if verbose then
     printf "parsing %s\n%!" file;
-  let fd = Unix.(openfile file [O_RDONLY] 0) in
-  let t = Unix_cstruct.of_fd fd in
+  let t = mmap file in
   if verbose then
-    printf "total pcap file length %d\n%!" (Cstruct.length t);
+    printf "total pcap file length %d\n%!" (String.length t);
 
-  let header, body = Cstruct.split t sizeof_pcap_header in
+  let header, body =
+    String.sub t 0 sizeof_pcap_header,
+    String.sub t sizeof_pcap_header (String.length t - sizeof_pcap_header)
+  in
   if verbose then
       test_pcap_header header;
 
-  let packets = Cstruct.iter
-      (fun buf -> Some (sizeof_pcap_packet + Int32.to_int (get_pcap_packet_incl_len buf)))
-      (fun buf -> buf, Cstruct.shift buf sizeof_pcap_packet)
-      body
+  let packets =
+    let rec dec off acc =
+      if String.length body = off then
+        List.rev acc
+      else
+        let hdr = String.sub body off sizeof_pcap_packet in
+        let len = Int32.to_int (get_pcap_packet_incl_len hdr) in
+        let pkg = String.sub body (off + sizeof_pcap_packet) len in
+        dec (off + len + sizeof_pcap_packet) ((hdr, pkg) :: acc)
+    in
+    dec 0 []
   in
-  let num_packets = Cstruct.fold
+  let num_packets = List.fold_left
       (fun a packet -> test_pcap_packet packet; (a+1))
-      packets 0
+      0 packets
   in
-  Unix.close fd;
   if verbose then
     printf "%s had %d packets\n\n%!" file num_packets
 
