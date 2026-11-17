@@ -1,7 +1,7 @@
 (test
  (name test)
  (package charrua-server)
- (libraries cstruct-unix alcotest charrua charrua-server))
+ (libraries alcotest charrua charrua-server))
 
 (alias
  (name runtest)

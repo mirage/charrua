@@ -98,7 +98,7 @@ let rec input config db link gbcol =
   let now = uptime_in_sec () in
   maybe_gc db now gbcol
   >>= fun (db, gbcol) ->
-  let t = match Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) with
+  let t = match Dhcp_wire.pkt_of_buf (Cstruct.to_string buf) (Cstruct.length buf) with
     | Error `Not_dhcp -> Lwt_log.error "packet is not ipv4" >>= fun () ->
       return db
     | Error (`Msg e) -> Lwt_log.error e
@@ -110,7 +110,7 @@ let rec input config db link gbcol =
       | Silence -> return db
       | Update (_lease, db) -> return db
       | Reply (reply, _, db) ->
-        Lwt_rawlink.send_packet link (Dhcp_wire.buf_of_pkt reply) >>= fun () ->
+        Lwt_rawlink.send_packet link (Cstruct.of_string (Dhcp_wire.buf_of_pkt reply)) >>= fun () ->
         Logs.debug (fun m -> m "Sent reply packet: %a" Dhcp_wire.pp_pkt reply);
         return db
       | Warning w ->

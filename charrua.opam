@@ -15,7 +15,6 @@ build: [
 depends: [
   "ocaml"         {>= "4.13.0"}
   "dune"          {>= "1.4.0"}
-  "cstruct"       {>= "6.0.0"}
   "ipaddr"        {>= "5.0.0"}
   "macaddr"       {>= "4.0.0"}
   "ohex"          {>= "0.2.0"}
