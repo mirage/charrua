@@ -57,12 +57,15 @@ module Make (Net : Mirage_net.S) = struct
       Mirage_sleep.ns @@ Duration.of_sec renewal >>= fun () ->
       let rec send_renewal () =
         match Dhcp_client.renew !c with
-        | `Noop -> 
+        | `Noop ->
           Lwt.return `Can't_renew
         | `Response (updated_c, pkt) ->
           c := updated_c;
           Log.debug (fun f -> f "attempted to renew lease: %a" Dhcp_client.pp updated_c);
-          Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
+          Net.write net ~size (fun cs ->
+              let pkt = Dhcp_wire.buf_of_pkt pkt in
+              Cstruct.blit_from_string pkt 0 cs 0 (String.length pkt);
+              String.length pkt) >>= function
           | Error e ->
             Lwt.return (`Failed_to_write e)
           | Ok () ->
@@ -96,7 +99,10 @@ module Make (Net : Mirage_net.S) = struct
         | `Response (updated_c, pkt) ->
           c := updated_c;
           Log.debug (fun f -> f "attempted to rebind lease: %a" Dhcp_client.pp updated_c);
-          Net.write net ~size (Dhcp_wire.pkt_into_buf pkt) >>= function
+          Net.write net ~size (fun cs ->
+              let pkt = Dhcp_wire.buf_of_pkt pkt in
+              Cstruct.blit_from_string pkt 0 cs 0 (String.length pkt);
+              String.length pkt) >>= function
           | Error e ->
             Lwt.return (`Failed_to_write e)
           | Ok () ->
@@ -121,7 +127,10 @@ module Make (Net : Mirage_net.S) = struct
     in
     let rec get_lease cond dhcpdiscover =
       Log.debug (fun f -> f "Sending DHCPDISCOVER...");
-      Net.write net ~size (Dhcp_wire.pkt_into_buf dhcpdiscover) >>= function
+          Net.write net ~size (fun cs ->
+              let pkt = Dhcp_wire.buf_of_pkt dhcpdiscover in
+              Cstruct.blit_from_string pkt 0 cs 0 (String.length pkt);
+              String.length pkt) >>= function
       | Error e ->
         Log.err (fun f -> f "Failed to write initial lease discovery request: %a" Net.pp_error e);
         Lwt.return_unit
@@ -144,13 +153,16 @@ module Make (Net : Mirage_net.S) = struct
     in
     let listen t cond =
       Net.listen t.net ~header_size (fun buf ->
-        match Dhcp_client.input !c buf with
+        match Dhcp_client.input !c (Cstruct.to_string buf) with
         | `Noop ->
           Lwt.return_unit
         | `Not_dhcp ->
           t.listen buf
         | `Response (s, action) -> begin
-            Net.write net ~size (Dhcp_wire.pkt_into_buf action) >>= function
+            Net.write net ~size (fun cs ->
+                let pkt = Dhcp_wire.buf_of_pkt action in
+                Cstruct.blit_from_string pkt 0 cs 0 (String.length pkt);
+                String.length pkt) >>= function
             | Error e ->
               Log.err (fun f -> f "Failed to write lease transaction response: %a" Net.pp_error e);
               Lwt.return_unit

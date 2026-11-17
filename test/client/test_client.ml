@@ -1,5 +1,3 @@
-let cstruct = Alcotest.of_pp Cstruct.hexdump_pp
-
 let msgtype =
   let module M = struct
     type t = Dhcp_wire.msgtype
@@ -25,7 +23,7 @@ end
 
 let random_buffer () =
   let sz = Randomconv.int16 Mirage_crypto_rng.generate in
-  Cstruct.of_string (Mirage_crypto_rng.generate sz)
+  Mirage_crypto_rng.generate sz
 
 let rec no_result t n () =
   if n <= 0 then ()
@@ -39,7 +37,7 @@ let rec no_result t n () =
   end
 
 let parseable buf =
-  Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (Cstruct.length buf))
+  Alcotest.(check bool) "buffer we constructed is valid dhcp" true (Dhcp_wire.is_dhcp buf (String.length buf))
 
 let random_xid () = Randomconv.int32 Mirage_crypto_rng.generate
 
@@ -52,7 +50,7 @@ let client_to_selecting () =
   let open Defaults in
   let (s, pkt) = Dhcp_client.create (random_xid ()) client_mac in
   let buf = Dhcp_wire.buf_of_pkt pkt in
-  let answer = Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
+  let answer = Dhcp_wire.pkt_of_buf buf (String.length buf) in
   Alcotest.(check (result pass reject)) "input succeeds" answer answer;
   (s, Result.get_ok answer)
 
@@ -101,7 +99,7 @@ let client_asks_dhcprequest () =
       let buf = Dhcp_wire.buf_of_pkt pkt in
       parseable buf;
       let dhcprequest = Result.get_ok @@
-        Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
+        Dhcp_wire.pkt_of_buf buf (String.length buf) in
       Alcotest.(check (option msgtype)) "responded to DHCPOFFER with DHCPREQUEST"
         (Some DHCPREQUEST) (find_message_type dhcprequest.options)
   end
@@ -118,7 +116,7 @@ let server_gives_dhcpack () =
   | `New_lease _-> Alcotest.fail "thought a DHCPOFFER was a lease"
   | `Response (_s, pkt) ->
     let buf = Dhcp_wire.buf_of_pkt pkt in
-    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
+    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (String.length buf) in
     let (dhcpack, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0l in
       Alcotest.(check (option msgtype)) "got a DHCPACK in response to DHCPREQUEST"
         (Some DHCPACK) (find_message_type dhcpack.options)
@@ -132,7 +130,7 @@ let client_returns_lease () =
   | `Noop | `Not_dhcp | `New_lease _ -> Alcotest.fail "incorrect response to DHCPOFFER"
   | `Response (s, pkt) ->
     let buf = Dhcp_wire.buf_of_pkt pkt in
-    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
+    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (String.length buf) in
     let (dhcpack, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0l in
     Alcotest.(check (option msgtype)) "got a DHCPACK in response to DHCPREQUEST"
       (Some DHCPACK) (find_message_type dhcpack.options);
@@ -169,7 +167,7 @@ let random_bound n =
   | `Noop | `Not_dhcp | `New_lease _ -> Alcotest.fail "couldn't enter REQUESTING properly"
   | `Response (s, dhcprequest) ->
     let buf = Dhcp_wire.buf_of_pkt dhcprequest in
-    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (Cstruct.length buf) in
+    let dhcprequest = Result.get_ok @@ Dhcp_wire.pkt_of_buf buf (String.length buf) in
     let (dhcpack, _db) = assert_reply @@ Dhcp_server.Input.input_pkt config db dhcprequest 0l in
     match Dhcp_client.input s (Dhcp_wire.buf_of_pkt dhcpack) with
     | `Noop | `Not_dhcp | `Response _ -> Alcotest.fail "client did not recognize DHCPACK as

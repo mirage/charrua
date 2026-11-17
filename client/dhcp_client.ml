@@ -238,7 +238,7 @@ let create ?(options = []) ?requests xid srcmac =
    *)
 let input t buf =
   let open Dhcp_wire in
-  match pkt_of_buf buf (Cstruct.length buf) with
+  match pkt_of_buf buf (String.length buf) with
   | Error `Not_dhcp -> `Not_dhcp
   | Error `Msg _ -> `Noop
   | Ok incoming ->

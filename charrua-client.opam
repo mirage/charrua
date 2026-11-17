@@ -16,7 +16,6 @@ depends: [
   "dune" {>= "1.4.0"}
   "ocaml" {>= "4.08.0"}
   "alcotest" {with-test}
-  "cstruct-unix" {with-test}
   "mirage-crypto-rng" {with-test & >= "1.2.0"}
   "charrua-server" {= version & with-test}
   "charrua" {= version}
